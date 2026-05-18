@@ -137,6 +137,16 @@ export async function setApiKey(plain: string): Promise<void> {
   });
 }
 
+export async function clearApiKey(): Promise<void> {
+  const current = await getSettings();
+  await setSettings({
+    ai: {
+      ...current.ai,
+      api_key_encrypted: '',
+    },
+  });
+}
+
 export async function getApiKey(): Promise<string | null> {
   const encrypted = (await getSettings()).ai.api_key_encrypted;
   if (encrypted === '') {

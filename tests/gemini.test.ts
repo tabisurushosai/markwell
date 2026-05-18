@@ -102,6 +102,29 @@ describe('gemini', () => {
     });
   });
 
+  it('uses model and apiKey overrides without reading storage', async () => {
+    mockedGetApiKey.mockResolvedValue(null);
+    const overrideModel = 'gemini-2.5-pro';
+    const overrideKey = 'override-key-only';
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        candidates: [{ content: { parts: [{ text: 'ok' }] } }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await callGemini('test', {
+      feature: 'translation',
+      model: overrideModel,
+      apiKey: overrideKey,
+    });
+
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toContain(`/models/${overrideModel}:generateContent`);
+    expect(url).toContain(`key=${overrideKey}`);
+    expect(mockedGetApiKey).not.toHaveBeenCalled();
+  });
+
   it('never exposes API key in GeminiError messages', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse(

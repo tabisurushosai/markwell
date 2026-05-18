@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentTier, getLicenseStatus, setLicenseStatus } from '../src/shared/storage/license.js';
 import {
+  clearApiKey,
   getApiKey,
   getSettings,
   setApiKey,
@@ -84,6 +85,17 @@ describe('settings + license storage', () => {
 
     await setApiKey('rotated-key');
     expect(await getApiKey()).toBe('rotated-key');
+  });
+
+  it('clearApiKey removes stored key', async () => {
+    await setApiKey('to-be-cleared');
+    expect(await getApiKey()).toBe('to-be-cleared');
+
+    await clearApiKey();
+    expect(await getApiKey()).toBeNull();
+
+    const settings = await getSettings();
+    expect(settings.ai.api_key_encrypted).toBe('');
   });
 
   it('merges settings patch', async () => {

@@ -12,6 +12,7 @@ import {
 } from '../shared/ai/usage.js';
 
 import './general-section.js';
+import './ai-section.js';
 import './tag-manager.js';
 import './project-manager.js';
 
@@ -259,6 +260,12 @@ export class MwOptions extends LitElement {
     .btn--danger:hover {
       border-color: #c44;
     }
+
+    .usage-heading {
+      margin: 32px 0 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
   `;
 
   connectedCallback(): void {
@@ -367,13 +374,16 @@ export class MwOptions extends LitElement {
   }
 
   private renderGeneralSection() {
-    return html`<mw-general-section></mw-general-section>`;
+    return html`<mw-general-settings></mw-general-settings>`;
   }
 
   private renderAiSection() {
     return html`
       <h1>AI</h1>
-      <p class="section-lead">ローカルに保存された当月の Gemini 利用量です。外部には送信されません。</p>
+      <p class="section-lead">Gemini API キーとモデルの設定、および当月の利用量です。</p>
+      <mw-ai-settings></mw-ai-settings>
+      <h2 class="usage-heading">使用量</h2>
+      <p class="hint">ローカルに保存された当月の Gemini 利用量です。外部には送信されません。</p>
       ${this.renderUsageSection()}
     `;
   }

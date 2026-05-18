@@ -75,6 +75,8 @@ export type CallGeminiOptions = {
   stream?: boolean;
   signal?: AbortSignal;
   feature: AiUsageFeature;
+  model?: string;
+  apiKey?: string;
 };
 
 function throwIfAborted(signal: AbortSignal | undefined): void {
@@ -286,13 +288,17 @@ async function readErrorBody(response: Response): Promise<string> {
   }
 }
 
-async function resolveCredentials(): Promise<{ apiKey: string; model: string }> {
-  const apiKey = await getApiKey();
-  if (apiKey === null) {
+async function resolveCredentials(overrides?: {
+  apiKey?: string;
+  model?: string;
+}): Promise<{ apiKey: string; model: string }> {
+  const apiKey = overrides?.apiKey ?? (await getApiKey());
+  if (apiKey === null || apiKey === '') {
     throw new Error('API key not set');
   }
   const settings = await getSettings();
-  return { apiKey, model: settings.ai.model };
+  const model = overrides?.model ?? settings.ai.model;
+  return { apiKey, model };
 }
 
 function buildEndpoint(model: string, action: 'generateContent' | 'streamGenerateContent', apiKey: string): string {
@@ -407,8 +413,9 @@ async function callGeminiNonStream(
   prompt: string,
   feature: AiUsageFeature,
   signal?: AbortSignal,
+  overrides?: { apiKey?: string; model?: string },
 ): Promise<string> {
-  const { apiKey, model } = await resolveCredentials();
+  const { apiKey, model } = await resolveCredentials(overrides);
   const url = buildEndpoint(model, 'generateContent', apiKey);
   const response = await fetchWithRetry(
     url,
@@ -617,7 +624,10 @@ export function callGemini(
   if (opts.stream === true) {
     return streamGeminiChunks(prompt, opts.feature, opts.signal);
   }
-  return callGeminiNonStream(prompt, opts.feature, opts.signal);
+  return callGeminiNonStream(prompt, opts.feature, opts.signal, {
+    apiKey: opts.apiKey,
+    model: opts.model,
+  });
 }
 
 export function callGeminiChat(
