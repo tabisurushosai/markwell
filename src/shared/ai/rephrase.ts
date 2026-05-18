@@ -51,7 +51,7 @@ export async function rephraseHighlightText(
     throw new Error('empty text');
   }
 
-  const response = await callGemini(buildRephrasePrompt(trimmed, style));
+  const response = await callGemini(buildRephrasePrompt(trimmed, style), { feature: 'rephrase' });
   const rephrased = parseRephraseResponse(response);
   if (rephrased === '') {
     throw new Error('Empty rephrase');

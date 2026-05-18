@@ -47,7 +47,7 @@ export async function translateHighlightText(
   }
 
   const prompt = buildTranslationPrompt(text, targetLang);
-  const response = await callGemini(prompt);
+  const response = await callGemini(prompt, { feature: 'translation' });
   const translated = parseTranslationResponse(response);
   if (translated === '') {
     throw new Error('Empty translation');

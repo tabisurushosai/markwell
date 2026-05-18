@@ -565,6 +565,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       for await (const chunk of callGemini(prompt, {
         stream: true,
         signal: abortController.signal,
+        feature: 'synthesis',
       })) {
         this.synthesisMarkdown += chunk;
       }
@@ -889,6 +890,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       for await (const chunk of callGemini(prompt, {
         stream: true,
         signal: abortController.signal,
+        feature: 'quote_extractor',
       })) {
         this.quotesMarkdown += chunk;
       }
@@ -1083,6 +1085,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       for await (const chunk of callGeminiChat(systemInstruction, turns, {
         stream: true,
         signal: abortController.signal,
+        feature: 'qa',
       })) {
         const messages = [...this.qaMessages];
         const assistant = messages[assistantIndex];

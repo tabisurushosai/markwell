@@ -61,7 +61,9 @@ export async function factCheckHighlightText(text: string): Promise<FactCheckRes
     throw new Error('empty text');
   }
 
-  const grounded = await callGeminiWithGoogleSearch(buildFactCheckPrompt(trimmed));
+  const grounded = await callGeminiWithGoogleSearch(buildFactCheckPrompt(trimmed), {
+    feature: 'fact_check',
+  });
   const result = toFactCheckResult(grounded);
   if (result.answer === '') {
     throw new Error('Empty fact check response');

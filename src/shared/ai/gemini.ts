@@ -1,4 +1,9 @@
 import { getApiKey, getSettings } from '../storage/settings.js';
+import {
+  estimateTokensForUsage,
+  recordUsage,
+  type AiUsageFeature,
+} from './usage.js';
 
 const GEMINI_API_ORIGIN = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MAX_RETRIES = 3;
@@ -26,11 +31,21 @@ type GenerateContentResponse = {
     };
     groundingMetadata?: GeminiGroundingMetadata;
   }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
   error?: {
     code?: number;
     message?: string;
     status?: string;
   };
+};
+
+export type GeminiUsageTokens = {
+  token_input: number;
+  token_output: number;
 };
 
 export type GeminiGroundingChunk = {
@@ -59,6 +74,7 @@ export type GeminiGroundedResult = {
 export type CallGeminiOptions = {
   stream?: boolean;
   signal?: AbortSignal;
+  feature: AiUsageFeature;
 };
 
 function throwIfAborted(signal: AbortSignal | undefined): void {
@@ -193,6 +209,67 @@ function extractText(payload: GenerateContentResponse): string {
   return parts.map((part) => part.text ?? '').join('');
 }
 
+export function extractUsageTokens(
+  payload: GenerateContentResponse,
+): GeminiUsageTokens | undefined {
+  const metadata = payload.usageMetadata;
+  if (metadata === undefined) {
+    return undefined;
+  }
+
+  const tokenInput = metadata.promptTokenCount ?? 0;
+  const tokenOutput = metadata.candidatesTokenCount ?? 0;
+  if (tokenInput === 0 && tokenOutput === 0) {
+    return undefined;
+  }
+
+  return {
+    token_input: tokenInput,
+    token_output: tokenOutput,
+  };
+}
+
+function resolveTokenCounts(
+  payload: GenerateContentResponse | undefined,
+  inputText: string,
+  outputText: string,
+): { token_input: number; token_output: number } {
+  const meta = payload?.usageMetadata;
+  if (meta?.promptTokenCount !== undefined) {
+    const token_input = meta.promptTokenCount;
+    const token_output =
+      meta.candidatesTokenCount ??
+      (meta.totalTokenCount !== undefined
+        ? Math.max(meta.totalTokenCount - token_input, 0)
+        : estimateTokensForUsage(outputText));
+    return { token_input, token_output };
+  }
+
+  return {
+    token_input: estimateTokensForUsage(inputText),
+    token_output: estimateTokensForUsage(outputText),
+  };
+}
+
+async function trackGeminiUsage(
+  feature: AiUsageFeature,
+  model: string,
+  payload: GenerateContentResponse | undefined,
+  inputText: string,
+  outputText: string,
+): Promise<void> {
+  try {
+    const { token_input, token_output } = resolveTokenCounts(payload, inputText, outputText);
+    await recordUsage({ model, token_input, token_output, feature });
+  } catch {
+    // 使用量記録の失敗で AI 呼び出し自体は失敗させない
+  }
+}
+
+function buildChatInputText(systemInstruction: string, turns: GeminiChatTurn[]): string {
+  return [systemInstruction, ...turns.map((turn) => turn.text)].join('\n');
+}
+
 async function readErrorBody(response: Response): Promise<string> {
   try {
     const json = (await response.json()) as GenerateContentResponse;
@@ -293,20 +370,20 @@ function buildGeminiRequestInit(body: string, signal?: AbortSignal): RequestInit
 async function parseGenerateContentResponse(
   response: Response,
   apiKey: string,
-): Promise<string> {
+): Promise<{ text: string; payload: GenerateContentResponse }> {
   const payload = (await response.json()) as GenerateContentResponse;
   if (payload.error !== undefined) {
     const message = maskSecret(payload.error.message ?? 'Gemini API error', apiKey);
     throw classifyHttpError(payload.error.code ?? 500, message, apiKey);
   }
 
-  return extractText(payload);
+  return { text: extractText(payload), payload };
 }
 
 async function parseGroundedGenerateContentResponse(
   response: Response,
   apiKey: string,
-): Promise<GeminiGroundedResult> {
+): Promise<{ result: GeminiGroundedResult; payload: GenerateContentResponse }> {
   const payload = (await response.json()) as GenerateContentResponse;
   if (payload.error !== undefined) {
     const message = maskSecret(payload.error.message ?? 'Gemini API error', apiKey);
@@ -317,13 +394,20 @@ async function parseGroundedGenerateContentResponse(
   const metadata = candidate?.groundingMetadata;
 
   return {
-    text: extractText(payload),
-    sources: extractGroundingSources(metadata),
-    webSearchQueries: metadata?.webSearchQueries ?? [],
+    result: {
+      text: extractText(payload),
+      sources: extractGroundingSources(metadata),
+      webSearchQueries: metadata?.webSearchQueries ?? [],
+    },
+    payload,
   };
 }
 
-async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
+async function callGeminiNonStream(
+  prompt: string,
+  feature: AiUsageFeature,
+  signal?: AbortSignal,
+): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'generateContent', apiKey);
   const response = await fetchWithRetry(
@@ -332,12 +416,15 @@ async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promis
     apiKey,
   );
 
-  return parseGenerateContentResponse(response, apiKey);
+  const { text, payload } = await parseGenerateContentResponse(response, apiKey);
+  await trackGeminiUsage(feature, model, payload, prompt, text);
+  return text;
 }
 
 async function callGeminiChatNonStream(
   systemInstruction: string,
   turns: GeminiChatTurn[],
+  feature: AiUsageFeature,
   signal?: AbortSignal,
 ): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
@@ -349,30 +436,41 @@ async function callGeminiChatNonStream(
     apiKey,
   );
 
-  return parseGenerateContentResponse(response, apiKey);
+  const { text, payload } = await parseGenerateContentResponse(response, apiKey);
+  const inputText = buildChatInputText(systemInstruction, turns);
+  await trackGeminiUsage(feature, model, payload, inputText, text);
+  return text;
 }
+
+export type CallGeminiWithGoogleSearchOptions = {
+  signal?: AbortSignal;
+  feature?: AiUsageFeature;
+};
 
 export async function callGeminiWithGoogleSearch(
   prompt: string,
-  signal?: AbortSignal,
+  opts?: CallGeminiWithGoogleSearchOptions,
 ): Promise<GeminiGroundedResult> {
+  const feature = opts?.feature ?? 'fact_check';
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'generateContent', apiKey);
   const body = buildGoogleSearchRequestBody(prompt);
   const response = await fetchWithRetry(
     url,
-    buildGeminiRequestInit(body, signal),
+    buildGeminiRequestInit(body, opts?.signal),
     apiKey,
   );
 
-  return parseGroundedGenerateContentResponse(response, apiKey);
+  const { result, payload } = await parseGroundedGenerateContentResponse(response, apiKey);
+  await trackGeminiUsage(feature, model, payload, prompt, result.text);
+  return result;
 }
 
 async function* streamGeminiResponseBody(
-  body: string,
   signal: AbortSignal | undefined,
   apiKey: string,
   response: Response,
+  usageOut: { payload?: GenerateContentResponse },
 ): AsyncGenerator<string, void, undefined> {
   if (response.body === null) {
     throw new GeminiError('Empty stream body', 'SERVER', response.status);
@@ -415,6 +513,8 @@ async function* streamGeminiResponseBody(
           throw classifyHttpError(payload.error.code ?? 500, message, apiKey);
         }
 
+        usageOut.payload = payload;
+
         const chunk = extractText(payload);
         if (chunk !== '') {
           yield chunk;
@@ -425,6 +525,7 @@ async function* streamGeminiResponseBody(
     const trailing = buffer.trim();
     if (trailing.startsWith('data: ') && trailing !== 'data: [DONE]') {
       const payload = JSON.parse(trailing.slice(6)) as GenerateContentResponse;
+      usageOut.payload = payload;
       const chunk = extractText(payload);
       if (chunk !== '') {
         yield chunk;
@@ -449,6 +550,7 @@ async function* streamGeminiResponseBody(
 
 async function* streamGeminiChunks(
   prompt: string,
+  feature: AiUsageFeature,
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, undefined> {
   const { apiKey, model } = await resolveCredentials();
@@ -458,12 +560,22 @@ async function* streamGeminiChunks(
     buildGeminiRequestInit(buildRequestBody(prompt), signal),
     apiKey,
   );
-  yield* streamGeminiResponseBody(buildRequestBody(prompt), signal, apiKey, response);
+  const usageOut: { payload?: GenerateContentResponse } = {};
+  let output = '';
+  try {
+    for await (const chunk of streamGeminiResponseBody(signal, apiKey, response, usageOut)) {
+      output += chunk;
+      yield chunk;
+    }
+  } finally {
+    await trackGeminiUsage(feature, model, usageOut.payload, prompt, output);
+  }
 }
 
 async function* streamGeminiChatChunks(
   systemInstruction: string,
   turns: GeminiChatTurn[],
+  feature: AiUsageFeature,
   signal?: AbortSignal,
 ): AsyncGenerator<string, void, undefined> {
   const { apiKey, model } = await resolveCredentials();
@@ -474,7 +586,17 @@ async function* streamGeminiChatChunks(
     buildGeminiRequestInit(body, signal),
     apiKey,
   );
-  yield* streamGeminiResponseBody(body, signal, apiKey, response);
+  const usageOut: { payload?: GenerateContentResponse } = {};
+  const inputText = buildChatInputText(systemInstruction, turns);
+  let output = '';
+  try {
+    for await (const chunk of streamGeminiResponseBody(signal, apiKey, response, usageOut)) {
+      output += chunk;
+      yield chunk;
+    }
+  } finally {
+    await trackGeminiUsage(feature, model, usageOut.payload, inputText, output);
+  }
 }
 
 export async function callGemini(
@@ -489,10 +611,13 @@ export function callGemini(
   prompt: string,
   opts?: CallGeminiOptions,
 ): Promise<string> | AsyncGenerator<string, void, undefined> {
-  if (opts?.stream === true) {
-    return streamGeminiChunks(prompt, opts.signal);
+  if (opts?.feature === undefined) {
+    throw new Error('feature is required');
   }
-  return callGeminiNonStream(prompt, opts?.signal);
+  if (opts.stream === true) {
+    return streamGeminiChunks(prompt, opts.feature, opts.signal);
+  }
+  return callGeminiNonStream(prompt, opts.feature, opts.signal);
 }
 
 export function callGeminiChat(
@@ -510,10 +635,13 @@ export function callGeminiChat(
   turns: GeminiChatTurn[],
   opts?: CallGeminiOptions,
 ): Promise<string> | AsyncGenerator<string, void, undefined> {
-  if (opts?.stream === true) {
-    return streamGeminiChatChunks(systemInstruction, turns, opts.signal);
+  if (opts?.feature === undefined) {
+    throw new Error('feature is required');
   }
-  return callGeminiChatNonStream(systemInstruction, turns, opts?.signal);
+  if (opts.stream === true) {
+    return streamGeminiChatChunks(systemInstruction, turns, opts.feature, opts.signal);
+  }
+  return callGeminiChatNonStream(systemInstruction, turns, opts.feature, opts?.signal);
 }
 
 /** @internal テスト用: URL から API キーをマスク */

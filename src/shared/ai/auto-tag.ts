@@ -52,7 +52,7 @@ export async function fetchAutoTagsForHighlight(selectedText: string): Promise<s
   }
 
   const prompt = buildAutoTagPrompt(text);
-  const response = await callGemini(prompt);
+  const response = await callGemini(prompt, { feature: 'auto_tag' });
   return parseAutoTagResponse(response);
 }
 

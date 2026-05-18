@@ -4,12 +4,14 @@ import {
   buildChatRequestBody,
   callGemini,
   callGeminiChat,
+  extractUsageTokens,
   GeminiError,
   redactGeminiUrl,
 } from '../src/shared/ai/gemini.js';
 
 const API_KEY = 'test-gemini-key-secret';
 const MODEL = 'gemini-2.0-flash';
+const TEST_FEATURE = 'synthesis' as const;
 
 vi.mock('../src/shared/storage/settings.js', () => ({
   getApiKey: vi.fn(),
@@ -17,9 +19,11 @@ vi.mock('../src/shared/storage/settings.js', () => ({
 }));
 
 import { getApiKey, getSettings } from '../src/shared/storage/settings.js';
+import * as usage from '../src/shared/ai/usage.js';
 
 const mockedGetApiKey = vi.mocked(getApiKey);
 const mockedGetSettings = vi.mocked(getSettings);
+const mockedRecordUsage = vi.spyOn(usage, 'recordUsage').mockResolvedValue(undefined);
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -39,6 +43,7 @@ function sseResponse(chunks: string[]): Response {
 describe('gemini', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    mockedRecordUsage.mockResolvedValue(undefined);
     mockedGetApiKey.mockResolvedValue(API_KEY);
     mockedGetSettings.mockResolvedValue({
       default_color: 'yellow',
@@ -59,22 +64,33 @@ describe('gemini', () => {
     vi.clearAllMocks();
   });
 
+  it('throws when feature is missing', () => {
+    expect(() => callGemini('hello')).toThrow('feature is required');
+  });
+
   it('throws when API key is not set', async () => {
     mockedGetApiKey.mockResolvedValue(null);
-    await expect(callGemini('hello')).rejects.toThrow('API key not set');
+    await expect(callGemini('hello', { feature: TEST_FEATURE })).rejects.toThrow('API key not set');
   });
 
   it('calls generateContent with model and key query param', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
         candidates: [{ content: { parts: [{ text: '応答テキスト' }] } }],
+        usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 8 },
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await callGemini('プロンプト');
+    const result = await callGemini('プロンプト', { feature: TEST_FEATURE });
 
     expect(result).toBe('応答テキスト');
+    expect(mockedRecordUsage).toHaveBeenCalledWith({
+      model: MODEL,
+      feature: TEST_FEATURE,
+      token_input: 12,
+      token_output: 8,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain(`/models/${MODEL}:generateContent`);
@@ -102,7 +118,7 @@ describe('gemini', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     try {
-      await callGemini('x');
+      await callGemini('x', { feature: TEST_FEATURE });
       expect.fail('expected GeminiError');
     } catch (error) {
       expect(error).toBeInstanceOf(GeminiError);
@@ -123,7 +139,7 @@ describe('gemini', () => {
       );
     vi.stubGlobal('fetch', fetchMock);
 
-    const promise = callGemini('retry me');
+    const promise = callGemini('retry me', { feature: TEST_FEATURE });
     await vi.runAllTimersAsync();
     const result = await promise;
 
@@ -135,7 +151,7 @@ describe('gemini', () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ error: { code: 429, message: 'quota' } }, 429));
     vi.stubGlobal('fetch', fetchMock);
 
-    const promise = callGemini('quota');
+    const promise = callGemini('quota', { feature: TEST_FEATURE });
     const expectation = expect(promise).rejects.toMatchObject({ kind: 'QUOTA' });
     await vi.runAllTimersAsync();
     await expectation;
@@ -146,7 +162,7 @@ describe('gemini', () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'unavailable' } }, 503));
     vi.stubGlobal('fetch', fetchMock);
 
-    const promise = callGemini('down');
+    const promise = callGemini('down', { feature: TEST_FEATURE });
     const expectation = expect(promise).rejects.toMatchObject({ kind: 'SERVER', status: 503 });
     await vi.runAllTimersAsync();
     await expectation;
@@ -157,7 +173,7 @@ describe('gemini', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     try {
-      await callGemini('net');
+      await callGemini('net', { feature: TEST_FEATURE });
       expect.fail('expected GeminiError');
     } catch (error) {
       expect(error).toMatchObject({ kind: 'NETWORK' });
@@ -170,17 +186,29 @@ describe('gemini', () => {
     const fetchMock = vi.fn().mockResolvedValue(
       sseResponse([
         JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Hello' }] } }] }),
-        JSON.stringify({ candidates: [{ content: { parts: [{ text: ' world' }] } }] }),
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: ' world' }] } }],
+          usageMetadata: { promptTokenCount: 5, candidatesTokenCount: 3 },
+        }),
       ]),
     );
     vi.stubGlobal('fetch', fetchMock);
 
     const chunks: string[] = [];
-    for await (const chunk of callGemini('stream prompt', { stream: true })) {
+    for await (const chunk of callGemini('stream prompt', {
+      stream: true,
+      feature: TEST_FEATURE,
+    })) {
       chunks.push(chunk);
     }
 
     expect(chunks).toEqual(['Hello', ' world']);
+    expect(mockedRecordUsage).toHaveBeenCalledWith({
+      model: MODEL,
+      feature: TEST_FEATURE,
+      token_input: 5,
+      token_output: 3,
+    });
     const [url] = fetchMock.mock.calls[0] as [string];
     expect(url).toContain(':streamGenerateContent');
     expect(url).toContain('alt=sse');
@@ -190,6 +218,14 @@ describe('gemini', () => {
     expect(redactGeminiUrl(`https://example.com?key=${API_KEY}&alt=sse`)).toBe(
       'https://example.com?key=***&alt=sse',
     );
+  });
+
+  it('extractUsageTokens reads usageMetadata', () => {
+    expect(
+      extractUsageTokens({
+        usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 4 },
+      }),
+    ).toEqual({ token_input: 10, token_output: 4 });
   });
 
   it('buildChatRequestBody includes systemInstruction and turns', () => {
@@ -220,7 +256,7 @@ describe('gemini', () => {
     for await (const chunk of callGeminiChat(
       'sys',
       [{ role: 'user', text: 'q' }],
-      { stream: true },
+      { stream: true, feature: 'project_qa' },
     )) {
       chunks.push(chunk);
     }

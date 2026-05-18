@@ -122,7 +122,7 @@ export async function findRelatedHighlights(source: Highlight): Promise<Highligh
   }
 
   const prompt = buildRelatedHighlightsPrompt(source.selected_text, candidates);
-  const response = await callGemini(prompt);
+  const response = await callGemini(prompt, { feature: 'related_highlights' });
   const indices = parseRelatedHighlightIndices(response, candidates.length, MAX_RESULTS);
   return resolveRelatedHighlights(candidates, indices);
 }

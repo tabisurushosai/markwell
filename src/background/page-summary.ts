@@ -45,7 +45,9 @@ export async function handleSummarizePageMessage(
   }
 
   try {
-    const summary = await callGemini(buildPageSummaryPrompt(trimmed, message.page_title));
+    const summary = await callGemini(buildPageSummaryPrompt(trimmed, message.page_title), {
+      feature: 'page_summary',
+    });
     const result = summary.trim();
     if (result === '') {
       return { ok: false, error: '要約を生成できませんでした。' };
