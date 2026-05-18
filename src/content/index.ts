@@ -5,6 +5,7 @@ import { initEditToolbar } from './edit-toolbar.js';
 import { initMiniToolbar } from './mini-toolbar.js';
 import { scheduleRestoreOnLoad } from './restore.js';
 import { initSelectionDetection } from './selection.js';
+import { initReanchorOnDomChange } from './re-anchor.js';
 import { initSpaDetector } from './spa-detector.js';
 import { isPageBlocked } from '../shared/utils/url.js';
 
@@ -35,6 +36,7 @@ async function bootstrap(): Promise<void> {
 
   scheduleRestoreOnLoad();
   initSpaDetector();
+  initReanchorOnDomChange();
   initHashJump();
 }
 
