@@ -5,6 +5,7 @@ import { callGemini } from '../shared/ai/gemini.js';
 import {
   buildSynthesisPrompt,
   estimateTokens,
+  extractUserInstructionFromPrompt,
   getSynthesisTokenWarning,
 } from '../shared/ai/synthesis-prompt.js';
 import { listHighlights, updateHighlight } from '../shared/storage/highlights.js';
@@ -97,6 +98,9 @@ export class MarkwellSidePanelRoot extends LitElement {
   @state() private premiumModalOpen = false;
 
   @state() private historyModalOpen = false;
+
+  /** 履歴から結果を復元したあと（instruction を編集して再生成可能） */
+  @state() private synthesisRestoredFromHistory = false;
 
   @state() private synthesisHistory: Synthesis[] = [];
 
@@ -462,6 +466,14 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private async handleSynthesize(): Promise<void> {
+    await this.runSynthesis({ savedStatusMessage: '合成結果を保存しました' });
+  }
+
+  private async handleRegenerate(): Promise<void> {
+    await this.runSynthesis({ savedStatusMessage: '再生成しました' });
+  }
+
+  private async runSynthesis(opts: { savedStatusMessage: string }): Promise<void> {
     const tier = await getCurrentTier();
     if (tier === 'free') {
       this.premiumModalOpen = true;
@@ -518,7 +530,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       !this.isSynthesisErrorMarkdown(this.synthesisMarkdown) &&
       this.selectedProjectId !== ''
     ) {
-      await this.persistSynthesisRecord(prompt, this.synthesisMarkdown);
+      await this.persistSynthesisRecord(prompt, this.synthesisMarkdown, opts.savedStatusMessage);
     }
   }
 
@@ -526,7 +538,11 @@ export class MarkwellSidePanelRoot extends LitElement {
     return markdown.startsWith('**エラー:**');
   }
 
-  private async persistSynthesisRecord(prompt: string, resultMarkdown: string): Promise<void> {
+  private async persistSynthesisRecord(
+    prompt: string,
+    resultMarkdown: string,
+    statusMessage = '合成結果を保存しました',
+  ): Promise<void> {
     const settings = await getSettings();
     await createSynthesis({
       project_id: this.selectedProjectId,
@@ -536,7 +552,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       token_input: Math.round(estimateTokens(prompt)),
       token_output: Math.round(estimateTokens(resultMarkdown)),
     });
-    this.showStatus('合成結果を保存しました');
+    this.showStatus(statusMessage);
   }
 
   private async openHistoryModal(): Promise<void> {
@@ -555,6 +571,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     // synthesisPrompt（userInstruction）は触らず、合成結果のみ復元する
     this.synthesisMarkdown = synthesis.result_markdown;
     this.resultVisible = true;
+    this.synthesisRestoredFromHistory = true;
     this.closeHistoryModal();
   }
 
@@ -607,6 +624,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     this.resultVisible = false;
     this.synthesisMarkdown = '';
+    this.synthesisRestoredFromHistory = false;
   }
 
   private closePremiumModal(): void {
@@ -818,6 +836,20 @@ export class MarkwellSidePanelRoot extends LitElement {
                 >
                   ${this.synthesizing ? '生成中…' : '合成する'}
                 </button>
+                ${this.synthesisRestoredFromHistory && this.resultVisible
+                  ? html`
+                      <button
+                        type="button"
+                        class="btn btn--primary"
+                        ?disabled=${this.synthesizing || this.highlights.length === 0}
+                        @click=${() => {
+                          void this.handleRegenerate();
+                        }}
+                      >
+                        ${this.synthesizing ? '生成中…' : '再生成'}
+                      </button>
+                    `
+                  : nothing}
                 <button
                   type="button"
                   class="btn"
