@@ -2,7 +2,6 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { estimateTokenCostUsd, formatUsdEstimate, GEMINI_FLASH_PRICING } from '../shared/ai/pricing.js';
-import { TRANSLATE_LANGUAGE_LABELS } from '../shared/ai/translation.js';
 import {
   AI_USAGE_FEATURE_LABELS,
   AI_USAGE_FEATURES,
@@ -11,8 +10,8 @@ import {
   getMonthlyUsage,
   type MonthlyUsageRecord,
 } from '../shared/ai/usage.js';
-import { getSettings, setSettings } from '../shared/storage/settings.js';
 
+import './general-section.js';
 import './tag-manager.js';
 import './project-manager.js';
 
@@ -35,10 +34,6 @@ function formatTokenCount(value: number): string {
 @customElement('mw-options')
 export class MwOptions extends LitElement {
   @state() private activeSection: OptionsSection = 'general';
-
-  @state() private translateTargetLang = 'ja';
-
-  @state() private saved = false;
 
   @state() private usageMonth = currentUsageMonth();
 
@@ -263,13 +258,7 @@ export class MwOptions extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    void this.loadSettings();
     void this.loadUsage();
-  }
-
-  private async loadSettings(): Promise<void> {
-    const settings = await getSettings();
-    this.translateTargetLang = settings.translate_target_lang;
   }
 
   private async loadUsage(): Promise<void> {
@@ -281,19 +270,6 @@ export class MwOptions extends LitElement {
 
   private selectSection(section: OptionsSection): void {
     this.activeSection = section;
-  }
-
-  private async onLangChange(event: Event): Promise<void> {
-    const select = event.target;
-    if (!(select instanceof HTMLSelectElement)) {
-      return;
-    }
-    this.translateTargetLang = select.value;
-    await setSettings({ translate_target_lang: select.value });
-    this.saved = true;
-    window.setTimeout(() => {
-      this.saved = false;
-    }, 2000);
   }
 
   private async handleResetUsage(): Promise<void> {
@@ -386,26 +362,7 @@ export class MwOptions extends LitElement {
   }
 
   private renderGeneralSection() {
-    return html`
-      <h1>一般</h1>
-      <p class="section-lead">ハイライトと popup の基本設定です。</p>
-      <label for="translate-lang">ハイライト翻訳の既定言語</label>
-      <select
-        id="translate-lang"
-        .value=${this.translateTargetLang}
-        @change=${(event: Event) => {
-          void this.onLangChange(event);
-        }}
-      >
-        ${Object.entries(TRANSLATE_LANGUAGE_LABELS).map(
-          ([code, label]) => html`
-            <option value=${code}>${label}</option>
-          `,
-        )}
-      </select>
-      <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
-      ${this.saved ? html`<p class="status">保存しました</p>` : nothing}
-    `;
+    return html`<mw-general-section></mw-general-section>`;
   }
 
   private renderAiSection() {
