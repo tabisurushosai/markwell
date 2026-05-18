@@ -1,6 +1,7 @@
 import { listHighlights } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
+import { initMiniToolbar } from './mini-toolbar.js';
 import { initSelectionDetection } from './selection.js';
 import { getCanonicalUrl, isPageBlocked } from '../shared/utils/url.js';
 
@@ -21,6 +22,7 @@ async function bootstrap(): Promise<void> {
   console.log('Markwell content ready');
 
   initSelectionDetection();
+  initMiniToolbar();
 
   chrome.runtime
     .sendMessage({
