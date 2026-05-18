@@ -6,6 +6,7 @@ import {
   createTag,
   deleteTag,
   getTag,
+  getTagUsageCounts,
   listTags,
   mergeTag,
   renameTag,
@@ -112,5 +113,16 @@ describe('tag CRUD', () => {
 
   it('rejects invalid tag color on create', async () => {
     await expect(createTag('Bad Color', 'yellow')).rejects.toThrow();
+  });
+
+  it('getTagUsageCounts reads highlight index lengths', async () => {
+    const tagA = await createTag('Alpha', '#ffd34e');
+    const tagB = await createTag('Beta', '#00aa88');
+    await createHighlight(sampleHighlightInput([tagA.id, tagB.id]));
+    await createHighlight(sampleHighlightInput([tagA.id]));
+
+    const counts = await getTagUsageCounts();
+    expect(counts[tagA.id]).toBe(2);
+    expect(counts[tagB.id]).toBe(1);
   });
 });

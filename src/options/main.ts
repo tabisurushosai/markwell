@@ -13,6 +13,8 @@ import {
 } from '../shared/ai/usage.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 
+import './tag-manager.js';
+
 function formatTokenCount(value: number): string {
   return value.toLocaleString('ja-JP');
 }
@@ -313,6 +315,12 @@ export class MwOptions extends LitElement {
         </select>
         <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
         ${this.saved ? html`<p class="status">保存しました</p>` : ''}
+      </section>
+
+      <section aria-labelledby="tags-title">
+        <h2 id="tags-title">タグ</h2>
+        <p class="hint">タグの作成・名前変更・統合・削除ができます。検索で絞り込めます。</p>
+        <mw-tag-manager></mw-tag-manager>
       </section>
 
       <section aria-labelledby="ai-usage-title">

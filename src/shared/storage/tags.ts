@@ -8,6 +8,8 @@ import { kvDelete, kvGet, kvListByPrefix, kvSet } from './kv.js';
 const TAG_KEY_PREFIX = 'markwell:tag:';
 const INDEX_BY_TAG_PREFIX = 'markwell:index:by-tag:';
 
+const IndexSchema = z.array(z.string());
+
 const TagColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const StoredTagSchema = TagSchema.extend({
   color: TagColorSchema,
@@ -48,7 +50,23 @@ export async function getTag(id: string): Promise<Tag | null> {
 
 export async function listTags(): Promise<Tag[]> {
   const tags = await kvListByPrefix(TAG_KEY_PREFIX, StoredTagSchema);
-  return tags.sort((a, b) => a.name.localeCompare(b.name));
+  return tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+}
+
+export async function getTagUsageCounts(): Promise<Record<string, number>> {
+  const all = await chrome.storage.local.get(null);
+  const counts: Record<string, number> = {};
+
+  for (const [key, raw] of Object.entries(all)) {
+    if (!key.startsWith(INDEX_BY_TAG_PREFIX)) {
+      continue;
+    }
+    const tagId = key.slice(INDEX_BY_TAG_PREFIX.length);
+    const parsed = IndexSchema.safeParse(raw);
+    counts[tagId] = parsed.success ? parsed.data.length : 0;
+  }
+
+  return counts;
 }
 
 export async function renameTag(id: string, newName: string): Promise<Tag> {
