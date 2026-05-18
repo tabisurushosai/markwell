@@ -10,10 +10,17 @@ type ContentRunCommandMessage = {
 
 initContextMenu();
 
+async function configureSidePanelBehavior(): Promise<void> {
+  await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  void configureSidePanelBehavior();
   void runMigrations();
   void registerContextMenus();
 });
+
+void configureSidePanelBehavior();
 
 chrome.runtime.onMessage.addListener((message: unknown) => {
   if (typeof message !== 'object' || message === null || !('type' in message)) {
@@ -51,8 +58,8 @@ async function handleCommand(command: MarkwellCommand): Promise<void> {
   }
 
   if (command === 'open_synthesis') {
-    if (tab.windowId !== undefined) {
-      await chrome.sidePanel.open({ windowId: tab.windowId });
+    if (tab.id !== undefined) {
+      await chrome.sidePanel.open({ tabId: tab.id });
     }
     return;
   }

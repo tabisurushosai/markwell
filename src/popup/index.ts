@@ -391,10 +391,11 @@ export class MarkwellPopupRoot extends LitElement {
   private handleOpenSidePanel(): void {
     void (async () => {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) {
+      const tabId = tabs[0]?.id;
+      if (tabId === undefined) {
         return;
       }
-      await chrome.sidePanel.open({ windowId: tabs[0].windowId });
+      await chrome.sidePanel.open({ tabId });
     })();
   }
 

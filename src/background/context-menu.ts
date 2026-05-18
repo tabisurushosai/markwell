@@ -58,8 +58,8 @@ async function handleContextMenuClick(
       await sendRunCommandToTab(tab.id, 'highlight_with_note');
       return;
     case MENU_OPEN_SIDE_PANEL:
-      if (tab.windowId !== undefined) {
-        await chrome.sidePanel.open({ windowId: tab.windowId });
+      if (tab.id !== undefined) {
+        await chrome.sidePanel.open({ tabId: tab.id });
       }
       return;
     default:
