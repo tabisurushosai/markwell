@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { applyLicenseKey } from '../shared/license/apply-license-key.js';
 import { resolveStripePaymentLink } from '../shared/license/config.js';
+import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../shared/license/start-trial.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import { getSettings } from '../shared/storage/settings.js';
 
@@ -25,6 +26,10 @@ export class MwPremiumSection extends LitElement {
   @state() private licenseKeyDraft = '';
 
   @state() private applying = false;
+
+  @state() private trialUsed = false;
+
+  @state() private startingTrial = false;
 
   @state() private toastMessage = '';
 
@@ -115,6 +120,12 @@ export class MwPremiumSection extends LitElement {
       color: #ffd34e;
     }
 
+    .trial-note {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: #c88;
+    }
+
     .license-row {
       display: flex;
       flex-wrap: wrap;
@@ -183,6 +194,7 @@ export class MwPremiumSection extends LitElement {
     ]);
     this.paymentLinkUrl = resolveStripePaymentLink(settings.stripe_payment_link);
     this.currentTier = tier;
+    this.trialUsed = await hasUsedTrial();
     this.storedLicenseKey = license.license_key ?? '';
     this.licenseKeyDraft = license.license_key ?? '';
     this.loading = false;
@@ -202,6 +214,29 @@ export class MwPremiumSection extends LitElement {
 
   private handlePurchase(): void {
     void chrome.tabs.create({ url: this.paymentLinkUrl });
+  }
+
+  private async handleStartTrial(): Promise<void> {
+    if (this.startingTrial || this.trialUsed) {
+      return;
+    }
+
+    this.startingTrial = true;
+    try {
+      await startTrial();
+      this.trialUsed = true;
+      this.currentTier = await getCurrentTier();
+      this.showToast('7 日間の Premium トライアルを開始しました');
+    } catch (error) {
+      if (error instanceof TrialAlreadyUsedError) {
+        this.trialUsed = true;
+        this.showToast('トライアルは 1 回のみ', true);
+      } else {
+        this.showToast('トライアルの開始に失敗しました', true);
+      }
+    } finally {
+      this.startingTrial = false;
+    }
   }
 
   private async handleApplyLicense(): Promise<void> {
@@ -236,6 +271,24 @@ export class MwPremiumSection extends LitElement {
         <p class="status-label">現在のプラン</p>
         <p class="status-value">${TIER_LABELS[this.currentTier]}</p>
       </div>
+
+      <section class="section" aria-labelledby="trial-title">
+        <span id="trial-title" class="section-title">Premium トライアル</span>
+        <p class="hint">7 日間、Premium 機能を無料でお試しいただけます。メール登録は不要です。</p>
+        <button
+          type="button"
+          class="btn btn--primary"
+          ?disabled=${this.trialUsed || this.startingTrial || this.currentTier === 'premium'}
+          @click=${() => {
+            void this.handleStartTrial();
+          }}
+        >
+          ${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
+        </button>
+        ${this.trialUsed
+          ? html`<p class="trial-note">トライアルは 1 回のみ</p>`
+          : nothing}
+      </section>
 
       <section class="section" aria-labelledby="purchase-title">
         <span id="purchase-title" class="section-title">Premium を購入</span>
