@@ -52,6 +52,11 @@ export class MwOptions extends LitElement {
       background: #1a1a1a;
     }
 
+    :host-context(html[data-theme='light']) {
+      color: #18181b;
+      background: #f4f4f5;
+    }
+
     .shell {
       display: flex;
       min-height: 100vh;

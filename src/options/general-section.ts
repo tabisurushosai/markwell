@@ -394,7 +394,7 @@ export class MwGeneralSettings extends LitElement {
               ></button>
             `,
           )}
-        </motion.div>
+        </div>
         <p class="hint">新規ハイライトの初期色です。</p>
       </div>
 
@@ -418,7 +418,7 @@ export class MwGeneralSettings extends LitElement {
         <p class="hint">${String(FONT_SCALE_MIN)} 〜 ${String(FONT_SCALE_MAX)} の範囲で UI の文字サイズを調整します。</p>
       </div>
 
-      <motion.div class="field">
+      <div class="field">
         <span class="field-label">密度</span>
         <div class="segmented" role="radiogroup" aria-label="UI 密度">
           ${DENSITY_OPTIONS.map(
@@ -436,7 +436,7 @@ export class MwGeneralSettings extends LitElement {
             `,
           )}
         </div>
-      </motion.div>
+      </div>
 
       <div class="field">
         <span class="field-label">テーマ</span>

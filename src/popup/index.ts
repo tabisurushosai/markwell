@@ -11,12 +11,11 @@ import type { Project } from '../shared/types/project.js';
 import type { Tag } from '../shared/types/tag.js';
 import type { ThemePreference } from '../shared/types/settings.js';
 import {
-  applyDocumentTheme,
   nextThemePreference,
-  resolveEffectiveTheme,
   themeToggleIcon,
   themeToggleLabel,
 } from './utils/theme.js';
+import { applyUiPreferences } from './utils/ui-preferences.js';
 import { DEFAULT_DATE_FILTER, type DateFilterValue } from './utils/date-filter.js';
 import type { ProjectFilterValue } from './utils/tag-filter.js';
 import './components/tag-chips.js';
@@ -111,25 +110,30 @@ export class MarkwellPopupRoot extends LitElement {
 
   private readonly onSystemThemeChange = (): void => {
     if (this.themePreference === 'auto') {
-      this.syncThemeToDocument();
+      void this.syncThemeToDocument();
     }
   };
 
   private async loadTheme(): Promise<void> {
     const settings = await getSettings();
     this.themePreference = settings.theme;
-    this.syncThemeToDocument();
+    await this.syncThemeToDocument();
   }
 
-  private syncThemeToDocument(): void {
-    applyDocumentTheme(resolveEffectiveTheme(this.themePreference));
+  private async syncThemeToDocument(): Promise<void> {
+    const settings = await getSettings();
+    applyUiPreferences({
+      theme: this.themePreference,
+      font_scale: settings.font_scale,
+      density: settings.density,
+    });
   }
 
   private async handleThemeToggle(): Promise<void> {
     const next = nextThemePreference(this.themePreference);
-    await setSettings({ theme: next });
+    const settings = await setSettings({ theme: next });
     this.themePreference = next;
-    this.syncThemeToDocument();
+    applyUiPreferences(settings);
   }
 
   private async loadFilterData(): Promise<void> {
