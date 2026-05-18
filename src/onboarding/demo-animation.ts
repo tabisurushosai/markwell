@@ -38,6 +38,16 @@ export class MwOnboardingDemo extends LitElement {
       animation: cursor-move 4s ease-in-out infinite;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .highlight-group,
+      .selection-group,
+      .cursor-group {
+        animation: none;
+        opacity: 1;
+        transform: translate(212px, 118px);
+      }
+    }
+
     @keyframes cursor-move {
       0%,
       10% {

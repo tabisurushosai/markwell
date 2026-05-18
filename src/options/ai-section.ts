@@ -10,6 +10,7 @@ import {
   setApiKey,
   setSettings,
 } from '../shared/storage/settings.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 type TestStatus =
   | { kind: 'idle' }
@@ -39,7 +40,7 @@ export class MwAiSettings extends LitElement {
 
   private toastTimer: number | undefined;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -238,7 +239,7 @@ export class MwAiSettings extends LitElement {
       color: #f0a0a0;
       border-color: #8b3a3a;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -441,6 +442,7 @@ export class MwAiSettings extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label="キーをテスト"
             ?disabled=${this.testStatus.kind === 'testing'}
             @click=${() => {
               void this.handleTestKey();
@@ -451,6 +453,7 @@ export class MwAiSettings extends LitElement {
           <button
             type="button"
             class="btn btn--danger"
+            aria-label="API キーを削除"
             ?disabled=${!this.hasStoredKey}
             @click=${() => {
               void this.handleDeleteKey();

@@ -12,6 +12,7 @@ import {
   FONT_SCALE_MIN,
 } from './utils/settings-form.js';
 import './blocked-sites-section.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; label: string }> = [
   { id: 'yellow', hex: '#ffd34e', label: 'イエロー' },
@@ -53,7 +54,7 @@ export class MwGeneralSettings extends LitElement {
 
   private toastTimer: number | undefined;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -212,7 +213,7 @@ export class MwGeneralSettings extends LitElement {
       color: #f0a0a0;
       border-color: #8b3a3a;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -373,6 +374,7 @@ export class MwGeneralSettings extends LitElement {
               <button
                 type="button"
                 class="segment-btn ${this.density === option.id ? 'segment-btn--active' : ''}"
+                aria-label=${option.label}
                 aria-pressed=${this.density === option.id}
                 @click=${() => {
                   void this.handleDensityChange(option.id);
@@ -393,6 +395,7 @@ export class MwGeneralSettings extends LitElement {
               <button
                 type="button"
                 class="segment-btn ${this.theme === option.id ? 'segment-btn--active' : ''}"
+                aria-label=${option.label}
                 aria-pressed=${this.theme === option.id}
                 @click=${() => {
                   void this.handleThemeChange(option.id);

@@ -1,5 +1,7 @@
 import { css } from 'lit';
 
+import { accessibilityStyles } from '../shared/styles/accessibility.js';
+
 /**
  * Popup デザイントークン（Lit CSS-in-JS）。
  * 子コンポーネントの Shadow DOM でも継承される CSS 変数を :host に定義する。
@@ -366,4 +368,4 @@ const popupLayoutStyles = css`
   }
 `;
 
-export const popupStyles = [popupDesignTokens, popupLayoutStyles];
+export const popupStyles = [popupDesignTokens, accessibilityStyles, popupLayoutStyles];

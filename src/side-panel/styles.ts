@@ -1,9 +1,11 @@
 import { css } from 'lit';
 
+import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { popupDesignTokens } from '../popup/styles.js';
 
 export const sidePanelStyles = [
   popupDesignTokens,
+  accessibilityStyles,
   css`
     :host {
       display: block;

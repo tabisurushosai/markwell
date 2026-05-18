@@ -362,6 +362,7 @@ export class MarkwellTagChips extends LitElement {
                 <button
                   type="button"
                   class="chip ${selected.has(tag.id) ? 'chip--selected' : ''}"
+                  aria-label=${tag.name}
                   @click=${() => {
                     this.toggleTag(tag.id);
                   }}
@@ -382,6 +383,7 @@ export class MarkwellTagChips extends LitElement {
                       class="preset-btn ${this.dateFilter.preset === preset.id
                         ? 'preset-btn--selected'
                         : ''}"
+                      aria-label=${preset.label}
                       @click=${() => {
                         this.selectPreset(preset.id);
                       }}
@@ -423,6 +425,7 @@ export class MarkwellTagChips extends LitElement {
                       <button
                         type="button"
                         class="apply-btn"
+                        aria-label="適用"
                         ?disabled=${this.customStartDraft === '' || this.customEndDraft === ''}
                         @click=${() => {
                           this.applyCustomRange();

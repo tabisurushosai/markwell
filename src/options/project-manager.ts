@@ -15,6 +15,7 @@ import {
   FALLBACK_PROJECT_EMOJI,
   formatProjectCoverEmoji,
 } from '../shared/utils/project-emoji.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 const DEFAULT_COVER_EMOJI = FALLBACK_PROJECT_EMOJI;
 const FREE_PROJECT_LIMIT = 2;
@@ -54,7 +55,7 @@ export class MwProjectManager extends LitElement {
 
   @state() private editingCoverEmoji = '';
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -279,7 +280,7 @@ export class MwProjectManager extends LitElement {
     .status--error {
       color: #f0a0a0;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -502,6 +503,7 @@ export class MwProjectManager extends LitElement {
       <button
         type="button"
         class="project-name-btn"
+        aria-label=${`プロジェクト名を変更: ${project.name}`}
         title="クリックして名前を変更"
         @click=${() => this.startEdit(project, 'name')}
       >
@@ -547,24 +549,48 @@ export class MwProjectManager extends LitElement {
     if (this.editingProjectId === project.id && this.editingField !== null) {
       return html`
         <div class="inline-form">
-          <button type="button" class="btn btn--primary" @click=${() => void this.handleSaveEdit(project.id)}>
+          <button
+            type="button"
+            class="btn btn--primary"
+            aria-label="保存"
+            @click=${() => void this.handleSaveEdit(project.id)}
+          >
             保存
           </button>
-          <button type="button" class="btn" @click=${() => this.cancelEdit()}>キャンセル</button>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelEdit()}>
+            キャンセル
+          </button>
         </div>
       `;
     }
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" @click=${() => this.startEdit(project, 'name')}>名前変更</button>
-        <button type="button" class="btn" @click=${() => this.startEdit(project, 'description')}>
+        <button type="button" class="btn" aria-label="名前変更" @click=${() => this.startEdit(project, 'name')}>
+          名前変更
+        </button>
+        <button
+          type="button"
+          class="btn"
+          aria-label="説明編集"
+          @click=${() => this.startEdit(project, 'description')}
+        >
           説明編集
         </button>
-        <button type="button" class="btn" @click=${() => this.startEdit(project, 'cover_emoji')}>
+        <button
+          type="button"
+          class="btn"
+          aria-label="絵文字変更"
+          @click=${() => this.startEdit(project, 'cover_emoji')}
+        >
           絵文字変更
         </button>
-        <button type="button" class="btn btn--danger" @click=${() => void this.handleDelete(row)}>
+        <button
+          type="button"
+          class="btn btn--danger"
+          aria-label="削除"
+          @click=${() => void this.handleDelete(row)}
+        >
           削除
         </button>
       </div>
@@ -633,7 +659,14 @@ export class MwProjectManager extends LitElement {
             }}
           />
         </div>
-        <button type="button" class="btn btn--primary" @click=${() => void this.handleCreate()}>作成</button>
+        <button
+          type="button"
+          class="btn btn--primary"
+          aria-label="作成"
+          @click=${() => void this.handleCreate()}
+        >
+          作成
+        </button>
       </div>
 
       <div class="toolbar">

@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { ONBOARDING_TRY_PAGE_URL } from '../shared/onboarding/constants.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../shared/license/start-trial.js';
+import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import './demo-animation.js';
 
@@ -20,14 +21,19 @@ export class MwOnboarding extends LitElement {
 
   @state() private dontShowAgain = false;
 
-  static styles = css`
+  static styles = [
+    accessibilityStyles,
+    css`
     :host {
       display: block;
       min-height: 100vh;
       padding: 40px 24px;
       box-sizing: border-box;
-      background: #1a1a1a;
-      color: #e0e0e0;
+      --accent: #ffd34e;
+      --bg: #1a1a1a;
+      --text: #e0e0e0;
+      background: var(--bg);
+      color: var(--text);
       font-family:
         system-ui,
         -apple-system,
@@ -171,7 +177,8 @@ export class MwOnboarding extends LitElement {
       height: 16px;
       accent-color: #ffd34e;
     }
-  `;
+  `,
+  ];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -281,6 +288,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
+          aria-label="次へ"
           @click=${() => {
             this.step = 2;
           }}
@@ -301,6 +309,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
+          aria-label=${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
           ?disabled=${this.trialUsed || this.startingTrial}
           @click=${() => {
             void this.handleStartTrial();
@@ -311,6 +320,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="スキップ"
           ?disabled=${this.startingTrial}
           @click=${() => {
             this.step = 3;
@@ -321,6 +331,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="戻る"
           @click=${() => {
             this.step = 1;
           }}
@@ -357,6 +368,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
+          aria-label="使ってみる"
           @click=${() => {
             void this.handleTryIt();
           }}
@@ -366,6 +378,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="完了"
           @click=${() => {
             void this.completeOnboarding();
           }}
@@ -375,6 +388,7 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="戻る"
           @click=${() => {
             this.step = 2;
           }}

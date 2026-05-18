@@ -10,10 +10,11 @@ import {
   MARKWELL_TERMS_URL,
 } from '../shared/constants/about.js';
 import { APP_VERSION } from '../shared/constants/version.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 @customElement('mw-about-section')
 export class MwAboutSection extends LitElement {
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -69,7 +70,7 @@ export class MwAboutSection extends LitElement {
       font-size: 12px;
       opacity: 0.8;
     }
-  `;
+  `];
 
   private openExternal(url: string): void {
     void chrome.tabs.create({ url });

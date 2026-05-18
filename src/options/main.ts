@@ -34,6 +34,7 @@ import './about-section.js';
 import './premium-section.js';
 import './tag-manager.js';
 import './project-manager.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 type OptionsSection = 'general' | 'ai' | 'tags' | 'projects' | 'premium' | 'data' | 'about';
 
@@ -73,7 +74,7 @@ export class MwOptions extends LitElement {
 
   @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
       min-height: 100vh;
@@ -320,7 +321,7 @@ export class MwOptions extends LitElement {
       background: #ffebee;
       color: #7f1d1d;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -451,6 +452,7 @@ export class MwOptions extends LitElement {
         <button
           type="button"
           class="btn btn--danger"
+          aria-label="当月データをリセット"
           ?disabled=${!hasUsage}
           @click=${() => {
             void this.handleResetUsage();
@@ -565,6 +567,7 @@ export class MwOptions extends LitElement {
                 <button
                   type="button"
                   class="nav-btn ${this.activeSection === section.id ? 'nav-btn--active' : ''}"
+                  aria-label=${section.label}
                   aria-current=${this.activeSection === section.id ? 'page' : 'false'}
                   @click=${() => {
                     this.selectSection(section.id);

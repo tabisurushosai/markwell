@@ -16,6 +16,7 @@ import {
 import { buildHighlightOpenUrl } from '../utils/highlight-url.js';
 import { type DateFilterValue, DEFAULT_DATE_FILTER, isDateFilterActive } from '../utils/date-filter.js';
 import { applyHighlightFilters, isProjectFilterActive, type ProjectFilterValue } from '../utils/tag-filter.js';
+import { accessibilityStyles } from '../../shared/styles/accessibility.js';
 import { popupDesignTokens } from '../styles.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -68,6 +69,7 @@ export class MarkwellAllHighlightsView extends LitElement {
 
   static styles = [
     popupDesignTokens,
+    accessibilityStyles,
     css`
       :host {
         display: block;
@@ -480,6 +482,7 @@ export class MarkwellAllHighlightsView extends LitElement {
         <button
           type="button"
           class="btn ${this.selectionMode ? 'btn--active' : ''}"
+          aria-label=${this.selectionMode ? '選択を終了' : '複数選択'}
           @click=${() => {
             this.toggleSelectionMode();
           }}
@@ -491,6 +494,7 @@ export class MarkwellAllHighlightsView extends LitElement {
               <button
                 type="button"
                 class="btn"
+                aria-label=${this.allVisibleSelected ? '表示分の選択を解除' : '表示分をすべて選択'}
                 ?disabled=${this.results.length === 0}
                 @click=${() => {
                   this.toggleSelectAllVisible();
@@ -518,6 +522,7 @@ export class MarkwellAllHighlightsView extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label="プロジェクトに追加"
             ?disabled=${this.bulkWorking || this.projects.length === 0}
             @click=${() => {
               this.openBulkPanel('project');
@@ -528,6 +533,7 @@ export class MarkwellAllHighlightsView extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label="タグ追加"
             ?disabled=${this.bulkWorking || tags.length === 0}
             @click=${() => {
               this.openBulkPanel('tags');
@@ -538,6 +544,7 @@ export class MarkwellAllHighlightsView extends LitElement {
           <button
             type="button"
             class="btn btn--danger"
+            aria-label="削除"
             ?disabled=${this.bulkWorking}
             @click=${() => {
               this.handleBulkDelete();
@@ -573,6 +580,7 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
+                    aria-label="追加する"
                     ?disabled=${this.bulkWorking || this.bulkProjectId === ''}
                     @click=${() => {
                       void this.handleBulkAddToProject();
@@ -583,6 +591,7 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
+                    aria-label="キャンセル"
                     @click=${() => {
                       this.bulkPanel = 'none';
                     }}
@@ -619,6 +628,7 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
+                    aria-label="タグを追加"
                     ?disabled=${this.bulkWorking || this.bulkTagIds.length === 0}
                     @click=${() => {
                       void this.handleBulkAddTags();
@@ -629,6 +639,7 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
+                    aria-label="キャンセル"
                     @click=${() => {
                       this.bulkPanel = 'none';
                       this.bulkTagIds = [];

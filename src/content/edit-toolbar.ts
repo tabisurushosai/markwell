@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { deleteHighlight, getHighlight, updateHighlight } from '../shared/storage/highlights.js';
 import { setSettings } from '../shared/storage/settings.js';
 import type { HighlightColor } from '../shared/types/highlight.js';
@@ -27,9 +28,14 @@ const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string }> = [
 
 @customElement('markwell-edit-toolbar')
 export class MarkwellEditToolbar extends LitElement {
-  static override styles = css`
+  static override styles = [
+    accessibilityStyles,
+    css`
     :host {
       all: initial;
+      --accent: #ffd34e;
+      --text: #e0e0e0;
+      --bg: #1a1a1a;
       position: fixed;
       z-index: 2147483647;
       font-family:
@@ -70,6 +76,20 @@ export class MarkwellEditToolbar extends LitElement {
       transform: scale(1.08);
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .color-dot:hover {
+        transform: none;
+      }
+    }
+
+    .color-dot:focus-visible,
+    .note-btn:focus-visible,
+    .delete-btn:focus-visible,
+    .close-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     .color-dot.selected {
       border-color: #fff;
       box-shadow: 0 0 0 2px #7eb6ff;
@@ -103,7 +123,8 @@ export class MarkwellEditToolbar extends LitElement {
       font-weight: 700;
       padding: 2px 8px;
     }
-  `;
+  `,
+  ];
 
   @property({ type: String })
   currentColor: HighlightColor = 'yellow';
@@ -131,7 +152,7 @@ export class MarkwellEditToolbar extends LitElement {
                 class="color-dot ${option.id === this.currentColor ? 'selected' : ''}"
                 style="background-color: ${option.hex}"
                 title=${option.id}
-                aria-label=${`Change color to ${option.id}`}
+                aria-label=${`色を ${option.id} に変更`}
                 aria-pressed=${option.id === this.currentColor ? 'true' : 'false'}
                 @click=${() => {
                   this.onColorSelect?.(option.id);
@@ -143,6 +164,7 @@ export class MarkwellEditToolbar extends LitElement {
         <button
           type="button"
           class="note-btn"
+          aria-label="メモ"
           @click=${() => {
             this.onNoteRequest?.();
           }}
@@ -152,6 +174,7 @@ export class MarkwellEditToolbar extends LitElement {
         <button
           type="button"
           class="delete-btn"
+          aria-label="削除"
           @click=${() => {
             this.onDeleteRequest?.();
           }}
@@ -161,7 +184,7 @@ export class MarkwellEditToolbar extends LitElement {
         <button
           type="button"
           class="close-btn"
-          aria-label="Close"
+          aria-label="閉じる"
           @click=${() => {
             this.onCloseRequest?.();
           }}

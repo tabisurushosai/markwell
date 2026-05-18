@@ -15,6 +15,7 @@ import {
   bulkDeleteTags,
   bulkUpdateTagColors,
 } from './utils/bulk-tag-operations.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 const DEFAULT_TAG_COLOR = '#ffd34e';
 
@@ -51,7 +52,7 @@ export class MwTagManager extends LitElement {
 
   @state() private bulkWorking = false;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -320,7 +321,7 @@ export class MwTagManager extends LitElement {
     .status--error {
       color: #f0a0a0;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -654,6 +655,7 @@ export class MwTagManager extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="色変更"
           @click=${() => this.openColorPicker(tag.id)}
         >
           色変更
@@ -696,6 +698,7 @@ export class MwTagManager extends LitElement {
       <button
         type="button"
         class="tag-name-btn"
+        aria-label=${`タグ名を変更: ${tag.name}`}
         title="クリックして名前を変更"
         @click=${() => this.startRename(tag)}
       >
@@ -715,6 +718,7 @@ export class MwTagManager extends LitElement {
         <button
           type="button"
           class="btn"
+          aria-label="一括色変更"
           ?disabled=${this.bulkWorking}
           @click=${() => {
             this.openBulkColorPicker();
@@ -735,6 +739,7 @@ export class MwTagManager extends LitElement {
         <button
           type="button"
           class="btn btn--danger"
+          aria-label="一括削除"
           ?disabled=${this.bulkWorking}
           @click=${() => {
             void this.handleBulkDelete();
@@ -752,10 +757,17 @@ export class MwTagManager extends LitElement {
     if (this.editingTagId === tag.id) {
       return html`
         <div class="inline-form">
-          <button type="button" class="btn btn--primary" @click=${() => void this.handleRename(tag.id)}>
+          <button
+            type="button"
+            class="btn btn--primary"
+            aria-label="保存"
+            @click=${() => void this.handleRename(tag.id)}
+          >
             保存
           </button>
-          <button type="button" class="btn" @click=${() => this.cancelEdit()}>キャンセル</button>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelEdit()}>
+            キャンセル
+          </button>
         </div>
       `;
     }
@@ -787,28 +799,39 @@ export class MwTagManager extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label="統合する"
             ?disabled=${this.mergeTargetId === ''}
             @click=${() => void this.handleMerge(tag.id)}
           >
             統合する
           </button>
-          <button type="button" class="btn" @click=${() => this.cancelMerge()}>キャンセル</button>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelMerge()}>
+            キャンセル
+          </button>
         </div>
       `;
     }
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" @click=${() => this.startRename(tag)}>名前変更</button>
+        <button type="button" class="btn" aria-label="名前変更" @click=${() => this.startRename(tag)}>
+          名前変更
+        </button>
         <button
           type="button"
           class="btn"
+          aria-label="他のタグに統合"
           ?disabled=${this.tagRows.length < 2}
           @click=${() => this.startMerge(tag.id)}
         >
           他のタグに統合
         </button>
-        <button type="button" class="btn btn--danger" @click=${() => void this.handleDelete(tag, usageCount)}>
+        <button
+          type="button"
+          class="btn btn--danger"
+          aria-label="削除"
+          @click=${() => void this.handleDelete(tag, usageCount)}
+        >
           削除
         </button>
       </div>
@@ -861,7 +884,14 @@ export class MwTagManager extends LitElement {
             }}
           />
         </div>
-        <button type="button" class="btn btn--primary" @click=${() => void this.handleCreate()}>作成</button>
+        <button
+          type="button"
+          class="btn btn--primary"
+          aria-label="作成"
+          @click=${() => void this.handleCreate()}
+        >
+          作成
+        </button>
       </div>
 
       <div class="toolbar">
@@ -883,6 +913,7 @@ export class MwTagManager extends LitElement {
               <button
                 type="button"
                 class="btn ${this.selectionMode ? 'btn--active' : ''}"
+                aria-label=${this.selectionMode ? '選択を終了' : '複数選択'}
                 @click=${() => {
                   this.toggleSelectionMode();
                 }}
@@ -894,6 +925,9 @@ export class MwTagManager extends LitElement {
                     <button
                       type="button"
                       class="btn"
+                      aria-label=${this.allVisibleSelected
+                        ? '表示分の選択を解除'
+                        : '表示分をすべて選択'}
                       ?disabled=${rows.length === 0}
                       @click=${() => {
                         this.toggleSelectAllVisible();

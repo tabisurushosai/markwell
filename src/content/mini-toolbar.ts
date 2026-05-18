@@ -5,6 +5,7 @@ import type { HighlightColor } from '../shared/types/highlight.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { TierLimitError } from '../shared/storage/highlights.js';
 import { saveHighlightFromRange } from './highlight-save.js';
+import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { openUpgradeModal } from '../shared/components/upgrade-modal.js';
 import { MARKWELL_SELECTION_EVENT, type MarkwellSelectionDetail } from './selection.js';
 
@@ -20,9 +21,14 @@ const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string }> = [
 
 @customElement('markwell-toolbar')
 export class MarkwellToolbar extends LitElement {
-  static override styles = css`
+  static override styles = [
+    accessibilityStyles,
+    css`
     :host {
       all: initial;
+      --accent: #ffd34e;
+      --text: #e0e0e0;
+      --bg: #1a1a1a;
       position: fixed;
       z-index: 2147483647;
       font-family:
@@ -63,6 +69,19 @@ export class MarkwellToolbar extends LitElement {
       transform: scale(1.08);
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .color-dot:hover {
+        transform: none;
+      }
+    }
+
+    .color-dot:focus-visible,
+    .note-btn:focus-visible,
+    .close-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     .note-btn,
     .close-btn {
       border: none;
@@ -85,7 +104,8 @@ export class MarkwellToolbar extends LitElement {
       font-weight: 700;
       padding: 2px 8px;
     }
-  `;
+  `,
+  ];
 
   @property({ attribute: false })
   onColorSelect: ((color: HighlightColor) => void) | null = null;
@@ -119,7 +139,7 @@ export class MarkwellToolbar extends LitElement {
                 class="color-dot"
                 style="background-color: ${option.hex}"
                 title=${option.id}
-                aria-label=${`Highlight ${option.id}`}
+                aria-label=${`${option.id} でハイライト`}
                 @click=${() => {
                   this.handleColorClick(option.id);
                 }}
@@ -130,6 +150,7 @@ export class MarkwellToolbar extends LitElement {
         <button
           type="button"
           class="note-btn"
+          aria-label="メモ追加"
           @click=${() => {
             this.handleNoteClick();
           }}
@@ -139,7 +160,7 @@ export class MarkwellToolbar extends LitElement {
         <button
           type="button"
           class="close-btn"
-          aria-label="Close"
+          aria-label="閉じる"
           @click=${() => {
             this.handleCloseClick();
           }}

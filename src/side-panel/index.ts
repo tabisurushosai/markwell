@@ -847,6 +847,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         <button
           type="button"
           class="btn export-menu-trigger"
+          aria-label="エクスポート"
           aria-expanded=${isOpen}
           aria-haspopup="menu"
           @click=${(event: Event) => {
@@ -869,6 +870,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                       type="button"
                       class="export-menu-item"
                       role="menuitem"
+                      aria-label=${label}
                       @click=${(event: Event) => {
                         this.handleExportFormat(format, markdown, createdAt, model, event);
                       }}
@@ -1055,6 +1057,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       <button
         type="button"
         class="btn"
+        aria-label="コピー"
         @click=${() => {
           void this.copyQuotesMarkdown();
         }}
@@ -1064,6 +1067,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       <button
         type="button"
         class="btn"
+        aria-label=".md ダウンロード"
         @click=${() => {
           this.downloadQuotesMarkdown();
         }}
@@ -1190,6 +1194,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           type="button"
           class="bottom-tab ${this.activeBottomTab === 'synthesis' ? 'bottom-tab--active' : ''}"
           role="tab"
+          aria-label=${formatAiButtonTitle('ハイライト合成', this.currentTier, 'synthesis')}
           aria-selected=${this.activeBottomTab === 'synthesis'}
           aria-controls="synthesis-panel"
           id="tab-synthesis"
@@ -1204,6 +1209,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           type="button"
           class="bottom-tab ${this.activeBottomTab === 'qa' ? 'bottom-tab--active' : ''}"
           role="tab"
+          aria-label=${formatAiButtonTitle('プロジェクト Q&A', this.currentTier, 'qa')}
           aria-selected=${this.activeBottomTab === 'qa'}
           aria-controls="qa-panel"
           id="tab-qa"
@@ -1240,6 +1246,11 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label=${this.synthesizing
+              ? '生成中…'
+              : this.resultVisible && this.resultPanelMode === 'synthesis'
+                ? '再生成'
+                : '合成する'}
             title=${formatAiButtonTitle('ハイライトを AI で合成', this.currentTier, 'synthesis')}
             ?disabled=${this.synthesizing || this.highlights.length === 0}
             @click=${() => {
@@ -1259,6 +1270,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label="キャンセル"
             ?disabled=${!this.synthesizing && !this.extractingQuotes && !this.resultVisible}
             @click=${() => {
               this.handleCancelSynthesis();
@@ -1269,6 +1281,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label="保存履歴を見る"
             ?disabled=${this.selectedProjectId === ''}
             @click=${() => {
               void this.openHistoryModal();
@@ -1279,6 +1292,9 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label=${this.extractingQuotes
+              ? '抽出中…'
+              : formatAiButtonTitle('印象的な引用を AI で抽出', this.currentTier, 'quote_extract')}
             title=${formatAiButtonTitle('印象的な引用を AI で抽出', this.currentTier, 'quote_extract')}
             ?disabled=${this.extractingQuotes || this.highlights.length === 0}
             @click=${() => {
@@ -1349,6 +1365,9 @@ export class MarkwellSidePanelRoot extends LitElement {
             <button
               type="submit"
               class="btn btn--primary"
+              aria-label=${this.qaStreaming
+                ? '応答中…'
+                : formatAiButtonTitle('ハイライトについて質問', this.currentTier, 'qa')}
               title=${formatAiButtonTitle('ハイライトについて質問', this.currentTier, 'qa')}
               ?disabled=${this.qaStreaming ||
               this.qaInput.trim() === '' ||
@@ -1361,6 +1380,7 @@ export class MarkwellSidePanelRoot extends LitElement {
             <button
               type="button"
               class="btn"
+              aria-label="停止"
               ?disabled=${!this.qaStreaming}
               @click=${() => {
                 this.handleCancelQa();
@@ -1494,6 +1514,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="card-btn"
+                    aria-label="ジャンプ"
                     @click=${() => {
                       void this.handleJump(highlight);
                     }}
@@ -1503,6 +1524,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="card-btn card-btn--exclude"
+                    aria-label="除外"
                     @click=${() => {
                       void this.handleExcludeFromProject(highlight);
                     }}
@@ -1633,6 +1655,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                               <button
                                 type="button"
                                 class="history-card__main"
+                                aria-label=${`合成履歴を表示: ${this.formatHistoryDate(synthesis.created_at)}`}
                                 @click=${() => {
                                   this.viewSynthesisFromHistory(synthesis);
                                 }}
@@ -1655,6 +1678,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 <button
                                   type="button"
                                   class="btn"
+                                  aria-label="Markdown コピー"
                                   @click=${(event: Event) => {
                                     void this.copySynthesisFromHistory(synthesis, event);
                                   }}
@@ -1671,6 +1695,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 <button
                                   type="button"
                                   class="btn card-btn--exclude"
+                                  aria-label="削除"
                                   @click=${(event: Event) => {
                                     void this.deleteSynthesisFromHistory(synthesis, event);
                                   }}
@@ -1687,6 +1712,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="btn btn--primary"
+                    aria-label="閉じる"
                     @click=${() => {
                       this.closeHistoryModal();
                     }}
@@ -1745,6 +1771,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="btn"
+                    aria-label="キャンセル"
                     @click=${() => {
                       this.closeCreateDialog();
                     }}
@@ -1754,6 +1781,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="btn btn--primary"
+                    aria-label="作成"
                     @click=${() => {
                       void this.handleCreateProject();
                     }}

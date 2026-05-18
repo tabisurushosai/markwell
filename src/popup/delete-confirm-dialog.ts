@@ -133,10 +133,10 @@ export class MarkwellDeleteConfirmDialog extends LitElement {
         >
           <p id="markwell-popup-delete-title" class="message">${this.message}</p>
           <div class="actions">
-            <button type="button" class="cancel-btn" @click=${this.handleCancel}>
+            <button type="button" class="cancel-btn" aria-label="キャンセル" @click=${this.handleCancel}>
               キャンセル
             </button>
-            <button type="button" class="confirm-btn" @click=${this.handleConfirm}>
+            <button type="button" class="confirm-btn" aria-label="削除" @click=${this.handleConfirm}>
               削除
             </button>
           </div>

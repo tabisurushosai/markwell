@@ -12,6 +12,7 @@ import {
 } from '../shared/license/trial-countdown.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import { getSettings } from '../shared/storage/settings.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 type Tier = 'free' | 'trial' | 'premium';
 
@@ -49,7 +50,7 @@ export class MwPremiumSection extends LitElement {
 
   private toastTimer: number | undefined;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -197,7 +198,7 @@ export class MwPremiumSection extends LitElement {
       color: #f0a0a0;
       border-color: #8b3a3a;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -327,6 +328,7 @@ export class MwPremiumSection extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
+          aria-label=${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
           ?disabled=${this.trialUsed || this.startingTrial || this.currentTier === 'premium'}
           @click=${() => {
             void this.handleStartTrial();
@@ -344,7 +346,12 @@ export class MwPremiumSection extends LitElement {
         <p class="purchase-note">
           決済完了後、メールにライセンスキーが届きます。それをここに貼り付けてください。
         </p>
-        <button type="button" class="btn btn--primary" @click=${() => this.handlePurchase()}>
+        <button
+          type="button"
+          class="btn btn--primary"
+          aria-label="$5 USD で Premium 購入"
+          @click=${() => this.handlePurchase()}
+        >
           $5 USD で Premium 購入
         </button>
         <p class="hint">Stripe の決済ページが新しいタブで開きます。</p>
@@ -376,6 +383,7 @@ export class MwPremiumSection extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label=${this.applying ? '適用中…' : '適用'}
             ?disabled=${!canApply}
             @click=${() => {
               void this.handleApplyLicense();

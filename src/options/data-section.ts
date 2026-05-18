@@ -8,6 +8,7 @@ import {
   downloadJsonFile,
   formatImportResultMessage,
 } from './utils/export-download.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 type ImportMode = 'merge' | 'replace';
 
@@ -35,7 +36,7 @@ export class MwDataSection extends LitElement {
 
   private toastTimer: number | undefined;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -232,7 +233,7 @@ export class MwDataSection extends LitElement {
       justify-content: flex-end;
       gap: 8px;
     }
-  `;
+  `];
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -419,6 +420,7 @@ export class MwDataSection extends LitElement {
             <button
               type="button"
               class="btn"
+              aria-label="キャンセル"
               ?disabled=${this.deleting}
               @click=${() => {
                 this.closeDeleteDialog();
@@ -429,6 +431,7 @@ export class MwDataSection extends LitElement {
             <button
               type="button"
               class="btn btn--danger"
+              aria-label=${this.deleting ? '削除中…' : '削除する'}
               ?disabled=${!canConfirm}
               @click=${() => {
                 void this.handleDeleteAllData();
@@ -455,6 +458,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label=${this.exporting ? 'エクスポート中…' : 'エクスポート'}
             ?disabled=${this.exporting}
             @click=${() => {
               void this.handleExport();
@@ -481,6 +485,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="btn"
+            aria-label="ファイルを選択"
             ?disabled=${this.importing}
             @click=${() => {
               this.openFilePicker();
@@ -496,6 +501,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="mode-btn ${this.importMode === 'merge' ? 'mode-btn--active' : ''}"
+            aria-label="マージ"
             aria-pressed=${this.importMode === 'merge'}
             @click=${() => {
               this.handleModeChange('merge');
@@ -506,6 +512,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="mode-btn ${this.importMode === 'replace' ? 'mode-btn--active' : ''}"
+            aria-label="置換"
             aria-pressed=${this.importMode === 'replace'}
             @click=${() => {
               this.handleModeChange('replace');
@@ -521,6 +528,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="btn ${this.importMode === 'replace' ? 'btn--danger' : 'btn--primary'}"
+            aria-label=${this.importing ? 'インポート中…' : 'インポート'}
             ?disabled=${!canImport}
             @click=${() => {
               void this.handleImport();
@@ -540,6 +548,7 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="btn btn--danger"
+            aria-label="全データを削除"
             ?disabled=${this.deleting}
             @click=${() => {
               this.openDeleteDialog();

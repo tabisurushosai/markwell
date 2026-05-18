@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { isValidRegExp } from '../shared/utils/regexp.js';
+import { optionsAccessibilityStyles } from './styles.js';
 
 @customElement('mw-blocked-sites')
 export class MwBlockedSites extends LitElement {
@@ -24,7 +25,7 @@ export class MwBlockedSites extends LitElement {
 
   private toastTimer: number | undefined;
 
-  static styles = css`
+  static styles = [...optionsAccessibilityStyles, css`
     :host {
       display: block;
     }
@@ -162,7 +163,7 @@ export class MwBlockedSites extends LitElement {
       color: #f0a0a0;
       border-color: #8b3a3a;
     }
-  `;
+  `];
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -349,6 +350,7 @@ export class MwBlockedSites extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label="追加"
             @click=${() => {
               void this.handleAddDomain();
             }}
@@ -381,6 +383,7 @@ export class MwBlockedSites extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            aria-label="追加"
             ?disabled=${!canAddPattern}
             @click=${() => {
               void this.handleAddPattern();

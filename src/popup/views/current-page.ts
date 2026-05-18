@@ -18,6 +18,7 @@ import { listTags } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
+import { accessibilityStyles } from '../../shared/styles/accessibility.js';
 import { popupDesignTokens } from '../styles.js';
 import {
   fetchPageTextFromActiveTab,
@@ -54,6 +55,7 @@ export class MarkwellCurrentPageView extends LitElement {
 
   static styles = [
     popupDesignTokens,
+    accessibilityStyles,
     css`
     :host {
       display: block;
@@ -345,6 +347,7 @@ export class MarkwellCurrentPageView extends LitElement {
             <button
               type="button"
               class="dialog-btn"
+              aria-label="閉じる"
               @click=${() => {
                 this.closeSummaryModal();
               }}
@@ -354,6 +357,7 @@ export class MarkwellCurrentPageView extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
+              aria-label="コピー"
               @click=${() => {
                 void this.copySummary();
               }}
@@ -398,6 +402,7 @@ export class MarkwellCurrentPageView extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
+              aria-label="閉じる"
               @click=${() => {
                 this.closePremiumModal();
               }}
@@ -456,6 +461,9 @@ export class MarkwellCurrentPageView extends LitElement {
         <button
           type="button"
           class="summary-btn"
+          aria-label=${this.summarizing
+            ? '要約中…'
+            : formatAiButtonTitle('このページの本文を AI で要約', this.licenseTier, 'page_summary')}
           title=${formatAiButtonTitle('このページの本文を AI で要約', this.licenseTier, 'page_summary')}
           ?disabled=${this.summarizing}
           @click=${() => {

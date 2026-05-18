@@ -184,10 +184,10 @@ export class MarkwellNoteDialog extends LitElement {
             @input=${this.handleInput}
           ></textarea>
           <div class="actions">
-            <button type="button" class="cancel-btn" @click=${this.handleCancel}>
+            <button type="button" class="cancel-btn" aria-label="キャンセル" @click=${this.handleCancel}>
               キャンセル
             </button>
-            <button type="button" class="save-btn" @click=${this.handleSave}>
+            <button type="button" class="save-btn" aria-label="保存" @click=${this.handleSave}>
               保存
             </button>
           </div>

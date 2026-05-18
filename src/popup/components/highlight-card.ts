@@ -41,6 +41,7 @@ import {
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
+import { accessibilityStyles } from '../../shared/styles/accessibility.js';
 import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
@@ -111,6 +112,7 @@ export class MarkwellHighlightCard extends LitElement {
 
   static styles = [
     popupDesignTokens,
+    accessibilityStyles,
     css`
     :host {
       display: block;
@@ -785,6 +787,7 @@ export class MarkwellHighlightCard extends LitElement {
                           ? 'tag-suggestion--active'
                           : ''}"
                         role="option"
+                        aria-label=${formatTagAutocompleteLabel(suggestion)}
                         aria-selected=${isActive}
                         @click=${() => {
                           void this.applyTagSuggestion(suggestion);
@@ -802,6 +805,7 @@ export class MarkwellHighlightCard extends LitElement {
                       type="button"
                       class="tag-suggestion ${isActive ? 'tag-suggestion--active' : ''}"
                       role="option"
+                      aria-label=${suggestion.tag.name}
                       aria-selected=${isActive}
                       @click=${() => {
                         void this.applyTagSuggestion(suggestion);
@@ -1219,6 +1223,7 @@ export class MarkwellHighlightCard extends LitElement {
                 type="button"
                 class="action-btn action-btn--icon"
                 title="タグを追加"
+                aria-label="タグを追加"
                 aria-expanded=${this.tagMenuOpen}
                 aria-haspopup="listbox"
                 @click=${(event: Event) => {
@@ -1234,6 +1239,7 @@ export class MarkwellHighlightCard extends LitElement {
                 type="button"
                 class="action-btn"
                 title="クリック: テキスト / 長押し・右クリック: Markdown"
+                aria-label="コピー"
                 @pointerdown=${(event: PointerEvent) => {
                   this.onCopyPointerDown(event);
                 }}
@@ -1268,6 +1274,7 @@ export class MarkwellHighlightCard extends LitElement {
                         type="button"
                         class="copy-menu-item"
                         role="menuitem"
+                        aria-label="Markdown 形式でコピー"
                         @click=${() => {
                           void this.handleCopyMarkdown();
                         }}
@@ -1281,6 +1288,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="action-btn action-btn--danger"
+              aria-label="削除"
               @click=${(event: Event) => {
                 event.stopPropagation();
                 void this.handleDelete();
@@ -1292,6 +1300,7 @@ export class MarkwellHighlightCard extends LitElement {
               type="button"
               class="action-btn"
               title=${`翻訳先: ${getTranslateLanguageLabel(this.translateTargetLang)}`}
+              aria-label=${this.translating ? '翻訳中' : '翻訳'}
               ?disabled=${this.translating}
               @click=${(event: Event) => {
                 void this.handleTranslate(event);
@@ -1303,6 +1312,7 @@ export class MarkwellHighlightCard extends LitElement {
               type="button"
               class="action-btn"
               title=${formatAiButtonTitle('選択テキストを言い換え', this.licenseTier, 'rephrase')}
+              aria-label=${this.rephrasing ? '言い換え中' : '言い換え'}
               ?disabled=${this.rephrasing}
               @click=${(event: Event) => {
                 this.handleRephraseClick(event);
@@ -1322,6 +1332,7 @@ export class MarkwellHighlightCard extends LitElement {
                 this.licenseTier,
                 'fact_check',
               )}
+              aria-label=${this.factChecking ? 'ファクトチェック中' : 'ファクトチェック'}
               ?disabled=${this.factChecking}
               @click=${(event: Event) => {
                 this.handleFactCheckClick(event);
@@ -1339,6 +1350,7 @@ export class MarkwellHighlightCard extends LitElement {
                       this.licenseTier,
                       'related',
                     )}
+                    aria-label="関連ハイライト"
                     @click=${(event: Event) => {
                       this.handleFindRelated(event);
                     }}
@@ -1353,6 +1365,7 @@ export class MarkwellHighlightCard extends LitElement {
                   <button
                     type="button"
                     class="action-btn"
+                    aria-label="ジャンプ"
                     @click=${(event: Event) => {
                       event.stopPropagation();
                       void this.handleJump();
@@ -1410,6 +1423,7 @@ export class MarkwellHighlightCard extends LitElement {
                   type="button"
                   class="style-btn"
                   role="option"
+                  aria-label=${getRephraseStyleLabel(style)}
                   @click=${() => {
                     void this.handleRephraseStyleSelect(style);
                   }}
@@ -1423,6 +1437,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn"
+              aria-label="キャンセル"
               @click=${() => {
                 this.closeRephraseStyleModal();
               }}
@@ -1469,6 +1484,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn"
+              aria-label="閉じる"
               @click=${() => {
                 this.closeRephraseResultModal();
               }}
@@ -1478,6 +1494,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
+              aria-label="コピー"
               ?disabled=${this.rephrasing || this.rephraseResultText === ''}
               @click=${() => {
                 void this.copyRephraseResult();
@@ -1550,6 +1567,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn"
+              aria-label="閉じる"
               @click=${() => {
                 this.closeFactCheckModal();
               }}
@@ -1559,6 +1577,7 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
+              aria-label="コピー"
               ?disabled=${this.factChecking || result === null}
               @click=${() => {
                 void this.copyFactCheckResult();

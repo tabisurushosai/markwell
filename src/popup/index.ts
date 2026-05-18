@@ -623,6 +623,7 @@ export class MarkwellPopupRoot extends LitElement {
               type="button"
               class="tab"
               role="tab"
+              aria-label=${tab.label}
               aria-selected=${this.activeTab === tab.id}
               @click=${() => {
                 this.selectTab(tab.id);
@@ -670,6 +671,7 @@ export class MarkwellPopupRoot extends LitElement {
         <button
           type="button"
           class="footer-btn"
+          aria-label="設定"
           @click=${() => {
             this.handleOpenOptions();
           }}
@@ -679,6 +681,7 @@ export class MarkwellPopupRoot extends LitElement {
         <button
           type="button"
           class="footer-btn"
+          aria-label="Side Panel を開く"
           @click=${() => {
             this.handleOpenSidePanel();
           }}
@@ -688,6 +691,7 @@ export class MarkwellPopupRoot extends LitElement {
         <button
           type="button"
           class="footer-btn"
+          aria-label="ヘルプ"
           @click=${() => {
             this.handleOpenHelp();
           }}
