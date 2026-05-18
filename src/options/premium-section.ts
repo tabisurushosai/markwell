@@ -13,6 +13,8 @@ import {
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import { toastFrom } from '../shared/components/toast.js';
 import { getSettings } from '../shared/storage/settings.js';
+import { InvalidLicenseKeyError } from '../shared/license/verify.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type Tier = 'free' | 'trial' | 'premium';
@@ -252,6 +254,10 @@ export class MwPremiumSection extends LitElement {
       if (error instanceof LicenseRefundedError) {
         this.currentTier = await getCurrentTier();
         toastFrom(this, error.message, 'error');
+        return;
+      }
+      if (error instanceof InvalidLicenseKeyError) {
+        toastFrom(this, t('error_license_invalid'), 'error');
         return;
       }
       const message = error instanceof Error ? error.message : 'ライセンスキーの適用に失敗しました';

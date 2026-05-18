@@ -84,6 +84,7 @@ import {
   isSynthesisAbortError,
 } from './utils/synthesis-errors.js';
 import './components/markdown-it.js';
+import { t } from '../shared/utils/i18n.js';
 import { sidePanelStyles } from './styles.js';
 
 const NEW_PROJECT_SENTINEL = '__markwell_new_project__';
@@ -668,14 +669,14 @@ export class MarkwellSidePanelRoot extends LitElement {
     event.stopPropagation();
     await deleteSynthesis(synthesis.id);
     this.synthesisHistory = await listSyntheses({ project_id: this.selectedProjectId });
-    this.showStatus('履歴を削除しました');
+    this.showStatus(t('toast_deleted'));
   }
 
   private async copySynthesisFromHistory(synthesis: Synthesis, event: Event): Promise<void> {
     event.stopPropagation();
     try {
       await copySynthesisMarkdown(synthesis.result_markdown);
-      this.showStatus('Markdown をコピーしました');
+      this.showStatus(t('toast_copied'));
     } catch {
       this.showStatus('コピーに失敗しました', 'error');
     }
@@ -978,7 +979,7 @@ export class MarkwellSidePanelRoot extends LitElement {
   private async copyQuotesMarkdown(): Promise<void> {
     try {
       await copySynthesisMarkdown(this.quotesMarkdown);
-      this.showStatus('Markdown をコピーしました');
+      this.showStatus(t('toast_copied'));
     } catch {
       this.showStatus('コピーに失敗しました', 'error');
     }
@@ -1194,7 +1195,7 @@ export class MarkwellSidePanelRoot extends LitElement {
             this.onBottomTabClick('synthesis');
           }}
         >
-          ${formatAiButtonLabel('合成', this.currentTier, 'synthesis')}
+          ${formatAiButtonLabel(t('side_panel_tab_synthesis'), this.currentTier, 'synthesis')}
         </button>
         <button
           type="button"
@@ -1209,7 +1210,7 @@ export class MarkwellSidePanelRoot extends LitElement {
             this.onBottomTabClick('qa');
           }}
         >
-          ${formatAiButtonLabel('💬 Q&A', this.currentTier, 'qa')}
+          ${formatAiButtonLabel(`💬 ${t('side_panel_tab_qa')}`, this.currentTier, 'qa')}
         </button>
       </div>
     `;
@@ -1227,7 +1228,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         <p class="synthesis-label">合成プロンプト</p>
         <textarea
           class="synthesis-prompt"
-          placeholder="プロジェクトのハイライトをどうまとめるか指示してください…"
+          placeholder=${t('synthesis_instruction_placeholder')}
           .value=${this.synthesisPrompt}
           @input=${(event: Event) => {
             this.onSynthesisPromptInput(event);
@@ -1256,29 +1257,29 @@ export class MarkwellSidePanelRoot extends LitElement {
               ? '生成中…'
               : this.resultVisible && this.resultPanelMode === 'synthesis'
                 ? formatAiButtonLabel('再生成', this.currentTier, 'synthesis')
-                : formatAiButtonLabel('合成する', this.currentTier, 'synthesis')}
+                : formatAiButtonLabel(t('synthesis_run'), this.currentTier, 'synthesis')}
           </button>
           <button
             type="button"
             class="btn"
-            aria-label="キャンセル"
+            aria-label=${t('synthesis_cancel')}
             ?disabled=${!this.synthesizing && !this.extractingQuotes && !this.resultVisible}
             @click=${() => {
               this.handleCancelSynthesis();
             }}
           >
-            キャンセル
+            ${t('synthesis_cancel')}
           </button>
           <button
             type="button"
             class="btn"
-            aria-label="保存履歴を見る"
+            aria-label=${t('synthesis_history')}
             ?disabled=${this.selectedProjectId === ''}
             @click=${() => {
               void this.openHistoryModal();
             }}
           >
-            保存履歴を見る
+            ${t('synthesis_history')}
           </button>
           <button
             type="button"
@@ -1294,7 +1295,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           >
             ${this.extractingQuotes
               ? '抽出中…'
-              : formatAiButtonLabel('✂️ 引用抽出', this.currentTier, 'quote_extract')}
+              : formatAiButtonLabel(`✂️ ${t('side_panel_tab_extract')}`, this.currentTier, 'quote_extract')}
           </button>
         </div>
       </div>

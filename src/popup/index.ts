@@ -41,6 +41,7 @@ import {
   CLOSED_UPGRADE_MODAL_STATE,
 } from '../shared/components/upgrade-modal-host.js';
 import type { AiFeature } from '../shared/license/ai-access.js';
+import { t } from '../shared/utils/i18n.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
 import './views/current-page.js';
@@ -574,7 +575,7 @@ export class MarkwellPopupRoot extends LitElement {
         <input
           class="search"
           type="search"
-          placeholder="検索..."
+          placeholder=${t('popup_search_placeholder')}
           .value=${this.searchQuery}
           @input=${(event: Event) => {
             this.onSearchInput(event);
@@ -603,13 +604,13 @@ export class MarkwellPopupRoot extends LitElement {
               type="button"
               class="tab"
               role="tab"
-              aria-label=${tab.label}
+              aria-label=${t(tab.labelKey)}
               aria-selected=${this.activeTab === tab.id}
               @click=${() => {
                 this.selectTab(tab.id);
               }}
             >
-              ${tab.label}
+              ${t(tab.labelKey)}
             </button>
           `,
         )}

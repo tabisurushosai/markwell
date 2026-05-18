@@ -18,6 +18,7 @@ import { type DateFilterValue, DEFAULT_DATE_FILTER, isDateFilterActive } from '.
 import { applyHighlightFilters, isProjectFilterActive, type ProjectFilterValue } from '../utils/tag-filter.js';
 import { accessibilityStyles } from '../../shared/styles/accessibility.js';
 import { dispatchToast, type ToastKind } from '../../shared/components/toast.js';
+import { t } from '../../shared/utils/i18n.js';
 import { popupDesignTokens } from '../styles.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -668,7 +669,7 @@ export class MarkwellAllHighlightsView extends LitElement {
     if (this.results.length === 0) {
       return html`
         <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">条件に一致するハイライトはありません</p>
+        <p class="empty">${t('popup_empty_all')}</p>
       `;
     }
 

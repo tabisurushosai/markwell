@@ -1,5 +1,7 @@
 import { type ZodType } from 'zod';
 
+import { t } from '../utils/i18n.js';
+
 const HIGHLIGHT_TEXT_WARN_BYTES = 100 * 1024;
 
 function hasSelectedText(value: unknown): value is { selected_text: string } {
@@ -50,7 +52,11 @@ export async function kvSet<T>(key: string, value: T, schema: ZodType<T>): Promi
   }
 
   warnIfLargeHighlight(parsed.data);
-  await chrome.storage.local.set({ [key]: parsed.data });
+  try {
+    await chrome.storage.local.set({ [key]: parsed.data });
+  } catch {
+    throw new Error(t('error_storage_full'));
+  }
 }
 
 export async function kvDelete(key: string): Promise<void> {

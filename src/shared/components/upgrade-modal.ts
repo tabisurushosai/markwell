@@ -5,6 +5,7 @@ import type { AiFeature } from '../license/ai-access.js';
 import { navigateToOptionsPremium } from '../license/navigate-options.js';
 import { PREMIUM_FEATURE_CATALOG } from '../license/premium-features.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../license/start-trial.js';
+import { t } from '../utils/i18n.js';
 import { buildUpgradeModalMessage } from './upgrade-modal-helpers.js';
 
 export type UpgradeModalParams = {
@@ -242,10 +243,10 @@ export class MwUpgradeModal extends LitElement {
             void this.handleStartTrial();
           }}
         >
-          ${this.startingTrial ? '開始中…' : 'まず無料トライアル'}
+          ${this.startingTrial ? '開始中…' : t('upgrade_start_trial')}
         </button>
         <button type="button" class="btn-primary" @click=${() => this.handlePurchase()}>
-          今すぐ購入
+          ${t('upgrade_purchase')}
         </button>
       `;
     }
@@ -283,8 +284,13 @@ export class MwUpgradeModal extends LitElement {
             event.stopPropagation();
           }}
         >
-          <h2 id="mw-upgrade-modal-title" class="title">Premium にアップグレード</h2>
+          <h2 id="mw-upgrade-modal-title" class="title">${t('upgrade_modal_title')}</h2>
           <p class="message">${message}</p>
+          ${this.showFeatureList
+            ? html`<p class="message">
+                ${this.trialUsed ? t('upgrade_modal_body_trial_used') : t('upgrade_modal_body_free')}
+              </p>`
+            : nothing}
           ${this.showFeatureList ? this.renderFeatureList() : nothing}
           <div class="actions">${this.renderActions()}</div>
         </div>

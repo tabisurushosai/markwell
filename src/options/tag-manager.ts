@@ -15,6 +15,7 @@ import {
   bulkDeleteTags,
   bulkUpdateTagColors,
 } from './utils/bulk-tag-operations.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 const DEFAULT_TAG_COLOR = '#ffd34e';
@@ -573,7 +574,7 @@ export class MwTagManager extends LitElement {
     }
 
     const confirmed = window.confirm(
-      `「${source.name}」を「${target.name}」に統合しますか？\n元のタグは削除され、ハイライトは統合先タグに付け替えられます。`,
+      t('confirm_merge_tag', [source.name, target.name]),
     );
     if (!confirmed) {
       return;

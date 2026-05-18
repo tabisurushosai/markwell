@@ -9,6 +9,7 @@ import {
   formatImportResultMessage,
 } from './utils/export-download.js';
 import { toastFrom } from '../shared/components/toast.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type ImportMode = 'merge' | 'replace';
@@ -351,9 +352,7 @@ export class MwDataSection extends LitElement {
           }}
         >
           <h2 id="delete-all-title" class="dialog-title">全データを削除</h2>
-          <p class="dialog-message">
-            ハイライト・タグ・プロジェクト・合成・設定など、すべてのローカルデータを削除します。この操作は取り消せません。
-          </p>
+          <p class="dialog-message">${t('confirm_delete_all')}</p>
           <p class="dialog-message"><strong>ライセンスは保持されます。</strong></p>
           <p class="dialog-message">続行するには「DELETE」と入力してください。</p>
           <input

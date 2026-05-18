@@ -11,6 +11,7 @@ import {
   setSettings,
 } from '../shared/storage/settings.js';
 import { toastFrom } from '../shared/components/toast.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type TestStatus =
@@ -362,7 +363,7 @@ export class MwAiSettings extends LitElement {
       <p class="privacy-note">このキーは Markwell サーバには一切送信されません。</p>
 
       <div class="field">
-        <label class="field-label" for="api-key">API キー</label>
+        <label class="field-label" for="api-key">${t('option_api_key')}</label>
         <p class="hint">
           <a href=${GEMINI_API_KEY_URL} target="_blank" rel="noopener noreferrer">
             Google AI Studio で API キーを取得
@@ -402,13 +403,13 @@ export class MwAiSettings extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="キーをテスト"
+            aria-label=${t('option_test_key')}
             ?disabled=${this.testStatus.kind === 'testing'}
             @click=${() => {
               void this.handleTestKey();
             }}
           >
-            キーをテスト
+            ${t('option_test_key')}
           </button>
           <button
             type="button"
@@ -426,7 +427,7 @@ export class MwAiSettings extends LitElement {
       </div>
 
       <div class="field">
-        <label class="field-label" for="gemini-model">モデル</label>
+        <label class="field-label" for="gemini-model">${t('option_model')}</label>
         <select
           id="gemini-model"
           .value=${this.selectedModel}

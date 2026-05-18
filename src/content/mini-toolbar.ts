@@ -7,6 +7,7 @@ import { TierLimitError } from '../shared/storage/highlights.js';
 import { saveHighlightFromRange } from './highlight-save.js';
 import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { openUpgradeModal } from '../shared/components/upgrade-modal.js';
+import { t } from '../shared/utils/i18n.js';
 import { MARKWELL_SELECTION_EVENT, type MarkwellSelectionDetail } from './selection.js';
 
 const TOOLBAR_OFFSET_PX = 8;
@@ -150,17 +151,17 @@ export class MarkwellToolbar extends LitElement {
         <button
           type="button"
           class="note-btn"
-          aria-label="メモ追加"
+          aria-label=${t('mini_toolbar_note')}
           @click=${() => {
             this.handleNoteClick();
           }}
         >
-          メモ追加
+          ${t('mini_toolbar_note')}
         </button>
         <button
           type="button"
           class="close-btn"
-          aria-label="閉じる"
+          aria-label=${t('mini_toolbar_close')}
           @click=${() => {
             this.handleCloseClick();
           }}

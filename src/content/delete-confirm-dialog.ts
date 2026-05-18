@@ -1,6 +1,8 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import { t } from '../shared/utils/i18n.js';
+
 @customElement('markwell-delete-confirm-dialog')
 export class MarkwellDeleteConfirmDialog extends LitElement {
   static override styles = css`
@@ -128,9 +130,7 @@ export class MarkwellDeleteConfirmDialog extends LitElement {
             event.stopPropagation();
           }}
         >
-          <p id="markwell-delete-title" class="message">
-            このハイライトを削除しますか？この操作は取り消せません。
-          </p>
+          <p id="markwell-delete-title" class="message">${t('confirm_delete_highlight')}</p>
           <div class="actions">
             <button type="button" class="cancel-btn" aria-label="キャンセル" @click=${this.handleCancel}>
               キャンセル

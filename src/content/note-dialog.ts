@@ -1,6 +1,8 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
+import { t } from '../shared/utils/i18n.js';
+
 @customElement('markwell-note-dialog')
 export class MarkwellNoteDialog extends LitElement {
   static override styles = css`
@@ -176,7 +178,7 @@ export class MarkwellNoteDialog extends LitElement {
             event.stopPropagation();
           }}
         >
-          <p id="markwell-note-title" class="title">メモ</p>
+          <p id="markwell-note-title" class="title">${t('note_dialog_title')}</p>
           <textarea
             .value=${this.draft}
             placeholder="メモを入力…"
@@ -184,11 +186,11 @@ export class MarkwellNoteDialog extends LitElement {
             @input=${this.handleInput}
           ></textarea>
           <div class="actions">
-            <button type="button" class="cancel-btn" aria-label="キャンセル" @click=${this.handleCancel}>
-              キャンセル
+            <button type="button" class="cancel-btn" aria-label=${t('note_dialog_cancel')} @click=${this.handleCancel}>
+              ${t('note_dialog_cancel')}
             </button>
-            <button type="button" class="save-btn" aria-label="保存" @click=${this.handleSave}>
-              保存
+            <button type="button" class="save-btn" aria-label=${t('note_dialog_save')} @click=${this.handleSave}>
+              ${t('note_dialog_save')}
             </button>
           </div>
         </div>

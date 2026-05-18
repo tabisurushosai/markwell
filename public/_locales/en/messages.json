@@ -4,5 +4,225 @@
   },
   "extension_description": {
     "message": "Highlight web text, then let AI synthesize your highlights into coherent essays. For researchers, writers, and learners."
+  },
+  "popup_tab_current": {
+    "message": "Current page"
+  },
+  "popup_tab_all": {
+    "message": "All"
+  },
+  "popup_tab_projects": {
+    "message": "Projects"
+  },
+  "popup_search_placeholder": {
+    "message": "Search…"
+  },
+  "popup_empty_current": {
+    "message": "No highlights on this page yet. Select text on the page to create one."
+  },
+  "popup_empty_all": {
+    "message": "No highlights match your filters."
+  },
+  "card_action_copy": {
+    "message": "Copy"
+  },
+  "card_action_delete": {
+    "message": "Delete"
+  },
+  "card_action_jump": {
+    "message": "Jump"
+  },
+  "card_action_copy_md": {
+    "message": "Copy as Markdown"
+  },
+  "card_action_translate": {
+    "message": "Translate"
+  },
+  "card_action_rephrase": {
+    "message": "Rephrase"
+  },
+  "mini_toolbar_note": {
+    "message": "Add note"
+  },
+  "mini_toolbar_close": {
+    "message": "Close"
+  },
+  "note_dialog_title": {
+    "message": "Note"
+  },
+  "note_dialog_save": {
+    "message": "Save"
+  },
+  "note_dialog_cancel": {
+    "message": "Cancel"
+  },
+  "side_panel_tab_synthesis": {
+    "message": "Synthesis"
+  },
+  "side_panel_tab_qa": {
+    "message": "Q&A"
+  },
+  "side_panel_tab_extract": {
+    "message": "Extract quotes"
+  },
+  "synthesis_instruction_placeholder": {
+    "message": "Tell AI how to synthesize the highlights in this project (optional)…"
+  },
+  "synthesis_run": {
+    "message": "Run synthesis"
+  },
+  "synthesis_cancel": {
+    "message": "Cancel"
+  },
+  "synthesis_history": {
+    "message": "Saved history"
+  },
+  "options_section_general": {
+    "message": "General"
+  },
+  "options_section_ai": {
+    "message": "AI"
+  },
+  "options_section_tags": {
+    "message": "Tags"
+  },
+  "options_section_projects": {
+    "message": "Projects"
+  },
+  "options_section_premium": {
+    "message": "Premium"
+  },
+  "options_section_data": {
+    "message": "Data"
+  },
+  "options_section_about": {
+    "message": "About"
+  },
+  "option_default_color": {
+    "message": "Default highlight color"
+  },
+  "option_font_scale": {
+    "message": "Font size"
+  },
+  "option_density": {
+    "message": "UI density"
+  },
+  "option_theme": {
+    "message": "Theme"
+  },
+  "option_blocked_domains": {
+    "message": "Blocked domains"
+  },
+  "option_blocked_patterns": {
+    "message": "Blocked URL patterns"
+  },
+  "option_api_key": {
+    "message": "API key"
+  },
+  "option_test_key": {
+    "message": "Test key"
+  },
+  "option_model": {
+    "message": "Model"
+  },
+  "tier_badge_free": {
+    "message": "FREE"
+  },
+  "tier_badge_trial": {
+    "message": "TRIAL"
+  },
+  "tier_badge_premium": {
+    "message": "PREMIUM"
+  },
+  "tier_trial_remaining": {
+    "message": "$days$ left",
+    "placeholders": {
+      "days": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "upgrade_modal_title": {
+    "message": "Upgrade to Premium"
+  },
+  "upgrade_modal_body_free": {
+    "message": "Premium raises your limits and unlocks every AI feature."
+  },
+  "upgrade_modal_body_trial_used": {
+    "message": "You have already used the free trial. Purchase Premium to keep using advanced features."
+  },
+  "upgrade_purchase": {
+    "message": "Buy now"
+  },
+  "upgrade_start_trial": {
+    "message": "Start free trial"
+  },
+  "onboarding_step1_title": {
+    "message": "What is Markwell?"
+  },
+  "onboarding_step1_body": {
+    "message": "Markwell lets you highlight text on the web, organize it with tags, and connect ideas with AI synthesis."
+  },
+  "onboarding_step2_title": {
+    "message": "Try Premium free for 7 days"
+  },
+  "onboarding_step2_body": {
+    "message": "Enjoy Premium features free for seven days. No email sign-up required."
+  },
+  "onboarding_step3_title": {
+    "message": "Keyboard shortcuts"
+  },
+  "onboarding_step3_body": {
+    "message": "Select text on any page and press Alt+H to save a highlight. Press Alt+S to open the synthesis side panel."
+  },
+  "onboarding_finish": {
+    "message": "Get started"
+  },
+  "onboarding_skip": {
+    "message": "Skip"
+  },
+  "confirm_delete_highlight": {
+    "message": "Delete this highlight? This cannot be undone."
+  },
+  "confirm_delete_all": {
+    "message": "Delete all highlights, tags, projects, and syntheses? License data will be kept. This cannot be undone."
+  },
+  "confirm_merge_tag": {
+    "message": "Merge “$source$” into “$target$”? The source tag will be removed and highlights will use the target tag.",
+    "placeholders": {
+      "source": {
+        "content": "$1",
+        "example": "research"
+      },
+      "target": {
+        "content": "$2",
+        "example": "reading"
+      }
+    }
+  },
+  "error_network": {
+    "message": "A network error occurred. Check your connection and try again."
+  },
+  "error_api_key_invalid": {
+    "message": "The API key is invalid."
+  },
+  "error_quota_exceeded": {
+    "message": "API usage limit reached."
+  },
+  "error_license_invalid": {
+    "message": "The license key is invalid."
+  },
+  "error_storage_full": {
+    "message": "Not enough storage space."
+  },
+  "toast_copied": {
+    "message": "Copied"
+  },
+  "toast_saved": {
+    "message": "Saved"
+  },
+  "toast_deleted": {
+    "message": "Deleted"
   }
 }

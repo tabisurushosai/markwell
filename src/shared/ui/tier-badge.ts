@@ -2,8 +2,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import type { LicenseTier } from '../storage/highlights.js';
-
-type TierBadgeLabel = 'FREE' | 'TRIAL' | 'PREMIUM';
+import { t } from '../utils/i18n.js';
 
 @customElement('mw-tier-badge')
 export class MwTierBadge extends LitElement {
@@ -81,14 +80,14 @@ export class MwTierBadge extends LitElement {
     }
   `;
 
-  private get badgeLabel(): TierBadgeLabel {
+  private get badgeLabel(): string {
     if (this.tier === 'premium') {
-      return 'PREMIUM';
+      return t('tier_badge_premium');
     }
     if (this.tier === 'trial') {
-      return 'TRIAL';
+      return t('tier_badge_trial');
     }
-    return 'FREE';
+    return t('tier_badge_free');
   }
 
   private get isClickable(): boolean {
@@ -116,7 +115,7 @@ export class MwTierBadge extends LitElement {
 
   override render() {
     const label = this.badgeLabel;
-    const showTrialDays = label === 'TRIAL' && this.trialRemainingLabel !== '';
+    const showTrialDays = this.tier === 'trial' && this.trialRemainingLabel !== '';
 
     return html`
       <button

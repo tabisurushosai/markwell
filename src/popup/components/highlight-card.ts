@@ -32,6 +32,7 @@ import { createTag } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import { formatHighlightAsMarkdown } from '../utils/format-highlight-markdown.js';
+import { t } from '../../shared/utils/i18n.js';
 import { openDeleteConfirmDialog } from '../delete-confirm-dialog.js';
 import {
   buildTagAutocompleteOptions,
@@ -906,7 +907,7 @@ export class MarkwellHighlightCard extends LitElement {
 
   private async handleCopyPlain(): Promise<void> {
     await navigator.clipboard.writeText(this.highlight.selected_text);
-    this.showToast('コピーしました', 'success');
+    this.showToast(t('toast_copied'), 'success');
   }
 
   private async handleCopyMarkdown(): Promise<void> {
@@ -1237,7 +1238,7 @@ export class MarkwellHighlightCard extends LitElement {
                 type="button"
                 class="action-btn"
                 title="クリック: テキスト / 長押し・右クリック: Markdown"
-                aria-label="コピー"
+                aria-label=${t('card_action_copy')}
                 @pointerdown=${(event: PointerEvent) => {
                   this.onCopyPointerDown(event);
                 }}
@@ -1257,7 +1258,7 @@ export class MarkwellHighlightCard extends LitElement {
                   this.onCopyContextMenu(event);
                 }}
               >
-                コピー
+                ${t('card_action_copy')}
               </button>
               ${this.copyMenuOpen
                 ? html`
@@ -1272,12 +1273,12 @@ export class MarkwellHighlightCard extends LitElement {
                         type="button"
                         class="copy-menu-item"
                         role="menuitem"
-                        aria-label="Markdown 形式でコピー"
+                        aria-label=${t('card_action_copy_md')}
                         @click=${() => {
                           void this.handleCopyMarkdown();
                         }}
                       >
-                        Markdown 形式でコピー
+                        ${t('card_action_copy_md')}
                       </button>
                     </div>
                   `
@@ -1286,31 +1287,31 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="action-btn action-btn--danger"
-              aria-label="削除"
+              aria-label=${t('card_action_delete')}
               @click=${(event: Event) => {
                 event.stopPropagation();
                 void this.handleDelete();
               }}
             >
-              削除
+              ${t('card_action_delete')}
             </button>
             <button
               type="button"
               class="action-btn"
               title=${`翻訳先: ${getTranslateLanguageLabel(this.translateTargetLang)}`}
-              aria-label=${this.translating ? '翻訳中' : '翻訳'}
+              aria-label=${this.translating ? '翻訳中' : t('card_action_translate')}
               ?disabled=${this.translating}
               @click=${(event: Event) => {
                 void this.handleTranslate(event);
               }}
             >
-              ${this.translating ? '翻訳中…' : '🌐 翻訳'}
+              ${this.translating ? '翻訳中…' : `🌐 ${t('card_action_translate')}`}
             </button>
             <button
               type="button"
               class="action-btn"
               title=${formatAiButtonTitle('選択テキストを言い換え', this.licenseTier, 'rephrase')}
-              aria-label=${this.rephrasing ? '言い換え中' : '言い換え'}
+              aria-label=${this.rephrasing ? '言い換え中' : t('card_action_rephrase')}
               ?disabled=${this.rephrasing}
               @click=${(event: Event) => {
                 this.handleRephraseClick(event);
@@ -1319,8 +1320,8 @@ export class MarkwellHighlightCard extends LitElement {
               ${this.rephrasing
                 ? '言い換え中…'
                 : canUseRephrase(this.licenseTier)
-                  ? '✍️ 言い換え'
-                  : '🔒 ✍️ 言い換え'}
+                  ? `✍️ ${t('card_action_rephrase')}`
+                  : `🔒 ✍️ ${t('card_action_rephrase')}`}
             </button>
             <button
               type="button"
@@ -1363,13 +1364,13 @@ export class MarkwellHighlightCard extends LitElement {
                   <button
                     type="button"
                     class="action-btn"
-                    aria-label="ジャンプ"
+                    aria-label=${t('card_action_jump')}
                     @click=${(event: Event) => {
                       event.stopPropagation();
                       void this.handleJump();
                     }}
                   >
-                    ジャンプ
+                    ${t('card_action_jump')}
                   </button>
                 `}
           </div>
@@ -1492,13 +1493,13 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
-              aria-label="コピー"
+              aria-label=${t('card_action_copy')}
               ?disabled=${this.rephrasing || this.rephraseResultText === ''}
               @click=${() => {
                 void this.copyRephraseResult();
               }}
             >
-              コピー
+              ${t('card_action_copy')}
             </button>
           </div>
         </div>
@@ -1575,13 +1576,13 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
-              aria-label="コピー"
+              aria-label=${t('card_action_copy')}
               ?disabled=${this.factChecking || result === null}
               @click=${() => {
                 void this.copyFactCheckResult();
               }}
             >
-              コピー
+              ${t('card_action_copy')}
             </button>
           </div>
         </div>

@@ -1,15 +1,16 @@
 import { GeminiError } from '../../shared/ai/gemini.js';
 import { AiAccessError } from '../../shared/license/ai-access.js';
+import { t } from '../../shared/utils/i18n.js';
 
 export function formatSynthesisError(error: unknown): string {
   if (error instanceof GeminiError) {
     switch (error.kind) {
       case 'AUTH':
-        return '**エラー:** API キーが無効です。設定画面で Gemini API キーを確認してください。';
+        return `**エラー:** ${t('error_api_key_invalid')}`;
       case 'QUOTA':
-        return '**エラー:** API の利用上限に達しました。しばらく待ってから再試行してください。';
+        return `**エラー:** ${t('error_quota_exceeded')}`;
       case 'NETWORK':
-        return '**エラー:** ネットワークに接続できませんでした。';
+        return `**エラー:** ${t('error_network')}`;
       case 'SERVER':
         return '**エラー:** Gemini サーバーエラーです。しばらく待ってから再試行してください。';
       default:

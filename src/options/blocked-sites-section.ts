@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { isValidRegExp } from '../shared/utils/regexp.js';
 import { toastFrom } from '../shared/components/toast.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 @customElement('mw-blocked-sites')
@@ -287,7 +288,7 @@ export class MwBlockedSites extends LitElement {
 
     return html`
       <section class="section" aria-labelledby="blocked-domains-title">
-        <span id="blocked-domains-title" class="section-title">ブロックドメイン</span>
+        <span id="blocked-domains-title" class="section-title">${t('option_blocked_domains')}</span>
         <div class="add-row">
           <input
             class="add-input"
@@ -323,7 +324,7 @@ export class MwBlockedSites extends LitElement {
       </section>
 
       <section class="section" aria-labelledby="blocked-patterns-title">
-        <span id="blocked-patterns-title" class="section-title">ブロック URL パターン</span>
+        <span id="blocked-patterns-title" class="section-title">${t('option_blocked_patterns')}</span>
         <div class="add-row">
           <input
             class="add-input ${this.patternInputInvalid ? 'add-input--invalid' : ''}"

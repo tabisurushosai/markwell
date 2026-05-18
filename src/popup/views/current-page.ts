@@ -25,6 +25,7 @@ import {
   fetchPageTextFromActiveTab,
   requestPageSummaryViaBackground,
 } from '../utils/page-summary-client.js';
+import { t } from '../../shared/utils/i18n.js';
 import { getCanonicalUrlForActiveTab } from '../utils/tab-url.js';
 
 @customElement('markwell-current-page-view')
@@ -416,11 +417,7 @@ export class MarkwellCurrentPageView extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      return html`
-        <p class="empty">
-          このページにはまだハイライトがありません。テキストを選択してハイライトしてみましょう。
-        </p>
-      `;
+      return html`<p class="empty">${t('popup_empty_current')}</p>`;
     }
 
     const visible = this.filteredHighlights;

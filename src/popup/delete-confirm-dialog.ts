@@ -1,6 +1,8 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import { t } from '../shared/utils/i18n.js';
+
 @customElement('markwell-delete-confirm-dialog')
 export class MarkwellDeleteConfirmDialog extends LitElement {
   static override styles = css`
@@ -85,7 +87,7 @@ export class MarkwellDeleteConfirmDialog extends LitElement {
   `;
 
   @property()
-  message = 'このハイライトを削除しますか？この操作は取り消せません。';
+  message = '';
 
   @property({ attribute: false })
   onConfirm: (() => void) | null = null;
@@ -167,9 +169,7 @@ export function openDeleteConfirmDialog(options: {
   closeDeleteConfirmDialog();
 
   const dialog = document.createElement('markwell-delete-confirm-dialog');
-  if (options.message !== undefined) {
-    dialog.message = options.message;
-  }
+  dialog.message = options.message ?? t('confirm_delete_highlight');
 
   dialog.onConfirm = () => {
     void (async () => {

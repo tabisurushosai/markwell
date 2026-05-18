@@ -5,6 +5,7 @@ import { ONBOARDING_TRY_PAGE_URL } from '../shared/onboarding/constants.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../shared/license/start-trial.js';
 import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
+import { t } from '../shared/utils/i18n.js';
 import './demo-animation.js';
 
 const TOTAL_STEPS = 3;
@@ -278,10 +279,8 @@ export class MwOnboarding extends LitElement {
     return html`
       <p class="step-label">${this.stepLabel()}</p>
       ${this.renderDots()}
-      <h1>Markwell とは</h1>
-      <p>
-        ウェブ上のテキストをハイライトして保存し、タグ付けや AI 合成で知識をつなげる Chrome 拡張機能です。
-      </p>
+      <h1>${t('onboarding_step1_title')}</h1>
+      <p>${t('onboarding_step1_body')}</p>
       <mw-onboarding-demo></mw-onboarding-demo>
       <p>テキストを選択してハイライトすると、ページ上に色付きのマーカーが残ります。</p>
       <div class="actions">
@@ -303,8 +302,8 @@ export class MwOnboarding extends LitElement {
     return html`
       <p class="step-label">${this.stepLabel()}</p>
       ${this.renderDots()}
-      <h1>7 日間 Premium トライアル</h1>
-      <p>7 日間、Premium 機能を無料でお試しいただけます。メール登録は不要です。</p>
+      <h1>${t('onboarding_step2_title')}</h1>
+      <p>${t('onboarding_step2_body')}</p>
       <div class="actions">
         <button
           type="button"
@@ -320,13 +319,13 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
-          aria-label="スキップ"
+          aria-label=${t('onboarding_skip')}
           ?disabled=${this.startingTrial}
           @click=${() => {
             this.step = 3;
           }}
         >
-          スキップ
+          ${t('onboarding_skip')}
         </button>
         <button
           type="button"
@@ -351,8 +350,8 @@ export class MwOnboarding extends LitElement {
     return html`
       <p class="step-label">${this.stepLabel()}</p>
       ${this.renderDots()}
-      <h1>ショートカット</h1>
-      <p>どのページでもすぐに使えるキーボードショートカットです。</p>
+      <h1>${t('onboarding_step3_title')}</h1>
+      <p>${t('onboarding_step3_body')}</p>
       <ul class="shortcut-list">
         <li class="shortcut-item">
           <kbd>Alt+H</kbd>
@@ -368,12 +367,12 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
-          aria-label="使ってみる"
+          aria-label=${t('onboarding_finish')}
           @click=${() => {
             void this.handleTryIt();
           }}
         >
-          使ってみる
+          ${t('onboarding_finish')}
         </button>
         <button
           type="button"

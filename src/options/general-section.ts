@@ -13,6 +13,7 @@ import {
 } from './utils/settings-form.js';
 import './blocked-sites-section.js';
 import { toastFrom } from '../shared/components/toast.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; label: string }> = [
@@ -285,12 +286,12 @@ export class MwGeneralSettings extends LitElement {
     }
 
     return html`
-      <h1>一般</h1>
+      <h1>${t('options_section_general')}</h1>
       <p class="hint" style="margin: 0 0 24px;">変更は自動的に保存されます。</p>
 
       <div class="field">
-        <span class="field-label">既定色</span>
-        <div class="color-row" role="radiogroup" aria-label="既定のハイライト色">
+        <span class="field-label">${t('option_default_color')}</span>
+        <div class="color-row" role="radiogroup" aria-label=${t('option_default_color')}>
           ${COLOR_OPTIONS.map(
             (option) => html`
               <button
@@ -311,7 +312,7 @@ export class MwGeneralSettings extends LitElement {
       </div>
 
       <div class="field">
-        <label class="field-label" for="font-scale">フォントスケール</label>
+        <label class="field-label" for="font-scale">${t('option_font_scale')}</label>
         <div class="slider-row">
           <input
             id="font-scale"
@@ -331,8 +332,8 @@ export class MwGeneralSettings extends LitElement {
       </div>
 
       <div class="field">
-        <span class="field-label">密度</span>
-        <div class="segmented" role="radiogroup" aria-label="UI 密度">
+        <span class="field-label">${t('option_density')}</span>
+        <div class="segmented" role="radiogroup" aria-label=${t('option_density')}>
           ${DENSITY_OPTIONS.map(
             (option) => html`
               <button
@@ -352,8 +353,8 @@ export class MwGeneralSettings extends LitElement {
       </div>
 
       <div class="field">
-        <span class="field-label">テーマ</span>
-        <div class="segmented" role="radiogroup" aria-label="テーマ">
+        <span class="field-label">${t('option_theme')}</span>
+        <div class="segmented" role="radiogroup" aria-label=${t('option_theme')}>
           ${THEME_OPTIONS.map(
             (option) => html`
               <button

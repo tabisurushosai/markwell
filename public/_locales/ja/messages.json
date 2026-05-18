@@ -4,5 +4,225 @@
   },
   "extension_description": {
     "message": "Web 上のテキストを蛍光ペンのようにハイライトし、複数のハイライトから AI が論考エッセイを自動生成。リサーチ・執筆・学習を加速します。"
+  },
+  "popup_tab_current": {
+    "message": "現在のページ"
+  },
+  "popup_tab_all": {
+    "message": "すべて"
+  },
+  "popup_tab_projects": {
+    "message": "プロジェクト"
+  },
+  "popup_search_placeholder": {
+    "message": "検索…"
+  },
+  "popup_empty_current": {
+    "message": "このページにはまだハイライトがありません。テキストを選択して、ハイライトしてみましょう。"
+  },
+  "popup_empty_all": {
+    "message": "条件に一致するハイライトはありません"
+  },
+  "card_action_copy": {
+    "message": "コピー"
+  },
+  "card_action_delete": {
+    "message": "削除"
+  },
+  "card_action_jump": {
+    "message": "ジャンプ"
+  },
+  "card_action_copy_md": {
+    "message": "Markdown でコピー"
+  },
+  "card_action_translate": {
+    "message": "翻訳"
+  },
+  "card_action_rephrase": {
+    "message": "言い換え"
+  },
+  "mini_toolbar_note": {
+    "message": "メモ追加"
+  },
+  "mini_toolbar_close": {
+    "message": "閉じる"
+  },
+  "note_dialog_title": {
+    "message": "メモ"
+  },
+  "note_dialog_save": {
+    "message": "保存"
+  },
+  "note_dialog_cancel": {
+    "message": "キャンセル"
+  },
+  "side_panel_tab_synthesis": {
+    "message": "合成"
+  },
+  "side_panel_tab_qa": {
+    "message": "Q&A"
+  },
+  "side_panel_tab_extract": {
+    "message": "引用抽出"
+  },
+  "synthesis_instruction_placeholder": {
+    "message": "このプロジェクトのハイライトをどうまとめるか、指示を入力してください（任意）…"
+  },
+  "synthesis_run": {
+    "message": "合成する"
+  },
+  "synthesis_cancel": {
+    "message": "キャンセル"
+  },
+  "synthesis_history": {
+    "message": "保存履歴"
+  },
+  "options_section_general": {
+    "message": "一般"
+  },
+  "options_section_ai": {
+    "message": "AI"
+  },
+  "options_section_tags": {
+    "message": "タグ"
+  },
+  "options_section_projects": {
+    "message": "プロジェクト"
+  },
+  "options_section_premium": {
+    "message": "Premium"
+  },
+  "options_section_data": {
+    "message": "データ"
+  },
+  "options_section_about": {
+    "message": "About"
+  },
+  "option_default_color": {
+    "message": "既定のハイライト色"
+  },
+  "option_font_scale": {
+    "message": "文字サイズ"
+  },
+  "option_density": {
+    "message": "UI 密度"
+  },
+  "option_theme": {
+    "message": "テーマ"
+  },
+  "option_blocked_domains": {
+    "message": "ブロックするドメイン"
+  },
+  "option_blocked_patterns": {
+    "message": "ブロックする URL パターン"
+  },
+  "option_api_key": {
+    "message": "API キー"
+  },
+  "option_test_key": {
+    "message": "キーをテスト"
+  },
+  "option_model": {
+    "message": "モデル"
+  },
+  "tier_badge_free": {
+    "message": "FREE"
+  },
+  "tier_badge_trial": {
+    "message": "TRIAL"
+  },
+  "tier_badge_premium": {
+    "message": "PREMIUM"
+  },
+  "tier_trial_remaining": {
+    "message": "残り $days$ 日",
+    "placeholders": {
+      "days": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "upgrade_modal_title": {
+    "message": "Premium にアップグレード"
+  },
+  "upgrade_modal_body_free": {
+    "message": "Premium では上限が緩やかになり、AI 機能をすべて利用できます。"
+  },
+  "upgrade_modal_body_trial_used": {
+    "message": "無料トライアルはすでにお試しいただいています。Premium を購入して機能を解放してください。"
+  },
+  "upgrade_purchase": {
+    "message": "今すぐ購入"
+  },
+  "upgrade_start_trial": {
+    "message": "まず無料トライアル"
+  },
+  "onboarding_step1_title": {
+    "message": "Markwell とは"
+  },
+  "onboarding_step1_body": {
+    "message": "Web 上のテキストをハイライトして保存し、タグ付けや AI 合成で知識をつなげる Chrome 拡張機能です。"
+  },
+  "onboarding_step2_title": {
+    "message": "7 日間 Premium トライアル"
+  },
+  "onboarding_step2_body": {
+    "message": "7 日間、Premium 機能を無料でお試しいただけます。メール登録は不要です。"
+  },
+  "onboarding_step3_title": {
+    "message": "ショートカット"
+  },
+  "onboarding_step3_body": {
+    "message": "どのページでも使えるキーボードショートカットです。テキストを選択して Alt+H でハイライト、Alt+S で合成パネルを開けます。"
+  },
+  "onboarding_finish": {
+    "message": "使ってみる"
+  },
+  "onboarding_skip": {
+    "message": "スキップ"
+  },
+  "confirm_delete_highlight": {
+    "message": "このハイライトを削除しますか？この操作は取り消せません。"
+  },
+  "confirm_delete_all": {
+    "message": "すべてのハイライト・タグ・プロジェクト・合成データを削除しますか？ライセンス情報は保持されます。この操作は取り消せません。"
+  },
+  "confirm_merge_tag": {
+    "message": "「$source$」を「$target$」に統合しますか？元のタグは削除され、ハイライトは統合先のタグに付け替えられます。",
+    "placeholders": {
+      "source": {
+        "content": "$1",
+        "example": "調査"
+      },
+      "target": {
+        "content": "$2",
+        "example": "読書"
+      }
+    }
+  },
+  "error_network": {
+    "message": "ネットワークエラーが発生しました。接続を確認してから、もう一度お試しください。"
+  },
+  "error_api_key_invalid": {
+    "message": "API キーが無効です。"
+  },
+  "error_quota_exceeded": {
+    "message": "API の利用上限に達しました。"
+  },
+  "error_license_invalid": {
+    "message": "ライセンスキーが無効です。"
+  },
+  "error_storage_full": {
+    "message": "ストレージの空き容量が不足しています。"
+  },
+  "toast_copied": {
+    "message": "コピーしました"
+  },
+  "toast_saved": {
+    "message": "保存しました"
+  },
+  "toast_deleted": {
+    "message": "削除しました"
   }
 }

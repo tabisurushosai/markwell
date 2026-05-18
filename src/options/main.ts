@@ -35,18 +35,19 @@ import './about-section.js';
 import './premium-section.js';
 import './tag-manager.js';
 import './project-manager.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type OptionsSection = 'general' | 'ai' | 'tags' | 'projects' | 'premium' | 'data' | 'about';
 
-const SECTIONS: ReadonlyArray<{ id: OptionsSection; label: string }> = [
-  { id: 'general', label: '一般' },
-  { id: 'ai', label: 'AI' },
-  { id: 'tags', label: 'タグ' },
-  { id: 'projects', label: 'プロジェクト' },
-  { id: 'premium', label: 'Premium' },
-  { id: 'data', label: 'データ' },
-  { id: 'about', label: 'About' },
+const SECTIONS: ReadonlyArray<{ id: OptionsSection; labelKey: string }> = [
+  { id: 'general', labelKey: 'options_section_general' },
+  { id: 'ai', labelKey: 'options_section_ai' },
+  { id: 'tags', labelKey: 'options_section_tags' },
+  { id: 'projects', labelKey: 'options_section_projects' },
+  { id: 'premium', labelKey: 'options_section_premium' },
+  { id: 'data', labelKey: 'options_section_data' },
+  { id: 'about', labelKey: 'options_section_about' },
 ];
 
 function formatTokenCount(value: number): string {
@@ -568,13 +569,13 @@ export class MwOptions extends LitElement {
                 <button
                   type="button"
                   class="nav-btn ${this.activeSection === section.id ? 'nav-btn--active' : ''}"
-                  aria-label=${section.label}
+                  aria-label=${t(section.labelKey)}
                   aria-current=${this.activeSection === section.id ? 'page' : 'false'}
                   @click=${() => {
                     this.selectSection(section.id);
                   }}
                 >
-                  ${section.label}
+                  ${t(section.labelKey)}
                 </button>
               `,
             )}
