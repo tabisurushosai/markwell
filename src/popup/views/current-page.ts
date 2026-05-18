@@ -27,6 +27,8 @@ export class MarkwellCurrentPageView extends LitElement {
 
   @property({ attribute: false }) dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
 
+  @property({ type: Number }) focusedCardIndex = -1;
+
   @state() private highlights: Highlight[] = [];
 
   @state() private tagsById: ReadonlyMap<string, Tag> = new Map();
@@ -131,10 +133,11 @@ export class MarkwellCurrentPageView extends LitElement {
       <h2 class="panel-title">このページのハイライト (${visible.length})</h2>
       <div class="list">
         ${visible.map(
-          (highlight) => html`
+          (highlight, index) => html`
             <markwell-highlight-card
               .highlight=${highlight}
               .tagsById=${this.tagsById}
+              ?keyboard-focused=${index === this.focusedCardIndex}
               @mw-refresh=${() => {
                 this.handleRefresh();
               }}

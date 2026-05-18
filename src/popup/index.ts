@@ -17,6 +17,12 @@ import {
 import { DEFAULT_DATE_FILTER, type DateFilterValue } from './utils/date-filter.js';
 import type { ProjectFilterValue } from './utils/tag-filter.js';
 import './components/tag-chips.js';
+import { MarkwellHighlightCard } from './components/highlight-card.js';
+import {
+  clampIndex,
+  isEditableElement,
+  shouldCycleViewTabs,
+} from './utils/keyboard-navigation.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
 import './views/current-page.js';
@@ -29,6 +35,8 @@ const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
   { id: 'all', label: 'すべて' },
   { id: 'projects', label: 'プロジェクト' },
 ];
+
+const TAB_IDS: TabId[] = ['page', 'all', 'projects'];
 
 @customElement('markwell-popup-root')
 export class MarkwellPopupRoot extends LitElement {
@@ -52,6 +60,8 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private themePreference: ThemePreference = 'dark';
 
+  @state() private focusedCardIndex = -1;
+
   private systemThemeQuery: MediaQueryList | null = null;
 
   static styles = popupStyles;
@@ -65,12 +75,14 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-date-filter', this.onDateFilter);
     this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
     this.systemThemeQuery.addEventListener('change', this.onSystemThemeChange);
+    window.addEventListener('keydown', this.onKeyDown, true);
     void this.loadFilterData();
     void this.loadTheme();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    window.removeEventListener('keydown', this.onKeyDown, true);
     this.removeEventListener('mw-toast', this.onToast);
     this.removeEventListener('mw-refresh', this.onDataRefresh);
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
@@ -117,7 +129,141 @@ export class MarkwellPopupRoot extends LitElement {
 
   private readonly onDataRefresh = (): void => {
     void this.loadFilterData();
+    this.clampFocusedCardIndex();
   };
+
+  protected firstUpdated(): void {
+    const search = this.renderRoot.querySelector('.search');
+    if (search instanceof HTMLInputElement) {
+      search.focus();
+    }
+  }
+
+  protected updated(changed: Map<string, unknown>): void {
+    if (changed.has('activeTab') && this.activeTab === 'projects') {
+      this.focusedCardIndex = -1;
+    }
+    if (
+      changed.has('searchQuery') ||
+      changed.has('selectedTagIds') ||
+      changed.has('selectedProjectFilter') ||
+      changed.has('dateFilter')
+    ) {
+      this.clampFocusedCardIndex();
+    }
+  }
+
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      window.close();
+      return;
+    }
+
+    if (event.key === 'Tab' && shouldCycleViewTabs(event.target)) {
+      event.preventDefault();
+      this.cycleViewTab(event.shiftKey ? -1 : 1);
+      return;
+    }
+
+    if (isEditableElement(event.target)) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (this.activeTab === 'projects') {
+        return;
+      }
+      event.preventDefault();
+      this.moveCardFocus(event.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
+
+    if (this.focusedCardIndex < 0) {
+      return;
+    }
+
+    const card = this.getFocusedCard();
+    if (card === null) {
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void card.jump();
+      return;
+    }
+
+    if (event.key === 'c' || event.key === 'C') {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+      event.preventDefault();
+      void card.copyPlain();
+      return;
+    }
+
+    if (event.key === 'd' || event.key === 'D') {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+      event.preventDefault();
+      void card.deleteWithConfirm();
+    }
+  };
+
+  private getHighlightCards(): MarkwellHighlightCard[] {
+    const panel = this.renderRoot.querySelector('.main');
+    if (panel === null) {
+      return [];
+    }
+    const view = panel.querySelector('markwell-current-page-view, markwell-all-highlights-view');
+    if (view === null || view.shadowRoot === null) {
+      return [];
+    }
+    const list = view.shadowRoot.querySelector('.list');
+    if (list === null) {
+      return [];
+    }
+    return Array.from(list.querySelectorAll('markwell-highlight-card')).filter(
+      (node): node is MarkwellHighlightCard => node instanceof MarkwellHighlightCard,
+    );
+  }
+
+  private getFocusedCard(): MarkwellHighlightCard | null {
+    const cards = this.getHighlightCards();
+    if (this.focusedCardIndex < 0 || this.focusedCardIndex >= cards.length) {
+      return null;
+    }
+    return cards[this.focusedCardIndex] ?? null;
+  }
+
+  private clampFocusedCardIndex(): void {
+    const count = this.getHighlightCards().length;
+    this.focusedCardIndex = clampIndex(this.focusedCardIndex, count);
+  }
+
+  private moveCardFocus(delta: number): void {
+    const cards = this.getHighlightCards();
+    if (cards.length === 0) {
+      this.focusedCardIndex = -1;
+      return;
+    }
+    if (this.focusedCardIndex < 0) {
+      this.focusedCardIndex = delta > 0 ? 0 : cards.length - 1;
+    } else {
+      this.focusedCardIndex =
+        (this.focusedCardIndex + delta + cards.length) % cards.length;
+    }
+    cards[this.focusedCardIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  private cycleViewTab(direction: -1 | 1): void {
+    const index = TAB_IDS.indexOf(this.activeTab);
+    const next = TAB_IDS[(index + direction + TAB_IDS.length) % TAB_IDS.length];
+    this.selectTab(next);
+    this.focusedCardIndex = -1;
+  }
 
   private readonly onProjectFilter = (event: Event): void => {
     if (!(event instanceof CustomEvent)) {
@@ -181,6 +327,9 @@ export class MarkwellPopupRoot extends LitElement {
 
   private selectTab(tabId: TabId): void {
     this.activeTab = tabId;
+    if (tabId === 'projects') {
+      this.focusedCardIndex = -1;
+    }
   }
 
   private renderTabPanel() {
@@ -191,6 +340,7 @@ export class MarkwellPopupRoot extends LitElement {
             .selectedTagIds=${this.selectedTagIds}
             .selectedProjectFilter=${this.selectedProjectFilter}
             .dateFilter=${this.dateFilter}
+            .focusedCardIndex=${this.focusedCardIndex}
           ></markwell-current-page-view>
         `;
       case 'all':
@@ -200,6 +350,7 @@ export class MarkwellPopupRoot extends LitElement {
             .selectedTagIds=${this.selectedTagIds}
             .selectedProjectFilter=${this.selectedProjectFilter}
             .dateFilter=${this.dateFilter}
+            .focusedCardIndex=${this.focusedCardIndex}
           ></markwell-all-highlights-view>
         `;
       case 'projects':

@@ -5,14 +5,13 @@ import { deleteHighlight } from '../../shared/storage/highlights.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import { formatHighlightAsMarkdown } from '../utils/format-highlight-markdown.js';
+import { openDeleteConfirmDialog } from '../delete-confirm-dialog.js';
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
 import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
-const DELETE_CONFIRM_MESSAGE =
-  'このハイライトを削除しますか？この操作は取り消せません。';
 const COPY_LONG_PRESS_MS = 300;
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
@@ -30,6 +29,8 @@ export class MarkwellHighlightCard extends LitElement {
   @property({ attribute: false }) tagsById: ReadonlyMap<string, Tag> = new Map();
 
   @property({ reflect: true }) mode: 'page' | 'search' = 'page';
+
+  @property({ type: Boolean, attribute: 'keyboard-focused' }) keyboardFocused = false;
 
   @state() private copyMenuOpen = false;
 
@@ -71,6 +72,11 @@ export class MarkwellHighlightCard extends LitElement {
 
     .card--search:hover {
       border-color: var(--accent);
+    }
+
+    .card--keyboard-focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     .source {
@@ -279,6 +285,31 @@ export class MarkwellHighlightCard extends LitElement {
     this.copyMenuOpen = true;
   }
 
+  /** キーボード / 外部からのプレーンテキストコピー */
+  async copyPlain(): Promise<void> {
+    await this.handleCopyPlain();
+  }
+
+  /** キーボード / 外部からのジャンプ（検索モードはページを開く） */
+  async jump(): Promise<void> {
+    if (this.mode === 'search') {
+      this.dispatchEvent(
+        new CustomEvent('mw-open-highlight', {
+          bubbles: true,
+          composed: true,
+          detail: { highlight: this.highlight },
+        }),
+      );
+      return;
+    }
+    await this.handleJump();
+  }
+
+  /** キーボード / 外部からの削除（confirm 付き） */
+  async deleteWithConfirm(): Promise<void> {
+    await this.handleDelete();
+  }
+
   private async handleCopyPlain(): Promise<void> {
     await navigator.clipboard.writeText(this.highlight.selected_text);
     this.showToast('コピーしました');
@@ -348,7 +379,9 @@ export class MarkwellHighlightCard extends LitElement {
 
     return html`
       <article
-        class="card ${isSearch ? 'card--search' : ''}"
+        class="card ${isSearch ? 'card--search' : ''} ${this.keyboardFocused
+          ? 'card--keyboard-focus'
+          : ''}"
         @click=${(event: Event) => {
           this.handleCardClick(event);
         }}

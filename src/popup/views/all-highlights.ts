@@ -22,6 +22,8 @@ export class MarkwellAllHighlightsView extends LitElement {
 
   @property({ attribute: false }) dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
 
+  @property({ type: Number }) focusedCardIndex = -1;
+
   @state() private debouncedQuery = '';
 
   @state() private results: Highlight[] = [];
@@ -174,11 +176,12 @@ export class MarkwellAllHighlightsView extends LitElement {
       <h2 class="panel-title">検索結果 (${this.results.length})</h2>
       <div class="list">
         ${this.results.map(
-          (highlight) => html`
+          (highlight, index) => html`
             <markwell-highlight-card
               mode="search"
               .highlight=${highlight}
               .tagsById=${this.tagsById}
+              ?keyboard-focused=${index === this.focusedCardIndex}
               @mw-open-highlight=${(event: Event) => {
                 this.handleOpenHighlight(event);
               }}
