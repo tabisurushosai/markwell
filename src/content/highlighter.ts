@@ -55,22 +55,34 @@ function ensureRangyReady(): void {
   rangyReady = true;
 }
 
+function buildHighlightStylesCss(): string {
+  return `
+    :root { --accent: #ffd34e; }
+    @keyframes markwell-jump-flash {
+      0%, 100% { outline: 2px solid transparent; outline-offset: 2px; }
+      25%, 75% { outline: 2px solid var(--accent); outline-offset: 2px; }
+      50% { outline: 2px solid transparent; outline-offset: 2px; }
+    }
+    mark.markwell-mark.markwell-jump-flash {
+      animation: markwell-jump-flash 1.5s ease;
+    }
+    ${(Object.keys(HIGHLIGHT_STYLE_RULES) as HighlightColor[])
+      .map(
+        (color) =>
+          `mark.markwell-mark.markwell-mark-${color} { ${HIGHLIGHT_STYLE_RULES[color]} border-radius: 2px; padding: 0 1px; }`,
+      )
+      .join('\n')}
+  `;
+}
+
 export function ensureHighlightStyles(): void {
-  if (document.getElementById(STYLE_ELEMENT_ID) !== null) {
-    return;
+  let style = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null;
+  if (style === null) {
+    style = document.createElement('style');
+    style.id = STYLE_ELEMENT_ID;
+    document.head.appendChild(style);
   }
-
-  const css = (Object.keys(HIGHLIGHT_STYLE_RULES) as HighlightColor[])
-    .map(
-      (color) =>
-        `mark.markwell-mark.markwell-mark-${color} { ${HIGHLIGHT_STYLE_RULES[color]} border-radius: 2px; padding: 0 1px; }`,
-    )
-    .join('\n');
-
-  const style = document.createElement('style');
-  style.id = STYLE_ELEMENT_ID;
-  style.textContent = css;
-  document.head.appendChild(style);
+  style.textContent = buildHighlightStylesCss();
 }
 
 function toRangyRange(range: Range): RangyWrappedRange {
@@ -259,6 +271,32 @@ const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'pink', 'blue', '
 
 export function findHighlightMarks(id: string): HTMLElement[] {
   return [...document.querySelectorAll<HTMLElement>(`mark[data-markwell-id="${id}"]`)];
+}
+
+const JUMP_FLASH_CLASS = 'markwell-jump-flash';
+const JUMP_FLASH_MS = 1500;
+
+/** 該当 mark へスクロールしアクセント色で点滅。見つからなければ false。 */
+export function jumpToHighlight(id: string): boolean {
+  const marks = findHighlightMarks(id);
+  if (marks.length === 0) {
+    return false;
+  }
+
+  ensureHighlightStyles();
+  marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  for (const mark of marks) {
+    mark.classList.remove(JUMP_FLASH_CLASS);
+    // reflow でアニメーションを再トリガー
+    void mark.offsetWidth;
+    mark.classList.add(JUMP_FLASH_CLASS);
+    window.setTimeout(() => {
+      mark.classList.remove(JUMP_FLASH_CLASS);
+    }, JUMP_FLASH_MS);
+  }
+
+  return true;
 }
 
 export function getHighlightMarksRect(marks: HTMLElement[]): DOMRect {

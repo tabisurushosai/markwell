@@ -18,7 +18,34 @@ export class MarkwellPopupRoot extends LitElement {
   @state() private searchQuery = '';
   @state() private tier: TierBadge = 'FREE';
 
+  @state() private toastMessage = '';
+
   static styles = popupStyles;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.addEventListener('mw-toast', this.onToast);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeEventListener('mw-toast', this.onToast);
+  }
+
+  private readonly onToast = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const detail = event.detail as { message?: string };
+    const message = detail.message ?? '';
+    if (message === '') {
+      return;
+    }
+    this.toastMessage = message;
+    window.setTimeout(() => {
+      this.toastMessage = '';
+    }, 3000);
+  };
 
   private onSearchInput(event: Event): void {
     const input = event.target;
@@ -120,6 +147,10 @@ export class MarkwellPopupRoot extends LitElement {
       </nav>
 
       <main class="main" role="tabpanel">${this.renderTabPanel()}</main>
+
+      ${this.toastMessage
+        ? html`<div class="toast" role="status">${this.toastMessage}</div>`
+        : ''}
 
       <footer class="footer">
         <button

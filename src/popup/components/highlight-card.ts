@@ -5,6 +5,7 @@ import { deleteHighlight } from '../../shared/storage/highlights.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
+import { isJumpToHighlightResponse } from '../utils/jump.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
@@ -131,16 +132,34 @@ export class MarkwellHighlightCard extends LitElement {
     this.dispatchRefresh();
   }
 
+  private showJumpNotFoundToast(): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-toast', {
+        bubbles: true,
+        composed: true,
+        detail: { message: 'ハイライトが見つかりません' },
+      }),
+    );
+  }
+
   private async handleJump(): Promise<void> {
     const tabId = await getActiveTabId();
     if (tabId === null) {
+      this.showJumpNotFoundToast();
       return;
     }
-    await chrome.tabs.sendMessage(tabId, {
-      type: 'JUMP_TO_HIGHLIGHT',
-      highlightId: this.highlight.id,
-    });
-    window.close();
+
+    try {
+      const response: unknown = await chrome.tabs.sendMessage(tabId, {
+        type: 'JUMP_TO_HIGHLIGHT',
+        id: this.highlight.id,
+      });
+      if (!isJumpToHighlightResponse(response) || !response.ok) {
+        this.showJumpNotFoundToast();
+      }
+    } catch {
+      this.showJumpNotFoundToast();
+    }
   }
 
   render() {

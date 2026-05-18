@@ -238,4 +238,21 @@ export const popupStyles = css`
     color: var(--text);
     border-color: var(--accent);
   }
+
+  .toast {
+    position: fixed;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: 56px;
+    z-index: 100;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+  }
 `;
