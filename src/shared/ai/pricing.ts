@@ -1,4 +1,8 @@
-/** Gemini 2.0 Flash 公式料金（USD / 1M tokens）。最終確認: 2026-05-18 */
+/**
+ * Gemini 2.0 Flash 公式料金（USD / 1M tokens）。
+ * 最終確認: 2026-05-18
+ * @see https://ai.google.dev/gemini-api/docs/pricing
+ */
 export const GEMINI_FLASH_PRICING = {
   model: 'gemini-2.0-flash',
   input_per_million_usd: 0.1,
