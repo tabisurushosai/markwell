@@ -3,7 +3,9 @@ import { customElement, property } from 'lit/decorators.js';
 
 import type { HighlightColor } from '../shared/types/highlight.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
+import { TierLimitError } from '../shared/storage/highlights.js';
 import { saveHighlightFromRange } from './highlight-save.js';
+import { openTierLimitDialog } from './tier-limit-dialog.js';
 import { MARKWELL_SELECTION_EVENT, type MarkwellSelectionDetail } from './selection.js';
 
 const TOOLBAR_OFFSET_PX = 8;
@@ -175,6 +177,22 @@ function isSelectionCollapsed(): boolean {
   return selection === null || selection.rangeCount === 0 || selection.isCollapsed;
 }
 
+async function saveHighlightFromToolbar(
+  range: Range,
+  color: HighlightColor,
+  note = '',
+): Promise<void> {
+  try {
+    await saveHighlightFromRange(range, color, note);
+  } catch (error) {
+    if (error instanceof TierLimitError) {
+      openTierLimitDialog();
+      return;
+    }
+    throw error;
+  }
+}
+
 function positionToolbar(toolbar: MarkwellToolbar, range: Range): void {
   const selectionRect = range.getBoundingClientRect();
   const toolbarRect = toolbar.getBoundingClientRect();
@@ -196,7 +214,7 @@ function showToolbar(range: Range): void {
         return;
       }
       await setSettings({ default_color: color });
-      await saveHighlightFromRange(activeRange, color);
+      await saveHighlightFromToolbar(activeRange, color);
       hideToolbar();
       document.getSelection()?.removeAllRanges();
     })();
@@ -210,7 +228,7 @@ function showToolbar(range: Range): void {
       // Note dialog UI: follow-up prompt.
       console.log('[markwell] note dialog pending (next prompt)');
       const settings = await getSettings();
-      await saveHighlightFromRange(activeRange, settings.default_color, '');
+      await saveHighlightFromToolbar(activeRange, settings.default_color, '');
       hideToolbar();
       document.getSelection()?.removeAllRanges();
     })();

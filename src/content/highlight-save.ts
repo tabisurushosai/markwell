@@ -1,5 +1,6 @@
 import { maybeApplyAutoTagsAfterCreate } from '../shared/ai/auto-tag.js';
-import { createHighlight } from '../shared/storage/highlights.js';
+import { assertHighlightLimit, createHighlight } from '../shared/storage/highlights.js';
+import { getCurrentTier } from '../shared/storage/license.js';
 import type { Highlight, HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
 import {
@@ -15,6 +16,9 @@ export async function saveHighlightFromRange(
   color: HighlightColor,
   note = '',
 ): Promise<Highlight> {
+  const tier = await getCurrentTier();
+  await assertHighlightLimit(tier);
+
   const selectedText = range.toString();
   const serialized = serializeRange(range);
   const { before, after } = getSelectionContext(range);

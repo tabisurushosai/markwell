@@ -12,7 +12,7 @@ import {
 const REANCHOR_THROTTLE_MS = 5000;
 
 const MARKWELL_UI_SELECTOR =
-  'markwell-toolbar, markwell-edit-toolbar, markwell-note-dialog, markwell-delete-confirm-dialog';
+  'markwell-toolbar, markwell-edit-toolbar, markwell-note-dialog, markwell-delete-confirm-dialog, markwell-tier-limit-dialog';
 
 let throttleTimer: ReturnType<typeof setTimeout> | null = null;
 let lastRunAt = 0;
