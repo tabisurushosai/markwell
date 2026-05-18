@@ -122,7 +122,7 @@ function restoreHighlightsIdle(highlights: Highlight[]): Promise<void> {
   });
 }
 
-async function restoreHighlightsForPage(highlights: Highlight[]): Promise<void> {
+export async function restoreHighlightsForPage(highlights: Highlight[]): Promise<void> {
   ensureHighlightStyles();
 
   if (highlights.length > LARGE_HIGHLIGHT_THRESHOLD) {
@@ -133,12 +133,15 @@ async function restoreHighlightsForPage(highlights: Highlight[]): Promise<void> 
   restoreHighlightsSync(highlights);
 }
 
+export async function restoreHighlightsForCurrentUrl(): Promise<void> {
+  const highlights = await listHighlights({ url_canonical: getCanonicalUrl() });
+  await restoreHighlightsForPage(highlights);
+}
+
 export function scheduleRestoreOnLoad(): void {
   void (async () => {
     await waitForDocumentComplete();
     await delay(RESTORE_DELAY_MS);
-
-    const highlights = await listHighlights({ url_canonical: getCanonicalUrl() });
-    await restoreHighlightsForPage(highlights);
+    await restoreHighlightsForCurrentUrl();
   })();
 }

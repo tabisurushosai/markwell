@@ -356,6 +356,21 @@ function getHighlightColorFromMark(mark: HTMLElement): HighlightColor {
   return 'yellow';
 }
 
+/** ページ上の Markwell ハイライト mark をすべて除去する（ストレージは触らない）。 */
+export function removeAllHighlightsFromDom(): void {
+  const marks = [...document.querySelectorAll<HTMLElement>('mark[data-markwell-id]')];
+  const ids = new Set<string>();
+  for (const mark of marks) {
+    const id = mark.getAttribute('data-markwell-id');
+    if (id !== null && id !== '') {
+      ids.add(id);
+    }
+  }
+  for (const id of ids) {
+    removeHighlightFromDom(id);
+  }
+}
+
 /** Unwrap mark elements via Rangy ClassApplier (spec: removeHighlights). */
 export function removeHighlightFromDom(id: string): void {
   ensureRangyReady();
