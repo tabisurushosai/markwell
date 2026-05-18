@@ -8,6 +8,7 @@
     "default_popup": "src/popup/index.html",
     "default_title": "Markwell"
   },
+  "options_page": "src/options/index.html",
   "options_ui": {
     "page": "src/options/index.html",
     "open_in_tab": true
