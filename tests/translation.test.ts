@@ -13,6 +13,10 @@ vi.mock('../src/shared/storage/settings.js', () => ({
   getApiKey: vi.fn(),
 }));
 
+vi.mock('../src/shared/storage/license.js', () => ({
+  getCurrentTier: vi.fn().mockResolvedValue('free'),
+}));
+
 vi.mock('../src/shared/ai/gemini.js', () => ({
   callGemini: vi.fn(),
 }));

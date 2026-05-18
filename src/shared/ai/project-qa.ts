@@ -1,6 +1,8 @@
-import type { GeminiChatTurn } from './gemini.js';
+import { callGeminiChat, type GeminiChatTurn } from './gemini.js';
+import { assertAiAccess, canUseAiFeature } from '../license/ai-access.js';
 import type { Highlight } from '../types/highlight.js';
 import type { LicenseTier } from '../storage/highlights.js';
+import { getCurrentTier } from '../storage/license.js';
 
 /** Gemini への system 相当の指示 */
 export const PROJECT_QA_SYSTEM_PROMPT =
@@ -12,7 +14,7 @@ export type QaChatMessage = {
 };
 
 export function canUseProjectQa(tier: LicenseTier): boolean {
-  return tier === 'premium' || tier === 'trial';
+  return canUseAiFeature(tier, 'qa');
 }
 
 export function formatHighlightsForQa(highlights: Highlight[]): string {
@@ -74,4 +76,20 @@ export function buildGeminiTurnsFromSession(messages: QaChatMessage[]): GeminiCh
       role: message.role === 'user' ? 'user' : 'model',
       text: message.content,
     }));
+}
+
+export function streamProjectQaReply(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  opts: { signal?: AbortSignal },
+): AsyncGenerator<string, void, undefined> {
+  return (async function* () {
+    const tier = await getCurrentTier();
+    assertAiAccess(tier, 'qa');
+    yield* callGeminiChat(systemInstruction, turns, {
+      stream: true,
+      signal: opts.signal,
+      feature: 'qa',
+    });
+  })();
 }

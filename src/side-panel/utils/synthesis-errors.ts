@@ -1,4 +1,5 @@
 import { GeminiError } from '../../shared/ai/gemini.js';
+import { AiAccessError } from '../../shared/license/ai-access.js';
 
 export function formatSynthesisError(error: unknown): string {
   if (error instanceof GeminiError) {
@@ -14,6 +15,9 @@ export function formatSynthesisError(error: unknown): string {
       default:
         return `**エラー:** ${error.message}`;
     }
+  }
+  if (error instanceof AiAccessError) {
+    return '**エラー:** トライアルまたは Premium で利用できます。';
   }
   if (error instanceof Error) {
     if (error.message === 'API key not set') {

@@ -1,5 +1,6 @@
-import { buildPageSummaryPrompt, canUsePageSummary } from '../shared/ai/page-summary.js';
-import { callGemini, GeminiError } from '../shared/ai/gemini.js';
+import { canUsePageSummary, summarizePageText } from '../shared/ai/page-summary.js';
+import { GeminiError } from '../shared/ai/gemini.js';
+import { AiAccessError } from '../shared/license/ai-access.js';
 import { getCurrentTier } from '../shared/storage/license.js';
 import type { SummarizePageMessage, SummarizePageResponse } from '../shared/messages/page-summary.js';
 
@@ -17,6 +18,9 @@ function formatSummaryError(error: unknown): string {
       default:
         return error.message;
     }
+  }
+  if (error instanceof AiAccessError) {
+    return 'ページ要約は Premium（またはトライアル）で利用できます。';
   }
   if (error instanceof Error) {
     if (error.message === 'API key not set') {
@@ -45,15 +49,16 @@ export async function handleSummarizePageMessage(
   }
 
   try {
-    const summary = await callGemini(buildPageSummaryPrompt(trimmed, message.page_title), {
-      feature: 'page_summary',
-    });
-    const result = summary.trim();
-    if (result === '') {
-      return { ok: false, error: '要約を生成できませんでした。' };
-    }
-    return { ok: true, summary: result };
+    const summary = await summarizePageText(trimmed, message.page_title);
+    return { ok: true, summary };
   } catch (error) {
+    if (error instanceof AiAccessError) {
+      return {
+        ok: false,
+        error: 'ページ要約は Premium（またはトライアル）で利用できます。',
+        code: 'PREMIUM_REQUIRED',
+      };
+    }
     return { ok: false, error: formatSummaryError(error) };
   }
 }

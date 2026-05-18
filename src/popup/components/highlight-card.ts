@@ -15,6 +15,7 @@ import {
   rephraseHighlightText,
   type RephraseStyle,
 } from '../../shared/ai/rephrase.js';
+import { AiAccessError, canUseAiFeature, formatAiButtonTitle } from '../../shared/license/ai-access.js';
 import {
   getCachedTranslation,
   getTranslateLanguageLabel,
@@ -78,6 +79,8 @@ export class MarkwellHighlightCard extends LitElement {
   @state() private rephraseResultModalOpen = false;
 
   @state() private rephrasePremiumModalOpen = false;
+
+  @state() private relatedPremiumModalOpen = false;
 
   @state() private rephraseStyle: RephraseStyle = 'polite';
 
@@ -941,11 +944,12 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
+  private showRelatedHighlightsButton(): boolean {
+    return this.showRelatedAction;
+  }
+
   private canUseRelatedHighlights(): boolean {
-    return (
-      this.showRelatedAction &&
-      (this.licenseTier === 'trial' || this.licenseTier === 'premium')
-    );
+    return canUseAiFeature(this.licenseTier, 'related');
   }
 
   private handleRephraseClick(event: Event): void {
@@ -995,7 +999,7 @@ export class MarkwellHighlightCard extends LitElement {
       if (error.message === 'API key not set') {
         return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
       }
-      if (error.message === 'Premium required') {
+      if (error instanceof AiAccessError) {
         return 'ファクトチェックは Premium で利用できます。';
       }
       return error.message;
@@ -1012,7 +1016,7 @@ export class MarkwellHighlightCard extends LitElement {
       this.factCheckResult = await factCheckHighlightText(this.highlight.selected_text);
     } catch (error) {
       this.closeFactCheckModal();
-      if (error instanceof Error && error.message === 'Premium required') {
+      if (error instanceof AiAccessError) {
         this.factCheckPremiumModalOpen = true;
         return;
       }
@@ -1039,8 +1043,8 @@ export class MarkwellHighlightCard extends LitElement {
       if (error.message === 'API key not set') {
         return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
       }
-      if (error.message === 'Premium required') {
-        return 'Premium（またはトライアル）で利用できます。';
+      if (error instanceof AiAccessError) {
+        return 'トライアルまたは Premium で利用できます。';
       }
       return error.message;
     }
@@ -1061,7 +1065,7 @@ export class MarkwellHighlightCard extends LitElement {
       );
     } catch (error) {
       this.closeRephraseResultModal();
-      if (error instanceof Error && error.message === 'Premium required') {
+      if (error instanceof AiAccessError) {
         this.rephrasePremiumModalOpen = true;
         return;
       }
@@ -1080,8 +1084,16 @@ export class MarkwellHighlightCard extends LitElement {
     }
   }
 
+  private closeRelatedPremiumModal(): void {
+    this.relatedPremiumModalOpen = false;
+  }
+
   private handleFindRelated(event: Event): void {
     event.stopPropagation();
+    if (!this.canUseRelatedHighlights()) {
+      this.relatedPremiumModalOpen = true;
+      return;
+    }
     this.dispatchEvent(
       new CustomEvent('mw-find-related', {
         bubbles: true,
@@ -1287,20 +1299,26 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="action-btn"
-              title="言い換え（Premium / Trial）"
+              title=${formatAiButtonTitle('選択テキストを言い換え', this.licenseTier, 'rephrase')}
               ?disabled=${this.rephrasing}
               @click=${(event: Event) => {
                 this.handleRephraseClick(event);
               }}
             >
-              ${this.rephrasing ? '言い換え中…' : '✍️ 言い換え'}
+              ${this.rephrasing
+                ? '言い換え中…'
+                : canUseRephrase(this.licenseTier)
+                  ? '✍️ 言い換え'
+                  : '🔒 ✍️ 言い換え'}
             </button>
             <button
               type="button"
               class="action-btn"
-              title=${canUseFactCheck(this.licenseTier)
-                ? 'web 検索で事実関係を確認（Premium）'
-                : 'Premium 限定機能'}
+              title=${formatAiButtonTitle(
+                'web 検索で事実関係を確認',
+                this.licenseTier,
+                'fact_check',
+              )}
               ?disabled=${this.factChecking}
               @click=${(event: Event) => {
                 this.handleFactCheckClick(event);
@@ -1308,17 +1326,21 @@ export class MarkwellHighlightCard extends LitElement {
             >
               ${this.factChecking ? '確認中…' : getFactCheckButtonLabel(this.licenseTier)}
             </button>
-            ${this.canUseRelatedHighlights()
+            ${this.showRelatedHighlightsButton()
               ? html`
                   <button
                     type="button"
                     class="action-btn"
-                    title="意味的に近いハイライトを提案"
+                    title=${formatAiButtonTitle(
+                      '意味的に近いハイライトを提案',
+                      this.licenseTier,
+                      'related',
+                    )}
                     @click=${(event: Event) => {
                       this.handleFindRelated(event);
                     }}
                   >
-                    🔗 関連
+                    ${this.canUseRelatedHighlights() ? '🔗 関連' : '🔒 🔗 関連'}
                   </button>
                 `
               : nothing}
@@ -1354,6 +1376,49 @@ export class MarkwellHighlightCard extends LitElement {
       ${this.renderRephrasePremiumModal()}
       ${this.renderFactCheckModal()}
       ${this.renderFactCheckPremiumModal()}
+      ${this.renderRelatedPremiumModal()}
+    `;
+  }
+
+  private renderRelatedPremiumModal() {
+    if (!this.relatedPremiumModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeRelatedPremiumModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="related-premium-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="related-premium-title" class="dialog-title">トライアルで解放</h3>
+          <p class="dialog-message">
+            関連ハイライトはトライアルまたは Premium で利用できます。
+          </p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              @click=${() => {
+                this.closeRelatedPremiumModal();
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      </div>
     `;
   }
 

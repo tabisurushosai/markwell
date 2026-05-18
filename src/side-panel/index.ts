@@ -1,7 +1,10 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import { callGemini, callGeminiChat } from '../shared/ai/gemini.js';
+import { streamProjectQaReply } from '../shared/ai/project-qa.js';
+import { streamQuoteExtraction } from '../shared/ai/quote-extractor.js';
+import { streamProjectSynthesis } from '../shared/ai/synthesis-run.js';
+import { formatAiButtonLabel, formatAiButtonTitle } from '../shared/license/ai-access.js';
 import {
   buildGeminiTurnsFromSession,
   buildProjectQaSystemInstruction,
@@ -563,10 +566,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     let synthesisSucceeded = false;
 
     try {
-      for await (const chunk of callGemini(prompt, {
-        stream: true,
+      for await (const chunk of streamProjectSynthesis(prompt, {
         signal: abortController.signal,
-        feature: 'synthesis',
       })) {
         this.synthesisMarkdown += chunk;
       }
@@ -888,10 +889,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     const prompt = buildQuoteExtractorPrompt(this.highlights);
 
     try {
-      for await (const chunk of callGemini(prompt, {
-        stream: true,
+      for await (const chunk of streamQuoteExtraction(prompt, {
         signal: abortController.signal,
-        feature: 'quote_extractor',
       })) {
         this.quotesMarkdown += chunk;
       }
@@ -1083,10 +1082,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     ]);
 
     try {
-      for await (const chunk of callGeminiChat(systemInstruction, turns, {
-        stream: true,
+      for await (const chunk of streamProjectQaReply(systemInstruction, turns, {
         signal: abortController.signal,
-        feature: 'qa',
       })) {
         const messages = [...this.qaMessages];
         const assistant = messages[assistantIndex];
@@ -1141,11 +1138,12 @@ export class MarkwellSidePanelRoot extends LitElement {
           aria-selected=${this.activeBottomTab === 'synthesis'}
           aria-controls="synthesis-panel"
           id="tab-synthesis"
+          title=${formatAiButtonTitle('ハイライト合成', this.currentTier, 'synthesis')}
           @click=${() => {
             this.onBottomTabClick('synthesis');
           }}
         >
-          合成
+          ${formatAiButtonLabel('合成', this.currentTier, 'synthesis')}
         </button>
         <button
           type="button"
@@ -1154,11 +1152,12 @@ export class MarkwellSidePanelRoot extends LitElement {
           aria-selected=${this.activeBottomTab === 'qa'}
           aria-controls="qa-panel"
           id="tab-qa"
+          title=${formatAiButtonTitle('プロジェクト Q&A', this.currentTier, 'qa')}
           @click=${() => {
             this.onBottomTabClick('qa');
           }}
         >
-          💬 Q&A
+          ${formatAiButtonLabel('💬 Q&A', this.currentTier, 'qa')}
         </button>
       </div>
     `;
@@ -1186,6 +1185,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
+            title=${formatAiButtonTitle('ハイライトを AI で合成', this.currentTier, 'synthesis')}
             ?disabled=${this.synthesizing || this.highlights.length === 0}
             @click=${() => {
               if (this.resultVisible && this.resultPanelMode === 'synthesis') {
@@ -1198,8 +1198,8 @@ export class MarkwellSidePanelRoot extends LitElement {
             ${this.synthesizing
               ? '生成中…'
               : this.resultVisible && this.resultPanelMode === 'synthesis'
-                ? '再生成'
-                : '合成する'}
+                ? formatAiButtonLabel('再生成', this.currentTier, 'synthesis')
+                : formatAiButtonLabel('合成する', this.currentTier, 'synthesis')}
           </button>
           <button
             type="button"
@@ -1224,12 +1224,15 @@ export class MarkwellSidePanelRoot extends LitElement {
           <button
             type="button"
             class="btn"
+            title=${formatAiButtonTitle('印象的な引用を AI で抽出', this.currentTier, 'quote_extract')}
             ?disabled=${this.extractingQuotes || this.highlights.length === 0}
             @click=${() => {
               void this.handleQuoteExtract();
             }}
           >
-            ${this.extractingQuotes ? '抽出中…' : '✂️ 引用抽出'}
+            ${this.extractingQuotes
+              ? '抽出中…'
+              : formatAiButtonLabel('✂️ 引用抽出', this.currentTier, 'quote_extract')}
           </button>
         </div>
       </div>
@@ -1291,11 +1294,14 @@ export class MarkwellSidePanelRoot extends LitElement {
             <button
               type="submit"
               class="btn btn--primary"
+              title=${formatAiButtonTitle('ハイライトについて質問', this.currentTier, 'qa')}
               ?disabled=${this.qaStreaming ||
               this.qaInput.trim() === '' ||
               this.highlights.length === 0}
             >
-              ${this.qaStreaming ? '応答中…' : '送信'}
+              ${this.qaStreaming
+                ? '応答中…'
+                : formatAiButtonLabel('送信', this.currentTier, 'qa')}
             </button>
             <button
               type="button"

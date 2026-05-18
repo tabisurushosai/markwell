@@ -101,12 +101,12 @@ describe('related-highlights', () => {
     expect(resolveRelatedHighlights(candidates, [3, 1])).toEqual([candidates[2], candidates[0]]);
   });
 
-  it('findRelatedHighlights skips when tier is free', async () => {
+  it('findRelatedHighlights rejects when tier is free', async () => {
     const { getCurrentTier } = await import('../src/shared/storage/license.js');
+    const { AiAccessError } = await import('../src/shared/license/ai-access.js');
     vi.mocked(getCurrentTier).mockResolvedValue('free');
 
-    const result = await findRelatedHighlights(sampleHighlight());
-    expect(result).toEqual([]);
+    await expect(findRelatedHighlights(sampleHighlight())).rejects.toBeInstanceOf(AiAccessError);
   });
 
   it('findRelatedHighlights returns top matches on trial', async () => {

@@ -12,6 +12,7 @@ import {
 } from '../utils/tag-filter.js';
 
 import { canUsePageSummary } from '../../shared/ai/page-summary.js';
+import { formatAiButtonLabel, formatAiButtonTitle } from '../../shared/license/ai-access.js';
 import { listHighlights } from '../../shared/storage/highlights.js';
 import { listTags } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
@@ -450,12 +451,15 @@ export class MarkwellCurrentPageView extends LitElement {
         <button
           type="button"
           class="summary-btn"
+          title=${formatAiButtonTitle('このページの本文を AI で要約', this.licenseTier, 'page_summary')}
           ?disabled=${this.summarizing}
           @click=${() => {
             void this.handlePageSummary();
           }}
         >
-          ${this.summarizing ? '要約中…' : '📝 ページを要約'}
+          ${this.summarizing
+            ? '要約中…'
+            : formatAiButtonLabel('📝 ページを要約', this.licenseTier, 'page_summary')}
         </button>
       </div>
       ${this.renderHighlightsBody()}

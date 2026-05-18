@@ -1,6 +1,8 @@
 import { callGemini } from './gemini.js';
-import { getApiKey } from '../storage/settings.js';
+import { assertAiAccess, canUseAiFeature } from '../license/ai-access.js';
 import type { LicenseTier } from '../storage/highlights.js';
+import { getCurrentTier } from '../storage/license.js';
+import { getApiKey } from '../storage/settings.js';
 
 export type RephraseStyle = 'polite' | 'concise' | 'academic' | 'casual';
 
@@ -19,7 +21,7 @@ const STYLE_INSTRUCTIONS: Record<RephraseStyle, string> = {
 };
 
 export function canUseRephrase(tier: LicenseTier): boolean {
-  return tier === 'trial' || tier === 'premium';
+  return canUseAiFeature(tier, 'rephrase');
 }
 
 export function getRephraseStyleLabel(style: RephraseStyle): string {
@@ -41,6 +43,9 @@ export async function rephraseHighlightText(
   text: string,
   style: RephraseStyle,
 ): Promise<string> {
+  const tier = await getCurrentTier();
+  assertAiAccess(tier, 'rephrase');
+
   const apiKey = await getApiKey();
   if (apiKey === null) {
     throw new Error('API key not set');

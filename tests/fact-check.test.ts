@@ -21,8 +21,8 @@ describe('fact-check', () => {
 
   it('getFactCheckButtonLabel reflects tier', () => {
     expect(getFactCheckButtonLabel('premium')).toBe('🔎 ファクトチェック');
-    expect(getFactCheckButtonLabel('trial')).toBe('🔎 Premium 機能');
-    expect(getFactCheckButtonLabel('free')).toBe('🔎 Premium 機能');
+    expect(getFactCheckButtonLabel('trial')).toBe('🔒 🔎 ファクトチェック');
+    expect(getFactCheckButtonLabel('free')).toBe('🔒 🔎 ファクトチェック');
   });
 
   it('buildFactCheckPrompt includes selected text', () => {

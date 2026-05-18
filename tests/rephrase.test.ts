@@ -12,6 +12,10 @@ vi.mock('../src/shared/storage/settings.js', () => ({
   getApiKey: vi.fn(),
 }));
 
+vi.mock('../src/shared/storage/license.js', () => ({
+  getCurrentTier: vi.fn(),
+}));
+
 vi.mock('../src/shared/ai/gemini.js', () => ({
   callGemini: vi.fn(),
 }));
@@ -38,7 +42,9 @@ describe('rephrase', () => {
 
   it('rephraseHighlightText calls Gemini when API key is set', async () => {
     const { getApiKey } = await import('../src/shared/storage/settings.js');
+    const { getCurrentTier } = await import('../src/shared/storage/license.js');
     const { callGemini } = await import('../src/shared/ai/gemini.js');
+    vi.mocked(getCurrentTier).mockResolvedValue('trial');
     vi.mocked(getApiKey).mockResolvedValue('key');
     vi.mocked(callGemini).mockResolvedValue('  言い換え結果  ');
 

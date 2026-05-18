@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { findRelatedHighlights } from '../shared/ai/related-highlights.js';
+import { AiAccessError } from '../shared/license/ai-access.js';
 import {
   formatTrialRemainingLabel,
   getTrialDaysRemaining,
@@ -474,9 +475,13 @@ export class MarkwellPopupRoot extends LitElement {
       if (related.length === 0) {
         this.showToast('関連ハイライトが見つかりませんでした');
       }
-    } catch {
+    } catch (error) {
       this.relatedHighlights = [];
-      this.showToast('関連ハイライトの取得に失敗しました');
+      if (error instanceof AiAccessError) {
+        this.showToast('関連ハイライトはトライアルまたは Premium で利用できます');
+      } else {
+        this.showToast('関連ハイライトの取得に失敗しました');
+      }
     } finally {
       this.relatedLoading = false;
     }

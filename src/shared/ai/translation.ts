@@ -1,4 +1,6 @@
 import { callGemini } from './gemini.js';
+import { assertAiAccess } from '../license/ai-access.js';
+import { getCurrentTier } from '../storage/license.js';
 import { getApiKey } from '../storage/settings.js';
 import type { Highlight } from '../types/highlight.js';
 
@@ -41,6 +43,9 @@ export async function translateHighlightText(
   text: string,
   targetLang: string,
 ): Promise<string> {
+  const tier = await getCurrentTier();
+  assertAiAccess(tier, 'translation');
+
   const apiKey = await getApiKey();
   if (apiKey === null) {
     throw new Error('API key not set');

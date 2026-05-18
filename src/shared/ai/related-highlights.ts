@@ -1,4 +1,5 @@
 import { callGemini } from './gemini.js';
+import { assertAiAccess } from '../license/ai-access.js';
 import { listHighlights } from '../storage/highlights.js';
 import { getCurrentTier } from '../storage/license.js';
 import { getApiKey } from '../storage/settings.js';
@@ -107,9 +108,7 @@ export function resolveRelatedHighlights(
 
 export async function findRelatedHighlights(source: Highlight): Promise<Highlight[]> {
   const tier = await getCurrentTier();
-  if (tier !== 'trial' && tier !== 'premium') {
-    return [];
-  }
+  assertAiAccess(tier, 'related');
 
   const apiKey = await getApiKey();
   if (apiKey === null) {

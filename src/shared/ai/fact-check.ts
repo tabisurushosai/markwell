@@ -1,4 +1,5 @@
 import { callGeminiWithGoogleSearch, type GeminiGroundedResult } from './gemini.js';
+import { assertAiAccess, canUseAiFeature } from '../license/ai-access.js';
 import type { LicenseTier } from '../storage/highlights.js';
 import { getCurrentTier } from '../storage/license.js';
 import { getApiKey } from '../storage/settings.js';
@@ -15,11 +16,12 @@ export type FactCheckResult = {
 };
 
 export function canUseFactCheck(tier: LicenseTier): boolean {
-  return tier === 'premium';
+  return canUseAiFeature(tier, 'fact_check');
 }
 
 export function getFactCheckButtonLabel(tier: LicenseTier): string {
-  return canUseFactCheck(tier) ? '🔎 ファクトチェック' : '🔎 Premium 機能';
+  const label = '🔎 ファクトチェック';
+  return canUseFactCheck(tier) ? label : `🔒 ${label}`;
 }
 
 export function buildFactCheckPrompt(selectedText: string): string {
@@ -47,9 +49,7 @@ export function formatFactCheckForCopy(result: FactCheckResult): string {
 
 export async function factCheckHighlightText(text: string): Promise<FactCheckResult> {
   const tier = await getCurrentTier();
-  if (!canUseFactCheck(tier)) {
-    throw new Error('Premium required');
-  }
+  assertAiAccess(tier, 'fact_check');
 
   const apiKey = await getApiKey();
   if (apiKey === null) {

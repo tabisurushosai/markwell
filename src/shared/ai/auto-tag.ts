@@ -1,4 +1,5 @@
 import { callGemini } from './gemini.js';
+import { assertAiAccess } from '../license/ai-access.js';
 import { getCurrentTier } from '../storage/license.js';
 import { getApiKey, getSettings } from '../storage/settings.js';
 import { updateHighlight } from '../storage/highlights.js';
@@ -62,9 +63,7 @@ export async function maybeApplyAutoTagsAfterCreate(
 ): Promise<void> {
   try {
     const tier = await getCurrentTier();
-    if (tier !== 'trial' && tier !== 'premium') {
-      return;
-    }
+    assertAiAccess(tier, 'auto_tag');
 
     const settings = await getSettings();
     if (!settings.ai.auto_tag_on_save) {

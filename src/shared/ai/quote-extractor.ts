@@ -1,10 +1,13 @@
+import { callGemini } from './gemini.js';
+import { assertAiAccess, canUseAiFeature } from '../license/ai-access.js';
 import type { Highlight } from '../types/highlight.js';
 import type { LicenseTier } from '../storage/highlights.js';
+import { getCurrentTier } from '../storage/license.js';
 
 export const QUOTE_EXTRACT_COUNT = 5;
 
 export function canUseQuoteExtractor(tier: LicenseTier): boolean {
-  return tier === 'premium' || tier === 'trial';
+  return canUseAiFeature(tier, 'quote_extract');
 }
 
 export function formatHighlightsForQuoteExtractor(highlights: Highlight[]): string {
@@ -49,4 +52,19 @@ export function buildQuoteDownloadFilename(createdAt: number): string {
   const pad = (value: number): string => String(value).padStart(2, '0');
   const stamp = `${String(date.getUTCFullYear())}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}-${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}`;
   return `markwell-quotes-${stamp}.md`;
+}
+
+export function streamQuoteExtraction(
+  prompt: string,
+  opts: { signal?: AbortSignal },
+): AsyncGenerator<string, void, undefined> {
+  return (async function* () {
+    const tier = await getCurrentTier();
+    assertAiAccess(tier, 'quote_extract');
+    yield* callGemini(prompt, {
+      stream: true,
+      signal: opts.signal,
+      feature: 'quote_extractor',
+    });
+  })();
 }
