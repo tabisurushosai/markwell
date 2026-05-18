@@ -164,20 +164,28 @@ export class MarkwellPopupRoot extends LitElement {
       case 'projects':
         return html`
           <h2 class="panel-title">プロジェクト</h2>
-          <ul class="project-list">
-            <li class="project-item">
-              <span class="project-name">サンプルプロジェクト</span>
-              <button
-                type="button"
-                class="btn-open"
-                @click=${() => {
-                  this.handleOpenSidePanel();
-                }}
-              >
-                開く
-              </button>
-            </li>
-          </ul>
+          ${this.projects.length === 0
+            ? html`<p class="placeholder">プロジェクトがありません</p>`
+            : html`
+                <ul class="project-list">
+                  ${this.projects.map(
+                    (project) => html`
+                      <li class="project-item">
+                        <span class="project-name">${project.name}</span>
+                        <button
+                          type="button"
+                          class="btn-open"
+                          @click=${() => {
+                            this.handleOpenSidePanel();
+                          }}
+                        >
+                          開く
+                        </button>
+                      </li>
+                    `,
+                  )}
+                </ul>
+              `}
         `;
       default:
         return nothing;
@@ -267,7 +275,7 @@ export class MarkwellPopupRoot extends LitElement {
             this.handleOpenSidePanel();
           }}
         >
-          Side Panel
+          Side Panel を開く
         </button>
         <button
           type="button"
