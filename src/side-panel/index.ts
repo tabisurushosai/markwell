@@ -1505,44 +1505,7 @@ export class MarkwellSidePanelRoot extends LitElement {
             aria-label=${this.resultPanelMode === 'quotes' ? '引用抽出' : '合成結果'}
             aria-hidden=${!this.isResultPanelVisible()}
           >
-            ${this.isResultPanelVisible()
-              ? html`
-                  <div class="result-header">
-                    <h2 class="result-header__title">
-                      ${this.resultPanelMode === 'quotes' ? '引用抽出' : '合成結果'}
-                    </h2>
-                    <div class="result-header__actions">
-                      ${this.resultPanelMode === 'synthesis' && this.synthesizing
-                        ? html`<span class="result-badge">生成中</span>`
-                        : nothing}
-                      ${this.resultPanelMode === 'quotes' && this.extractingQuotes
-                        ? html`<span class="result-badge">抽出中</span>`
-                        : nothing}
-                      ${this.resultPanelMode === 'synthesis' &&
-                      !this.synthesizing &&
-                      !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
-                        ? this.renderExportMenu(
-                            this.synthesisMarkdown,
-                            this.synthesisExportCreatedAt,
-                            this.lastSynthesisModel,
-                            'result',
-                            this.exportMenuOpen,
-                          )
-                        : nothing}
-                      ${this.resultPanelMode === 'quotes' ? this.renderQuoteResultActions() : nothing}
-                    </div>
-                  </div>
-                  <div class="result-body">
-                    ${this.resultPanelMode === 'quotes'
-                      ? this.extractingQuotes && this.quotesMarkdown === ''
-                        ? html`<p class="result-placeholder">抽出中…</p>`
-                        : html`<markdown-it .content=${this.quotesMarkdown}></markdown-it>`
-                      : this.synthesizing && this.synthesisMarkdown === ''
-                        ? html`<p class="result-placeholder">生成中…</p>`
-                        : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
-                  </div>
-                `
-              : nothing}
+            ${this.isResultPanelVisible() ? this.renderResultPanel() : nothing}
           </aside>
         </div>
       </div>

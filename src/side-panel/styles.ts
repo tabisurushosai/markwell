@@ -491,6 +491,12 @@ export const sidePanelStyles = [
       font-weight: 600;
     }
 
+    .btn--compact {
+      flex: 0 1 auto;
+      padding: var(--space-1) var(--space-2);
+      font-size: var(--font-size-sm);
+    }
+
     .result-panel {
       display: none;
       flex-direction: column;
