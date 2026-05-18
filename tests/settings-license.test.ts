@@ -70,6 +70,12 @@ describe('settings + license storage', () => {
     expect(settings.shortcuts.quick_highlight).toBe('Alt+H');
     expect(settings.onboarding_seen).toBe(false);
     expect(settings.theme).toBe('dark');
+    expect(settings.blocked_domains).toEqual([
+      'chrome.google.com',
+      'chromewebstore.google.com',
+      'localhost:*',
+      '127.0.0.1:*',
+    ]);
   });
 
   it('encrypts and decrypts API key without storing plaintext', async () => {
