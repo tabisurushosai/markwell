@@ -11,6 +11,10 @@ import {
   renameTag,
   updateTagColor,
 } from '../shared/storage/tags.js';
+import {
+  bulkDeleteTags,
+  bulkUpdateTagColors,
+} from './utils/bulk-tag-operations.js';
 
 const DEFAULT_TAG_COLOR = '#ffd34e';
 
@@ -40,6 +44,12 @@ export class MwTagManager extends LitElement {
   @state() private mergingTagId: string | null = null;
 
   @state() private mergeTargetId = '';
+
+  @state() private selectionMode = false;
+
+  @state() private selectedTagIds: string[] = [];
+
+  @state() private bulkWorking = false;
 
   static styles = css`
     :host {
@@ -138,6 +148,38 @@ export class MwTagManager extends LitElement {
     .btn--danger {
       border-color: #8b3a3a;
       color: #f0a0a0;
+    }
+
+    .btn--active {
+      border-color: #8a7428;
+      color: #ffd34e;
+    }
+
+    .bulk-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #242424;
+    }
+
+    .bulk-meta {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .row-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .select-col {
+      width: 32px;
     }
 
     .meta {
@@ -303,6 +345,129 @@ export class MwTagManager extends LitElement {
     return this.tagRows.filter((row) => row.tag.name.toLowerCase().includes(query));
   }
 
+  private pruneSelection(): void {
+    const visibleIds = new Set(this.filteredRows.map((row) => row.tag.id));
+    this.selectedTagIds = this.selectedTagIds.filter((id) => visibleIds.has(id));
+  }
+
+  private get selectedCount(): number {
+    return this.selectedTagIds.length;
+  }
+
+  private get allVisibleSelected(): boolean {
+    const rows = this.filteredRows;
+    return rows.length > 0 && rows.every((row) => this.isSelected(row.tag.id));
+  }
+
+  private isSelected(tagId: string): boolean {
+    return this.selectedTagIds.includes(tagId);
+  }
+
+  private toggleSelectionMode(): void {
+    this.selectionMode = !this.selectionMode;
+    if (!this.selectionMode) {
+      this.clearSelection();
+    }
+    this.cancelEdit();
+    this.cancelMerge();
+  }
+
+  private clearSelection(): void {
+    this.selectedTagIds = [];
+  }
+
+  private toggleTagSelection(tagId: string): void {
+    if (this.isSelected(tagId)) {
+      this.selectedTagIds = this.selectedTagIds.filter((id) => id !== tagId);
+      return;
+    }
+    this.selectedTagIds = [...this.selectedTagIds, tagId];
+  }
+
+  private toggleSelectAllVisible(): void {
+    const rows = this.filteredRows;
+    if (this.allVisibleSelected) {
+      const visibleIds = new Set(rows.map((row) => row.tag.id));
+      this.selectedTagIds = this.selectedTagIds.filter((id) => !visibleIds.has(id));
+      return;
+    }
+    const merged = new Set(this.selectedTagIds);
+    for (const row of rows) {
+      merged.add(row.tag.id);
+    }
+    this.selectedTagIds = [...merged];
+  }
+
+  private getSelectedRows(): TagRow[] {
+    return this.tagRows.filter((row) => this.isSelected(row.tag.id));
+  }
+
+  private async handleBulkDelete(): Promise<void> {
+    if (this.selectedCount === 0 || this.bulkWorking) {
+      return;
+    }
+
+    const selectedRows = this.getSelectedRows();
+    const totalUsage = selectedRows.reduce((sum, row) => sum + row.usageCount, 0);
+    const usageNote =
+      totalUsage > 0
+        ? `\n${String(totalUsage)} 件のハイライトからタグが外れます。`
+        : '';
+    const confirmed = window.confirm(
+      `選択した ${String(selectedRows.length)} 件のタグを削除しますか？${usageNote}`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    this.bulkWorking = true;
+    try {
+      const count = await bulkDeleteTags(selectedRows.map((row) => row.tag.id));
+      this.clearSelection();
+      this.selectionMode = false;
+      this.cancelEdit();
+      this.cancelMerge();
+      await this.reload();
+      this.showStatus(`${String(count)} 件のタグを削除しました`);
+    } catch (error) {
+      this.showStatus(error instanceof Error ? error.message : '一括削除に失敗しました', true);
+    } finally {
+      this.bulkWorking = false;
+    }
+  }
+
+  private openBulkColorPicker(): void {
+    const input = this.renderRoot.querySelector('#bulk-tag-color');
+    if (input instanceof HTMLInputElement) {
+      input.click();
+    }
+  }
+
+  private async handleBulkColorChange(event: Event): Promise<void> {
+    if (this.selectedCount === 0 || this.bulkWorking) {
+      return;
+    }
+
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const color = input.value;
+    this.bulkWorking = true;
+    try {
+      const count = await bulkUpdateTagColors(this.selectedTagIds, color);
+      this.clearSelection();
+      this.selectionMode = false;
+      await this.reload();
+      this.showStatus(`${String(count)} 件のタグ色を変更しました`);
+    } catch (error) {
+      this.showStatus(error instanceof Error ? error.message : '一括色変更に失敗しました', true);
+    } finally {
+      this.bulkWorking = false;
+    }
+  }
+
   private showStatus(message: string, isError = false): void {
     this.statusMessage = isError ? `error:${message}` : message;
     window.setTimeout(() => {
@@ -346,6 +511,9 @@ export class MwTagManager extends LitElement {
   }
 
   private startRename(tag: Tag): void {
+    if (this.selectionMode) {
+      return;
+    }
     this.cancelMerge();
     this.editingTagId = tag.id;
     this.editingName = tag.name;
@@ -536,6 +704,48 @@ export class MwTagManager extends LitElement {
     `;
   }
 
+  private renderBulkBar() {
+    if (!this.selectionMode || this.selectedCount === 0) {
+      return nothing;
+    }
+
+    return html`
+      <div class="bulk-bar">
+        <span class="bulk-meta">${String(this.selectedCount)} 件選択中</span>
+        <button
+          type="button"
+          class="btn"
+          ?disabled=${this.bulkWorking}
+          @click=${() => {
+            this.openBulkColorPicker();
+          }}
+        >
+          一括色変更
+        </button>
+        <input
+          id="bulk-tag-color"
+          class="color-picker-hidden"
+          type="color"
+          aria-label="選択したタグの色を一括変更"
+          .value=${DEFAULT_TAG_COLOR}
+          @change=${(event: Event) => {
+            void this.handleBulkColorChange(event);
+          }}
+        />
+        <button
+          type="button"
+          class="btn btn--danger"
+          ?disabled=${this.bulkWorking}
+          @click=${() => {
+            void this.handleBulkDelete();
+          }}
+        >
+          一括削除
+        </button>
+      </div>
+    `;
+  }
+
   private renderActions(row: TagRow) {
     const { tag, usageCount } = row;
 
@@ -664,10 +874,40 @@ export class MwTagManager extends LitElement {
             const input = event.target;
             if (input instanceof HTMLInputElement) {
               this.filterQuery = input.value;
+              this.pruneSelection();
             }
           }}
         />
+        ${this.tagRows.length > 0
+          ? html`
+              <button
+                type="button"
+                class="btn ${this.selectionMode ? 'btn--active' : ''}"
+                @click=${() => {
+                  this.toggleSelectionMode();
+                }}
+              >
+                ${this.selectionMode ? '選択を終了' : '複数選択'}
+              </button>
+              ${this.selectionMode
+                ? html`
+                    <button
+                      type="button"
+                      class="btn"
+                      ?disabled=${rows.length === 0}
+                      @click=${() => {
+                        this.toggleSelectAllVisible();
+                      }}
+                    >
+                      ${this.allVisibleSelected ? '表示分の選択を解除' : '表示分をすべて選択'}
+                    </button>
+                  `
+                : nothing}
+            `
+          : nothing}
       </div>
+
+      ${this.renderBulkBar()}
 
       <p class="meta">
         ${this.filterQuery.trim() === ''
@@ -682,6 +922,9 @@ export class MwTagManager extends LitElement {
               <table>
                 <thead>
                   <tr>
+                    ${this.selectionMode
+                      ? html`<th scope="col" class="select-col"><span class="sr-only">選択</span></th>`
+                      : nothing}
                     <th scope="col">タグ</th>
                     <th scope="col">色</th>
                     <th scope="col">使用回数</th>
@@ -692,10 +935,25 @@ export class MwTagManager extends LitElement {
                   ${rows.map(
                     (row) => html`
                       <tr>
+                        ${this.selectionMode
+                          ? html`
+                              <td class="select-col">
+                                <input
+                                  class="row-checkbox"
+                                  type="checkbox"
+                                  .checked=${this.isSelected(row.tag.id)}
+                                  aria-label=${`${row.tag.name} を選択`}
+                                  @change=${() => {
+                                    this.toggleTagSelection(row.tag.id);
+                                  }}
+                                />
+                              </td>
+                            `
+                          : nothing}
                         <td>${this.renderTagNameCell(row)}</td>
-                        <td>${this.renderColorCell(row)}</td>
+                        <td>${this.selectionMode ? nothing : this.renderColorCell(row)}</td>
                         <td>${String(row.usageCount)}</td>
-                        <td>${this.renderActions(row)}</td>
+                        <td>${this.selectionMode ? nothing : this.renderActions(row)}</td>
                       </tr>
                     `,
                   )}
