@@ -306,8 +306,8 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   /** キーボード / 外部からの削除（confirm 付き） */
-  async deleteWithConfirm(): Promise<void> {
-    await this.handleDelete();
+  deleteWithConfirm(): void {
+    this.handleDelete();
   }
 
   private async handleCopyPlain(): Promise<void> {
@@ -322,14 +322,15 @@ export class MarkwellHighlightCard extends LitElement {
     this.showToast('Markdown をコピーしました');
   }
 
-  private async handleDelete(): Promise<void> {
-    if (!window.confirm(DELETE_CONFIRM_MESSAGE)) {
-      return;
-    }
+  private handleDelete(): void {
     const highlight = this.highlight;
-    await deleteHighlight(highlight.id);
-    await notifyHighlightRemovedOnOpenTabs(highlight);
-    this.dispatchRefresh();
+    openDeleteConfirmDialog({
+      onConfirm: async () => {
+        await deleteHighlight(highlight.id);
+        await notifyHighlightRemovedOnOpenTabs(highlight);
+        this.dispatchRefresh();
+      },
+    });
   }
 
   private showJumpNotFoundToast(): void {
