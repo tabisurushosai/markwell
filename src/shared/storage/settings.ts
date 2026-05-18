@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS: Settings = {
     provider: 'gemini',
     api_key_encrypted: '',
     model: 'gemini-2.0-flash',
+    auto_tag_on_save: true,
   },
   shortcuts: {
     quick_highlight: 'Alt+H',
@@ -124,11 +125,13 @@ export async function setSettings(patch: Partial<Settings>): Promise<Settings> {
 
 export async function setApiKey(plain: string): Promise<void> {
   const apiKeyEncrypted = await encryptPlaintext(plain);
+  const current = await getSettings();
   await setSettings({
     ai: {
       provider: 'gemini',
       api_key_encrypted: apiKeyEncrypted,
-      model: (await getSettings()).ai.model,
+      model: current.ai.model,
+      auto_tag_on_save: current.ai.auto_tag_on_save,
     },
   });
 }

@@ -127,6 +127,11 @@ export class MarkwellHighlightCard extends LitElement {
       border: 1px solid var(--border);
     }
 
+    .tag--ai {
+      border-style: dashed;
+      color: var(--text-muted);
+    }
+
     .note-icon {
       font-size: 12px;
       line-height: 1;
@@ -405,6 +410,9 @@ export class MarkwellHighlightCard extends LitElement {
                 ? html`<span class="tag" style="border-color: ${tag.color}">${tag.name}</span>`
                 : nothing;
             })}
+            ${this.highlight.ai_tags.map(
+              (aiTag) => html`<span class="tag tag--ai" title="AI タグ">${aiTag}</span>`,
+            )}
             ${hasNote ? html`<span class="note-icon" title=${this.highlight.note}>📝</span>` : ''}
             <time class="time" datetime=${new Date(this.highlight.created_at).toISOString()}>
               ${formatRelativeTime(this.highlight.created_at)}

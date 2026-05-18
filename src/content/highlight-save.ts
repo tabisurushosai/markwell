@@ -1,3 +1,4 @@
+import { maybeApplyAutoTagsAfterCreate } from '../shared/ai/auto-tag.js';
 import { createHighlight } from '../shared/storage/highlights.js';
 import type { Highlight, HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
@@ -42,5 +43,6 @@ export async function saveHighlightFromRange(
 
   applyHighlight(range, highlight.color, highlight.id);
   syncHighlightNoteInDom(highlight.id, highlight.note);
+  void maybeApplyAutoTagsAfterCreate(highlight.id, highlight.selected_text);
   return highlight;
 }

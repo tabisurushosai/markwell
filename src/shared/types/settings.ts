@@ -15,6 +15,8 @@ export type Settings = {
     provider: 'gemini';
     api_key_encrypted: string;
     model: string;
+    /** ハイライト保存時に AI 自動タグ付け（trial / premium） */
+    auto_tag_on_save: boolean;
   };
   shortcuts: {
     quick_highlight: string;
@@ -34,6 +36,7 @@ export const SettingsSchema = z.object({
     provider: z.literal('gemini'),
     api_key_encrypted: z.string(),
     model: z.string(),
+    auto_tag_on_save: z.boolean().default(true),
   }),
   shortcuts: z.object({
     quick_highlight: z.string(),
