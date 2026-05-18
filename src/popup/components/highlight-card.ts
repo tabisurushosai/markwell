@@ -162,8 +162,19 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
+  private showToast(message: string): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-toast', {
+        bubbles: true,
+        composed: true,
+        detail: { message },
+      }),
+    );
+  }
+
   private async handleCopy(): Promise<void> {
     await navigator.clipboard.writeText(this.highlight.selected_text);
+    this.showToast('コピーしました');
   }
 
   private async handleDelete(): Promise<void> {
@@ -177,13 +188,7 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   private showJumpNotFoundToast(): void {
-    this.dispatchEvent(
-      new CustomEvent('mw-toast', {
-        bubbles: true,
-        composed: true,
-        detail: { message: 'ハイライトが見つかりません' },
-      }),
-    );
+    this.showToast('ハイライトが見つかりません');
   }
 
   private handleCardClick(event: Event): void {
@@ -260,12 +265,15 @@ export class MarkwellHighlightCard extends LitElement {
           <div class="actions">
             <button
               type="button"
-              class="action-btn"
-              @click=${() => {
+              class="action-btn action-btn--icon"
+              aria-label="コピー"
+              title="コピー"
+              @click=${(event: Event) => {
+                event.stopPropagation();
                 void this.handleCopy();
               }}
             >
-              コピー
+              📋
             </button>
             <button
               type="button"
