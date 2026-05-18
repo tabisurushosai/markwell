@@ -1,5 +1,6 @@
 import { initContextMenu, registerContextMenus } from './context-menu.js';
 import { initPageSummaryMessaging } from './page-summary.js';
+import { getOrCreateDeviceId } from '../shared/license/device-id.js';
 import { runMigrations } from '../shared/storage/migrations.js';
 
 type MarkwellCommand = 'quick_highlight' | 'open_synthesis';
@@ -20,6 +21,7 @@ chrome.runtime.onInstalled.addListener(() => {
   void configureSidePanelBehavior();
   void runMigrations();
   void registerContextMenus();
+  void getOrCreateDeviceId();
 });
 
 void configureSidePanelBehavior();

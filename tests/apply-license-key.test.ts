@@ -34,11 +34,16 @@ function createFakeChromeStorage() {
       }
       return Promise.resolve();
     }),
+    dump: store,
   };
 }
 
 describe('applyLicenseKey', () => {
+  let fakeStorage: ReturnType<typeof createFakeChromeStorage>;
+
   beforeEach(() => {
+    fakeStorage = createFakeChromeStorage();
+    fakeStorage.dump.set('markwell:device_id', 'DEVICE123');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ valid: true, tier: 'premium' }), {
         status: 200,
@@ -47,7 +52,7 @@ describe('applyLicenseKey', () => {
     ));
     vi.stubGlobal('chrome', {
       storage: {
-        local: createFakeChromeStorage(),
+        local: fakeStorage,
       },
     });
   });
@@ -61,6 +66,14 @@ describe('applyLicenseKey', () => {
     expect(status.license_key).toBe('MW-TEST-KEY');
     expect(status.tier).toBe('premium');
     expect((await getLicenseStatus()).license_key).toBe('MW-TEST-KEY');
+
+    const fetchMock = vi.mocked(fetch);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/verify-license'),
+      expect.objectContaining({
+        body: expect.stringContaining('device_id'),
+      }),
+    );
   });
 
   it('rejects empty license key', async () => {
