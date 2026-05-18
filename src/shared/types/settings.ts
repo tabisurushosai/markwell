@@ -1,0 +1,39 @@
+import { z } from 'zod';
+
+import { HighlightColorSchema, type HighlightColor } from './highlight.js';
+
+export type Settings = {
+  default_color: HighlightColor;
+  font_scale: number;
+  density: 'compact' | 'normal' | 'comfortable';
+  blocked_domains: string[];
+  blocked_url_patterns: string[];
+  ai: {
+    provider: 'gemini';
+    api_key_encrypted: string;
+    model: string;
+  };
+  shortcuts: {
+    quick_highlight: string;
+    open_synthesis: string;
+  };
+  onboarding_seen: boolean;
+};
+
+export const SettingsSchema = z.object({
+  default_color: HighlightColorSchema,
+  font_scale: z.number(),
+  density: z.enum(['compact', 'normal', 'comfortable']),
+  blocked_domains: z.array(z.string()),
+  blocked_url_patterns: z.array(z.string()),
+  ai: z.object({
+    provider: z.literal('gemini'),
+    api_key_encrypted: z.string(),
+    model: z.string(),
+  }),
+  shortcuts: z.object({
+    quick_highlight: z.string(),
+    open_synthesis: z.string(),
+  }),
+  onboarding_seen: z.boolean(),
+});
