@@ -84,6 +84,9 @@ export class MarkwellDeleteConfirmDialog extends LitElement {
     }
   `;
 
+  @property()
+  message = 'このハイライトを削除しますか？この操作は取り消せません。';
+
   @property({ attribute: false })
   onConfirm: (() => void) | null = null;
 
@@ -128,9 +131,7 @@ export class MarkwellDeleteConfirmDialog extends LitElement {
             event.stopPropagation();
           }}
         >
-          <p id="markwell-popup-delete-title" class="message">
-            このハイライトを削除しますか？この操作は取り消せません。
-          </p>
+          <p id="markwell-popup-delete-title" class="message">${this.message}</p>
           <div class="actions">
             <button type="button" class="cancel-btn" @click=${this.handleCancel}>
               キャンセル
@@ -159,12 +160,16 @@ export function closeDeleteConfirmDialog(): void {
 }
 
 export function openDeleteConfirmDialog(options: {
+  message?: string;
   onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
 }): void {
   closeDeleteConfirmDialog();
 
   const dialog = document.createElement('markwell-delete-confirm-dialog');
+  if (options.message !== undefined) {
+    dialog.message = options.message;
+  }
 
   dialog.onConfirm = () => {
     void (async () => {

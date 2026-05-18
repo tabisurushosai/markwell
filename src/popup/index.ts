@@ -377,6 +377,7 @@ export class MarkwellPopupRoot extends LitElement {
             .focusedCardIndex=${this.focusedCardIndex}
             .licenseTier=${this.licenseTier}
             .translateTargetLang=${this.translateTargetLang}
+            .projects=${this.projects}
           ></markwell-all-highlights-view>
         `;
       case 'projects':
