@@ -27,5 +27,21 @@
       "all_frames": false
     }
   ],
-  "permissions": ["sidePanel", "storage"]
+  "permissions": ["sidePanel", "storage"],
+  "commands": {
+    "quick_highlight": {
+      "suggested_key": {
+        "default": "Alt+H",
+        "mac": "Alt+H"
+      },
+      "description": "Highlight the current selection with the default color"
+    },
+    "open_synthesis": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "mac": "Alt+S"
+      },
+      "description": "Open the synthesis side panel"
+    }
+  }
 }

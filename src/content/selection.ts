@@ -25,7 +25,7 @@ function isSelectionInsideMarkedHighlight(range: Range): boolean {
   return element?.closest('[data-markwell-id]') !== null;
 }
 
-function readActiveSelection(): { text: string; range: Range } | null {
+export function getHighlightableSelection(): { text: string; range: Range } | null {
   const selection = document.getSelection();
   if (selection === null || selection.rangeCount === 0 || selection.isCollapsed) {
     return null;
@@ -57,7 +57,7 @@ export function initSelectionDetection(): void {
 
     debounceTimer = setTimeout(() => {
       debounceTimer = null;
-      const payload = readActiveSelection();
+      const payload = getHighlightableSelection();
       if (payload === null) {
         return;
       }
