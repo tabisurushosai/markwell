@@ -1,6 +1,11 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import {
+  DEFAULT_DATE_FILTER,
+  filterHighlightsByDate,
+  type DateFilterValue,
+} from '../utils/date-filter.js';
+import {
   filterHighlightsByProject,
   filterHighlightsByTagIds,
   type ProjectFilterValue,
@@ -18,6 +23,8 @@ export class MarkwellCurrentPageView extends LitElement {
   @property({ attribute: false }) selectedTagIds: string[] = [];
 
   @property() selectedProjectFilter: ProjectFilterValue = 'all';
+
+  @property({ attribute: false }) dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
 
   @state() private highlights: Highlight[] = [];
 
@@ -86,7 +93,8 @@ export class MarkwellCurrentPageView extends LitElement {
   }
 
   private get filteredHighlights(): Highlight[] {
-    const byProject = filterHighlightsByProject(this.highlights, this.selectedProjectFilter);
+    const byDate = filterHighlightsByDate(this.highlights, this.dateFilter);
+    const byProject = filterHighlightsByProject(byDate, this.selectedProjectFilter);
     return filterHighlightsByTagIds(byProject, this.selectedTagIds);
   }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Highlight } from '../src/shared/types/highlight.js';
+import { filterHighlightsByDate } from '../src/popup/utils/date-filter.js';
 import {
   applyHighlightFilters,
   filterHighlightsByProject,
@@ -53,5 +54,23 @@ describe('tag-filter', () => {
       searchQuery: 'alpha',
     });
     expect(results.map((h) => h.id)).toEqual(['1']);
+  });
+
+  it('filters by date preset', () => {
+    const now = 1_700_000_000_000;
+    const todayHighlight: Highlight = {
+      ...highlights[0],
+      id: 'today',
+      created_at: now,
+      updated_at: now,
+    };
+    const oldHighlight: Highlight = {
+      ...highlights[0],
+      id: 'old',
+      created_at: now - 10 * 24 * 60 * 60 * 1000,
+      updated_at: now - 10 * 24 * 60 * 60 * 1000,
+    };
+    const filtered = filterHighlightsByDate([todayHighlight, oldHighlight], { preset: 'today', customStart: '', customEnd: '' }, now);
+    expect(filtered.map((h) => h.id)).toEqual(['today']);
   });
 });

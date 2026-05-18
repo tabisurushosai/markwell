@@ -1,9 +1,11 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { getCurrentTier } from '../shared/storage/license.js';
 import { listProjects } from '../shared/storage/projects.js';
 import { listTags } from '../shared/storage/tags.js';
 import type { Project } from '../shared/types/project.js';
 import type { Tag } from '../shared/types/tag.js';
+import { DEFAULT_DATE_FILTER, type DateFilterValue } from './utils/date-filter.js';
 import type { ProjectFilterValue } from './utils/tag-filter.js';
 import './components/tag-chips.js';
 import { popupStyles } from './styles.js';
@@ -35,6 +37,10 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private selectedProjectFilter: ProjectFilterValue = 'all';
 
+  @state() private dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
+
+  @state() private licenseTier: 'free' | 'trial' | 'premium' = 'free';
+
   static styles = popupStyles;
 
   connectedCallback(): void {
@@ -43,6 +49,7 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-refresh', this.onDataRefresh);
     this.addEventListener('mw-tag-toggle', this.onTagToggle);
     this.addEventListener('mw-project-filter', this.onProjectFilter);
+    this.addEventListener('mw-date-filter', this.onDateFilter);
     void this.loadFilterData();
   }
 
@@ -52,12 +59,19 @@ export class MarkwellPopupRoot extends LitElement {
     this.removeEventListener('mw-refresh', this.onDataRefresh);
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
     this.removeEventListener('mw-project-filter', this.onProjectFilter);
+    this.removeEventListener('mw-date-filter', this.onDateFilter);
   }
 
   private async loadFilterData(): Promise<void> {
-    const [tags, projects] = await Promise.all([listTags(), listProjects()]);
+    const [tags, projects, tier] = await Promise.all([
+      listTags(),
+      listProjects(),
+      getCurrentTier(),
+    ]);
     this.tags = tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
     this.projects = projects.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    this.licenseTier = tier;
+    this.tier = tier === 'premium' ? 'PREMIUM' : tier === 'trial' ? 'TRIAL' : 'FREE';
   }
 
   private readonly onDataRefresh = (): void => {
@@ -73,6 +87,17 @@ export class MarkwellPopupRoot extends LitElement {
       return;
     }
     this.selectedProjectFilter = projectFilter;
+  };
+
+  private readonly onDateFilter = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const dateFilter = (event.detail as { dateFilter?: DateFilterValue }).dateFilter;
+    if (!dateFilter) {
+      return;
+    }
+    this.dateFilter = dateFilter;
   };
 
   private readonly onTagToggle = (event: Event): void => {
@@ -124,6 +149,7 @@ export class MarkwellPopupRoot extends LitElement {
           <markwell-current-page-view
             .selectedTagIds=${this.selectedTagIds}
             .selectedProjectFilter=${this.selectedProjectFilter}
+            .dateFilter=${this.dateFilter}
           ></markwell-current-page-view>
         `;
       case 'all':
@@ -132,6 +158,7 @@ export class MarkwellPopupRoot extends LitElement {
             .searchQuery=${this.searchQuery}
             .selectedTagIds=${this.selectedTagIds}
             .selectedProjectFilter=${this.selectedProjectFilter}
+            .dateFilter=${this.dateFilter}
           ></markwell-all-highlights-view>
         `;
       case 'projects':
@@ -195,6 +222,8 @@ export class MarkwellPopupRoot extends LitElement {
         .projects=${this.projects}
         .selectedTagIds=${this.selectedTagIds}
         .selectedProjectFilter=${this.selectedProjectFilter}
+        .dateFilter=${this.dateFilter}
+        .licenseTier=${this.licenseTier}
       ></markwell-tag-chips>
 
       <nav class="tabs" role="tablist">

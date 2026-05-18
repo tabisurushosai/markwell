@@ -1,9 +1,24 @@
 import { LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import type { Project } from '../../shared/types/project.js';
 import type { Tag } from '../../shared/types/tag.js';
+import {
+  DEFAULT_DATE_FILTER,
+  type DateFilterPreset,
+  type DateFilterValue,
+  isDateFilterActive,
+} from '../utils/date-filter.js';
 import { PROJECT_FILTER_ALL, type ProjectFilterValue } from '../utils/tag-filter.js';
+
+type LicenseTier = 'free' | 'trial' | 'premium';
+
+const DATE_PRESETS: ReadonlyArray<{ id: DateFilterPreset; label: string }> = [
+  { id: 'today', label: '今日' },
+  { id: '7d', label: '直近 7 日' },
+  { id: '30d', label: '直近 30 日' },
+  { id: 'all', label: 'すべて' },
+];
 
 @customElement('markwell-tag-chips')
 export class MarkwellTagChips extends LitElement {
@@ -14,6 +29,16 @@ export class MarkwellTagChips extends LitElement {
   @property({ attribute: false }) selectedTagIds: string[] = [];
 
   @property() selectedProjectFilter: ProjectFilterValue = 'all';
+
+  @property({ attribute: false }) dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
+
+  @property() licenseTier: LicenseTier = 'free';
+
+  @state() private datePanelOpen = false;
+
+  @state() private customStartDraft = '';
+
+  @state() private customEndDraft = '';
 
   static styles = css`
     :host {
@@ -39,6 +64,122 @@ export class MarkwellTagChips extends LitElement {
     .row::-webkit-scrollbar-thumb {
       background: var(--text-muted);
       border-radius: var(--radius-sm);
+    }
+
+    .date-toggle {
+      flex-shrink: 0;
+      width: 32px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .date-toggle:hover {
+      border-color: var(--text-muted);
+    }
+
+    .date-toggle--active,
+    .date-toggle--open {
+      border-color: var(--accent);
+      background: var(--surface-raised);
+    }
+
+    .date-panel {
+      padding: var(--space-2) var(--space-3) var(--space-3);
+      border-bottom: 1px solid var(--surface-raised);
+      background: var(--surface);
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      margin-bottom: var(--space-2);
+    }
+
+    .preset-btn {
+      padding: var(--space-1) var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .preset-btn:hover {
+      color: var(--text);
+    }
+
+    .preset-btn--selected {
+      border-color: var(--accent);
+      background: var(--surface-raised);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .custom {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .custom-label {
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+    }
+
+    .custom-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .custom-input {
+      flex: 1;
+      min-width: 0;
+      padding: var(--space-1) var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+    }
+
+    .custom-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .premium-hint {
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--accent);
+    }
+
+    .apply-btn {
+      align-self: flex-start;
+      padding: var(--space-1) var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .apply-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .project-filter {
@@ -110,6 +251,20 @@ export class MarkwellTagChips extends LitElement {
     }
   `;
 
+  private get isPremium(): boolean {
+    return this.licenseTier === 'premium';
+  }
+
+  private emitDateFilter(filter: DateFilterValue): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-date-filter', {
+        bubbles: true,
+        composed: true,
+        detail: { dateFilter: filter },
+      }),
+    );
+  }
+
   private toggleTag(tagId: string): void {
     this.dispatchEvent(
       new CustomEvent('mw-tag-toggle', {
@@ -125,22 +280,63 @@ export class MarkwellTagChips extends LitElement {
     if (!(select instanceof HTMLSelectElement)) {
       return;
     }
-    const value = select.value;
     this.dispatchEvent(
       new CustomEvent('mw-project-filter', {
         bubbles: true,
         composed: true,
-        detail: { projectFilter: value },
+        detail: { projectFilter: select.value },
       }),
     );
+  }
+
+  private toggleDatePanel(): void {
+    this.datePanelOpen = !this.datePanelOpen;
+    if (this.datePanelOpen) {
+      this.customStartDraft = this.dateFilter.customStart;
+      this.customEndDraft = this.dateFilter.customEnd;
+    }
+  }
+
+  private selectPreset(preset: DateFilterPreset): void {
+    this.emitDateFilter({
+      preset,
+      customStart: '',
+      customEnd: '',
+    });
+  }
+
+  private applyCustomRange(): void {
+    if (!this.isPremium) {
+      return;
+    }
+    this.emitDateFilter({
+      preset: 'custom',
+      customStart: this.customStartDraft,
+      customEnd: this.customEndDraft,
+    });
   }
 
   render() {
     const selected = new Set(this.selectedTagIds);
     const projectActive = this.selectedProjectFilter !== PROJECT_FILTER_ALL;
+    const dateActive = isDateFilterActive(this.dateFilter);
 
     return html`
       <div class="row">
+        <button
+          type="button"
+          class="date-toggle ${dateActive ? 'date-toggle--active' : ''} ${this.datePanelOpen
+            ? 'date-toggle--open'
+            : ''}"
+          aria-expanded=${this.datePanelOpen}
+          aria-label="日付フィルタ"
+          title="日付フィルタ"
+          @click=${() => {
+            this.toggleDatePanel();
+          }}
+        >
+          📅
+        </button>
         <label class="project-filter">
           <span class="project-filter__label">📁 プロジェクト</span>
           <select
@@ -175,6 +371,78 @@ export class MarkwellTagChips extends LitElement {
               `,
             )}
       </div>
+      ${this.datePanelOpen
+        ? html`
+            <div class="date-panel">
+              <div class="preset-row">
+                ${DATE_PRESETS.map(
+                  (preset) => html`
+                    <button
+                      type="button"
+                      class="preset-btn ${this.dateFilter.preset === preset.id
+                        ? 'preset-btn--selected'
+                        : ''}"
+                      @click=${() => {
+                        this.selectPreset(preset.id);
+                      }}
+                    >
+                      ${preset.label}
+                    </button>
+                  `,
+                )}
+              </div>
+              <div class="custom">
+                <p class="custom-label">カスタム期間</p>
+                ${this.isPremium
+                  ? html`
+                      <div class="custom-row">
+                        <input
+                          class="custom-input"
+                          type="date"
+                          .value=${this.customStartDraft}
+                          @input=${(event: Event) => {
+                            const input = event.target;
+                            if (input instanceof HTMLInputElement) {
+                              this.customStartDraft = input.value;
+                            }
+                          }}
+                        />
+                        <span>〜</span>
+                        <input
+                          class="custom-input"
+                          type="date"
+                          .value=${this.customEndDraft}
+                          @input=${(event: Event) => {
+                            const input = event.target;
+                            if (input instanceof HTMLInputElement) {
+                              this.customEndDraft = input.value;
+                            }
+                          }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        class="apply-btn"
+                        ?disabled=${this.customStartDraft === '' || this.customEndDraft === ''}
+                        @click=${() => {
+                          this.applyCustomRange();
+                        }}
+                      >
+                        適用
+                      </button>
+                    `
+                  : html`
+                      <div class="custom-row">
+                        <input class="custom-input" type="date" disabled />
+                        <span>〜</span>
+                        <input class="custom-input" type="date" disabled />
+                      </div>
+                      <p class="premium-hint">Premium で解放</p>
+                    `}
+              </div>
+            </div>
+          `
+        : ''}
     `;
   }
 }

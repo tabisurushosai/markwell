@@ -7,6 +7,7 @@ import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
 import { buildHighlightOpenUrl } from '../utils/highlight-url.js';
+import { type DateFilterValue, DEFAULT_DATE_FILTER, isDateFilterActive } from '../utils/date-filter.js';
 import { applyHighlightFilters, isProjectFilterActive, type ProjectFilterValue } from '../utils/tag-filter.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -18,6 +19,8 @@ export class MarkwellAllHighlightsView extends LitElement {
   @property({ attribute: false }) selectedTagIds: string[] = [];
 
   @property() selectedProjectFilter: ProjectFilterValue = 'all';
+
+  @property({ attribute: false }) dateFilter: DateFilterValue = { ...DEFAULT_DATE_FILTER };
 
   @state() private debouncedQuery = '';
 
@@ -76,7 +79,11 @@ export class MarkwellAllHighlightsView extends LitElement {
   }
 
   updated(changed: Map<string, unknown>): void {
-    if (changed.has('selectedTagIds') || changed.has('selectedProjectFilter')) {
+    if (
+      changed.has('selectedTagIds') ||
+      changed.has('selectedProjectFilter') ||
+      changed.has('dateFilter')
+    ) {
       this.applyFilter();
     }
     if (changed.has('searchQuery')) {
@@ -105,7 +112,8 @@ export class MarkwellAllHighlightsView extends LitElement {
     return (
       this.debouncedQuery.trim() !== '' ||
       this.selectedTagIds.length > 0 ||
-      isProjectFilterActive(this.selectedProjectFilter)
+      isProjectFilterActive(this.selectedProjectFilter) ||
+      isDateFilterActive(this.dateFilter)
     );
   }
 
@@ -121,6 +129,7 @@ export class MarkwellAllHighlightsView extends LitElement {
       searchQuery: this.debouncedQuery,
       tagIds: this.selectedTagIds,
       projectFilter: this.selectedProjectFilter,
+      dateFilter: this.dateFilter,
     });
   }
 
@@ -150,7 +159,7 @@ export class MarkwellAllHighlightsView extends LitElement {
     if (!this.hasActiveFilter()) {
       return html`
         <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">検索・タグ・プロジェクトのいずれかで絞り込んでください</p>
+        <p class="empty">検索・タグ・プロジェクト・日付のいずれかで絞り込んでください</p>
       `;
     }
 

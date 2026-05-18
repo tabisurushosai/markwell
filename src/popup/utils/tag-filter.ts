@@ -1,4 +1,5 @@
 import type { Highlight } from '../../shared/types/highlight.js';
+import { filterHighlightsByDate, type DateFilterValue, DEFAULT_DATE_FILTER } from './date-filter.js';
 import { filterHighlights } from './search.js';
 
 export const PROJECT_FILTER_ALL = 'all';
@@ -42,9 +43,11 @@ export function applyHighlightFilters(
     searchQuery?: string;
     tagIds?: string[];
     projectFilter?: ProjectFilterValue;
+    dateFilter?: DateFilterValue;
   },
 ): Highlight[] {
-  let result = filterHighlightsByProject(highlights, options.projectFilter ?? PROJECT_FILTER_ALL);
+  let result = filterHighlightsByDate(highlights, options.dateFilter ?? DEFAULT_DATE_FILTER);
+  result = filterHighlightsByProject(result, options.projectFilter ?? PROJECT_FILTER_ALL);
   result = filterHighlightsByTagIds(result, options.tagIds ?? []);
   const query = options.searchQuery?.trim() ?? '';
   if (query !== '') {
