@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Markwell",
+  "name": "__MSG_extension_name__",
   "version": "0.0.0",
-  "description": "Web ハイライト & AI 合成 Chrome 拡張",
+  "description": "__MSG_extension_description__",
+  "default_locale": "en",
   "action": {
     "default_popup": "src/popup/index.html",
     "default_title": "Markwell"
