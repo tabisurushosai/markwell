@@ -177,8 +177,48 @@ export class MwTagManager extends LitElement {
       vertical-align: middle;
     }
 
-    .tag-name {
+    .tag-name-btn {
       margin-left: 8px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tag-name-btn:hover {
+      color: #ffd34e;
+      text-decoration: underline;
+    }
+
+    .rename-input {
+      margin-left: 8px;
+      min-width: 140px;
+      padding: 4px 8px;
+      border: 1px solid #666;
+      border-radius: 4px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .merge-select {
+      min-width: 180px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .actions {
@@ -298,8 +338,13 @@ export class MwTagManager extends LitElement {
 
   private async handleRename(tagId: string): Promise<void> {
     const newName = this.editingName.trim();
+    const current = this.tagRows.find((row) => row.tag.id === tagId)?.tag.name ?? '';
     if (newName === '') {
       this.showStatus('タグ名を入力してください', true);
+      return;
+    }
+    if (newName === current) {
+      this.cancelEdit();
       return;
     }
 
@@ -310,6 +355,18 @@ export class MwTagManager extends LitElement {
       this.showStatus('タグ名を変更しました');
     } catch (error) {
       this.showStatus(error instanceof Error ? error.message : '名前の変更に失敗しました', true);
+    }
+  }
+
+  private onRenameKeydown(event: KeyboardEvent, tagId: string): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void this.handleRename(tagId);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelEdit();
     }
   }
 
@@ -373,22 +430,46 @@ export class MwTagManager extends LitElement {
     }
   }
 
+  private renderTagNameCell(row: TagRow) {
+    const { tag } = row;
+    if (this.editingTagId === tag.id) {
+      return html`
+        <span class="color-swatch" style="background: ${tag.color}" aria-hidden="true"></span>
+        <input
+          class="rename-input"
+          type="text"
+          aria-label="タグ名を編集"
+          .value=${this.editingName}
+          @input=${(event: Event) => {
+            const input = event.target;
+            if (input instanceof HTMLInputElement) {
+              this.editingName = input.value;
+            }
+          }}
+          @keydown=${(event: KeyboardEvent) => this.onRenameKeydown(event, tag.id)}
+        />
+      `;
+    }
+
+    return html`
+      <span class="color-swatch" style="background: ${tag.color}" aria-hidden="true"></span>
+      <button
+        type="button"
+        class="tag-name-btn"
+        title="クリックして名前を変更"
+        @click=${() => this.startRename(tag)}
+      >
+        ${tag.name}
+      </button>
+    `;
+  }
+
   private renderActions(row: TagRow) {
     const { tag, usageCount } = row;
 
     if (this.editingTagId === tag.id) {
       return html`
         <div class="inline-form">
-          <input
-            type="text"
-            .value=${this.editingName}
-            @input=${(event: Event) => {
-              const input = event.target;
-              if (input instanceof HTMLInputElement) {
-                this.editingName = input.value;
-              }
-            }}
-          />
           <button type="button" class="btn btn--primary" @click=${() => void this.handleRename(tag.id)}>
             保存
           </button>
@@ -401,7 +482,10 @@ export class MwTagManager extends LitElement {
       const targets = this.tagRows.filter((entry) => entry.tag.id !== tag.id);
       return html`
         <div class="inline-form">
+          <label class="sr-only" for=${`merge-target-${tag.id}`}>他のタグに統合</label>
           <select
+            id=${`merge-target-${tag.id}`}
+            aria-label="他のタグに統合"
             .value=${this.mergeTargetId}
             @change=${(event: Event) => {
               const select = event.target;
@@ -410,15 +494,20 @@ export class MwTagManager extends LitElement {
               }
             }}
           >
-            <option value="">統合先を選択</option>
+            <option value="">他のタグに統合先を選択</option>
             ${targets.map(
               (entry) => html`
                 <option value=${entry.tag.id}>${entry.tag.name}</option>
               `,
             )}
           </select>
-          <button type="button" class="btn btn--primary" @click=${() => void this.handleMerge(tag.id)}>
-            統合
+          <button
+            type="button"
+            class="btn btn--primary"
+            ?disabled=${this.mergeTargetId === ''}
+            @click=${() => void this.handleMerge(tag.id)}
+          >
+            統合を実行
           </button>
           <button type="button" class="btn" @click=${() => this.cancelMerge()}>キャンセル</button>
         </div>
@@ -434,7 +523,7 @@ export class MwTagManager extends LitElement {
           ?disabled=${this.tagRows.length < 2}
           @click=${() => this.startMerge(tag.id)}
         >
-          統合
+          他のタグに統合
         </button>
         <button type="button" class="btn btn--danger" @click=${() => void this.handleDelete(tag, usageCount)}>
           削除
@@ -529,14 +618,7 @@ export class MwTagManager extends LitElement {
                   ${rows.map(
                     (row) => html`
                       <tr>
-                        <td>
-                          <span
-                            class="color-swatch"
-                            style="background: ${row.tag.color}"
-                            aria-hidden="true"
-                          ></span>
-                          <span class="tag-name">${row.tag.name}</span>
-                        </td>
+                        <td>${this.renderTagNameCell(row)}</td>
                         <td>${String(row.usageCount)}</td>
                         <td>${this.renderActions(row)}</td>
                       </tr>
