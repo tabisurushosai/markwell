@@ -4,6 +4,11 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyLicenseKey } from '../shared/license/apply-license-key.js';
 import { resolveStripePaymentLink } from '../shared/license/config.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../shared/license/start-trial.js';
+import {
+  formatTrialRemainingLabel,
+  getTrialDaysRemaining,
+  isTrialUrgent,
+} from '../shared/license/trial-countdown.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import { getSettings } from '../shared/storage/settings.js';
 
@@ -30,6 +35,10 @@ export class MwPremiumSection extends LitElement {
   @state() private trialUsed = false;
 
   @state() private startingTrial = false;
+
+  @state() private trialRemainingLabel = '';
+
+  @state() private trialUrgent = false;
 
   @state() private toastMessage = '';
 
@@ -63,6 +72,22 @@ export class MwPremiumSection extends LitElement {
       font-size: 18px;
       font-weight: 600;
       color: #ffd34e;
+    }
+
+    .trial-countdown {
+      margin: 6px 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #c9b35c;
+    }
+
+    .trial-countdown--urgent {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #fff;
+      background: #c62828;
     }
 
     .section {
@@ -195,9 +220,21 @@ export class MwPremiumSection extends LitElement {
     this.paymentLinkUrl = resolveStripePaymentLink(settings.stripe_payment_link);
     this.currentTier = tier;
     this.trialUsed = await hasUsedTrial();
+    this.applyTrialCountdown(tier, license.trial_end);
     this.storedLicenseKey = license.license_key ?? '';
     this.licenseKeyDraft = license.license_key ?? '';
     this.loading = false;
+  }
+
+  private applyTrialCountdown(tier: Tier, trialEnd: number | null): void {
+    if (tier === 'trial' && trialEnd !== null) {
+      const days = getTrialDaysRemaining(trialEnd);
+      this.trialRemainingLabel = formatTrialRemainingLabel(days);
+      this.trialUrgent = isTrialUrgent(days);
+      return;
+    }
+    this.trialRemainingLabel = '';
+    this.trialUrgent = false;
   }
 
   private showToast(message: string, isError = false): void {
@@ -223,9 +260,10 @@ export class MwPremiumSection extends LitElement {
 
     this.startingTrial = true;
     try {
-      await startTrial();
+      const next = await startTrial();
       this.trialUsed = true;
       this.currentTier = await getCurrentTier();
+      this.applyTrialCountdown('trial', next.trial_end);
       this.showToast('7 日間の Premium トライアルを開始しました');
     } catch (error) {
       if (error instanceof TrialAlreadyUsedError) {
@@ -270,6 +308,11 @@ export class MwPremiumSection extends LitElement {
       <div class="status-card">
         <p class="status-label">現在のプラン</p>
         <p class="status-value">${TIER_LABELS[this.currentTier]}</p>
+        ${this.trialRemainingLabel !== ''
+          ? html`<p class="trial-countdown ${this.trialUrgent ? 'trial-countdown--urgent' : ''}">
+              ${this.trialRemainingLabel}
+            </p>`
+          : nothing}
       </div>
 
       <section class="section" aria-labelledby="trial-title">

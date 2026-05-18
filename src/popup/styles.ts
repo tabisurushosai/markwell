@@ -108,9 +108,30 @@ const popupLayoutStyles = css`
   }
 
   .tier-badge[data-tier='TRIAL'] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    line-height: 1.15;
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
     background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  }
+
+  .tier-badge[data-tier='TRIAL'][data-urgent] {
+    color: #fff;
+    border-color: #b71c1c;
+    background: #c62828;
+  }
+
+  .tier-badge__tier {
+    font-size: 10px;
+  }
+
+  .tier-badge__days {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0;
   }
 
   .tier-badge[data-tier='PREMIUM'] {

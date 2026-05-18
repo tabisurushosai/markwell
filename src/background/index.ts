@@ -1,5 +1,6 @@
 import { initContextMenu, registerContextMenus } from './context-menu.js';
 import { initPageSummaryMessaging } from './page-summary.js';
+import { initTrialCheck } from './trial-check.js';
 import { getOrCreateDeviceId } from '../shared/license/device-id.js';
 import { runMigrations } from '../shared/storage/migrations.js';
 
@@ -12,6 +13,7 @@ type ContentRunCommandMessage = {
 
 initContextMenu();
 initPageSummaryMessaging();
+initTrialCheck();
 
 async function configureSidePanelBehavior(): Promise<void> {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });

@@ -1,7 +1,12 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { findRelatedHighlights } from '../shared/ai/related-highlights.js';
-import { getCurrentTier } from '../shared/storage/license.js';
+import {
+  formatTrialRemainingLabel,
+  getTrialDaysRemaining,
+  isTrialUrgent,
+} from '../shared/license/trial-countdown.js';
+import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { listProjects } from '../shared/storage/projects.js';
 import { listTags } from '../shared/storage/tags.js';
@@ -45,6 +50,10 @@ export class MarkwellPopupRoot extends LitElement {
   @state() private activeTab: TabId = 'page';
   @state() private searchQuery = '';
   @state() private tier: TierBadge = 'FREE';
+
+  @state() private trialRemainingLabel = '';
+
+  @state() private trialUrgent = false;
 
   @state() private toastMessage = '';
 
@@ -137,10 +146,11 @@ export class MarkwellPopupRoot extends LitElement {
   }
 
   private async loadFilterData(): Promise<void> {
-    const [tags, projects, tier, settings] = await Promise.all([
+    const [tags, projects, tier, license, settings] = await Promise.all([
       listTags(),
       listProjects(),
       getCurrentTier(),
+      getLicenseStatus(),
       getSettings(),
     ]);
     this.tags = tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
@@ -148,6 +158,14 @@ export class MarkwellPopupRoot extends LitElement {
     this.licenseTier = tier;
     this.translateTargetLang = settings.translate_target_lang;
     this.tier = tier === 'premium' ? 'PREMIUM' : tier === 'trial' ? 'TRIAL' : 'FREE';
+    if (tier === 'trial' && license.trial_end !== null) {
+      const days = getTrialDaysRemaining(license.trial_end);
+      this.trialRemainingLabel = formatTrialRemainingLabel(days);
+      this.trialUrgent = isTrialUrgent(days);
+    } else {
+      this.trialRemainingLabel = '';
+      this.trialUrgent = false;
+    }
   }
 
   private readonly onDataRefresh = (): void => {
@@ -537,7 +555,18 @@ export class MarkwellPopupRoot extends LitElement {
             this.onSearchInput(event);
           }}
         />
-        <span class="tier-badge" data-tier=${this.tier}>${this.tier}</span>
+        <span
+          class="tier-badge"
+          data-tier=${this.tier}
+          ?data-urgent=${this.trialUrgent}
+        >
+          ${this.tier === 'TRIAL' && this.trialRemainingLabel !== ''
+            ? html`
+                <span class="tier-badge__tier">TRIAL</span>
+                <span class="tier-badge__days">${this.trialRemainingLabel}</span>
+              `
+            : this.tier}
+        </span>
       </header>
 
       <markwell-tag-chips
