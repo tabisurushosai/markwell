@@ -919,7 +919,10 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 <time datetime=${new Date(synthesis.created_at).toISOString()}>
                                   ${this.formatHistoryDate(synthesis.created_at)}
                                 </time>
-                                <span class="history-item__model">${synthesis.model}</span>
+                                <span class="history-item__model"
+                                  >${synthesis.model} · 入力 ${String(synthesis.token_input)} /
+                                  出力 ${String(synthesis.token_output)}</span
+                                >
                               </div>
                               <p class="history-item__preview">
                                 ${this.previewMarkdown(synthesis.result_markdown)}

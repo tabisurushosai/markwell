@@ -123,3 +123,18 @@ export async function listSyntheses(
 
   return sorted.slice(offset, offset + limit);
 }
+
+/** import 後にプロジェクト別インデックスを再構築する */
+export async function rebuildSynthesisIndexes(syntheses: Synthesis[]): Promise<void> {
+  const all = await chrome.storage.local.get(null);
+  const indexKeys = Object.keys(all).filter((key) =>
+    key.startsWith(INDEX_BY_PROJECT_PREFIX),
+  );
+  if (indexKeys.length > 0) {
+    await chrome.storage.local.remove(indexKeys);
+  }
+
+  for (const synthesis of syntheses) {
+    await addToIndex(indexByProjectKey(synthesis.project_id), synthesis.id);
+  }
+}

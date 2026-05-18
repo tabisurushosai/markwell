@@ -5,6 +5,7 @@ import { ProjectSchema } from '../types/project.js';
 import { SynthesisSchema } from '../types/synthesis.js';
 import { TagSchema } from '../types/tag.js';
 import { CURRENT_SCHEMA_VERSION, getSchemaVersion } from './migrations.js';
+import { rebuildSynthesisIndexes } from './syntheses.js';
 import { kvDelete, kvGet, kvListByPrefix, kvSet } from './kv.js';
 
 const HIGHLIGHT_KEY_PREFIX = 'markwell:highlight:';
@@ -212,6 +213,9 @@ export async function importAll(json: unknown, mode: 'merge' | 'replace'): Promi
 
     const allHighlights = await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema);
     await rebuildHighlightIndexes(allHighlights);
+
+    const allSyntheses = await kvListByPrefix(SYNTHESIS_KEY_PREFIX, SynthesisSchema);
+    await rebuildSynthesisIndexes(allSyntheses);
 
     return {
       imported: {
