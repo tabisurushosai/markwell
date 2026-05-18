@@ -1,4 +1,9 @@
-import { jumpToHighlight, removeHighlightFromDom } from './highlighter.js';
+import {
+  jumpToHighlight,
+  removeHighlightFromDom,
+  updateHighlightColorInDom,
+} from './highlighter.js';
+import type { HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
 import { handleHighlightWithNoteCommand, handleQuickHighlightCommand } from './shortcuts.js';
 
@@ -10,6 +15,7 @@ export type ContentMessage =
   | { type: 'GET_CANONICAL_URL' }
   | { type: 'JUMP_TO_HIGHLIGHT'; id: string }
   | { type: 'REMOVE_HIGHLIGHT_FROM_DOM'; id: string }
+  | { type: 'UPDATE_HIGHLIGHT_COLOR'; id: string; color: HighlightColor }
   | { type: 'RUN_COMMAND'; command: ContentRunCommand };
 
 export type JumpToHighlightResponse = { ok: boolean };
@@ -33,6 +39,10 @@ export function initContentMessaging(): void {
       }
       case 'REMOVE_HIGHLIGHT_FROM_DOM':
         removeHighlightFromDom(msg.id);
+        sendResponse({ ok: true });
+        return true;
+      case 'UPDATE_HIGHLIGHT_COLOR':
+        updateHighlightColorInDom(msg.id, msg.color);
         sendResponse({ ok: true });
         return true;
       case 'RUN_COMMAND': {

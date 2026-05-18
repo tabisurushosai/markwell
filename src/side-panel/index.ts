@@ -1,24 +1,49 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import { listHighlights } from '../shared/storage/highlights.js';
+import { listHighlights, updateHighlight } from '../shared/storage/highlights.js';
 import { getCurrentTier } from '../shared/storage/license.js';
 import {
   assertProjectLimit,
   createProject,
   listProjects,
   ProjectLimitError,
+  removeHighlightFromProject,
   reorderHighlightsInProject,
 } from '../shared/storage/projects.js';
 import { getLastProjectId, setLastProjectId } from '../shared/storage/ui-state.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
+import type { HighlightColor } from '../shared/types/highlight.js';
 import type { Project } from '../shared/types/project.js';
 import { applyDocumentTheme, resolveEffectiveTheme } from '../popup/utils/theme.js';
+import {
+  jumpToHighlightFromSidePanel,
+  notifyHighlightColorOnOpenTabs,
+} from './utils/highlight-actions.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import { sidePanelStyles } from './styles.js';
 
 const NEW_PROJECT_SENTINEL = '__markwell_new_project__';
+
+const HIGHLIGHT_COLORS: readonly HighlightColor[] = [
+  'yellow',
+  'green',
+  'pink',
+  'blue',
+  'orange',
+];
+
+const COLOR_LABELS: Record<HighlightColor, string> = {
+  yellow: '黄',
+  green: '緑',
+  pink: 'ピンク',
+  blue: '青',
+  orange: 'オレンジ',
+};
+
+const EMPTY_PROJECT_HIGHLIGHTS_MESSAGE =
+  'このプロジェクトにはハイライトがありません。popup からハイライトを右クリック → プロジェクトに追加 で入れられます';
 
 @customElement('markwell-side-panel-root')
 export class MarkwellSidePanelRoot extends LitElement {
@@ -44,7 +69,11 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private createError = '';
 
+  @state() private statusMessage = '';
+
   private systemThemeQuery: MediaQueryList | null = null;
+
+  private statusTimer: number | undefined;
 
   static styles = sidePanelStyles;
 
@@ -59,6 +88,9 @@ export class MarkwellSidePanelRoot extends LitElement {
     super.disconnectedCallback();
     this.systemThemeQuery?.removeEventListener('change', this.onSystemThemeChange);
     this.systemThemeQuery = null;
+    if (this.statusTimer !== undefined) {
+      window.clearTimeout(this.statusTimer);
+    }
   }
 
   private readonly onSystemThemeChange = (): void => {
@@ -100,13 +132,36 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private async loadHighlightsForProject(): Promise<void> {
-    const project = this.projects.find((item) => item.id === this.selectedProjectId);
+    if (this.selectedProjectId === '') {
+      this.highlights = [];
+      return;
+    }
+    const project = await getProject(this.selectedProjectId);
     if (project === undefined) {
       this.highlights = [];
       return;
     }
+    const projectIndex = this.projects.findIndex((item) => item.id === project.id);
+    if (projectIndex >= 0) {
+      this.projects = [
+        ...this.projects.slice(0, projectIndex),
+        project,
+        ...this.projects.slice(projectIndex + 1),
+      ];
+    }
     const items = await listHighlights({ project_id: project.id });
     this.highlights = orderHighlightsForProject(items, project);
+  }
+
+  private showStatus(message: string): void {
+    this.statusMessage = message;
+    if (this.statusTimer !== undefined) {
+      window.clearTimeout(this.statusTimer);
+    }
+    this.statusTimer = window.setTimeout(() => {
+      this.statusMessage = '';
+      this.statusTimer = undefined;
+    }, 3000);
   }
 
   private async selectProject(projectId: string): Promise<void> {
@@ -193,6 +248,127 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.highlights = orderHighlightsForProject(this.highlights, project);
   }
 
+  private async handleExcludeFromProject(highlight: Highlight): Promise<void> {
+    if (this.selectedProjectId === '') {
+      return;
+    }
+    await removeHighlightFromProject(this.selectedProjectId, highlight.id);
+    const project = this.projects.find((item) => item.id === this.selectedProjectId);
+    if (project !== undefined) {
+      project.highlight_order = project.highlight_order.filter((id) => id !== highlight.id);
+    }
+    await this.loadHighlightsForProject();
+  }
+
+  private async handleJump(highlight: Highlight): Promise<void> {
+    await jumpToHighlightFromSidePanel(highlight);
+  }
+
+  private async handleColorChange(highlight: Highlight, color: HighlightColor): Promise<void> {
+    if (highlight.color === color) {
+      return;
+    }
+    const updated = await updateHighlight(highlight.id, { color });
+    this.highlights = this.highlights.map((item) =>
+      item.id === updated.id ? updated : item,
+    );
+    await notifyHighlightColorOnOpenTabs(updated, color);
+  }
+
+  private readonly onHighlightReorder = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const direction = (event.detail as { direction?: -1 | 1 }).direction;
+    const card = event.target;
+    if (!(card instanceof HTMLElement) || direction === undefined) {
+      return;
+    }
+    const index = this.highlights.findIndex((highlight) => {
+      const item = card.closest('markwell-project-highlight-card');
+      return item?.highlight?.id === highlight.id;
+    });
+    // find index from composed path
+    const path = event.composedPath();
+    const cardEl = path.find(
+      (node): node is HTMLElement & { highlight: Highlight } =>
+        node instanceof HTMLElement && node.tagName === 'MARKWELL-PROJECT-HIGHLIGHT-CARD',
+    );
+    if (cardEl === undefined) {
+      return;
+    }
+    const highlightId = (cardEl as { highlight?: Highlight }).highlight?.id;
+    const idx = this.highlights.findIndex((h) => h.id === highlightId);
+    if (idx < 0) {
+      return;
+    }
+    this.moveHighlight(idx, direction);
+  };
+
+  private readonly onHighlightExclude = (event: Event): void => {
+    const highlight = this.highlightFromEvent(event);
+    if (highlight === null || this.selectedProjectId === '') {
+      return;
+    }
+    void this.excludeHighlightFromProject(highlight);
+  };
+
+  private readonly onHighlightJump = (event: Event): void => {
+    const highlight = this.highlightFromEvent(event);
+    if (highlight === null) {
+      return;
+    }
+    void this.jumpToHighlight(highlight);
+  };
+
+  private readonly onHighlightColor = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const highlight = this.highlightFromEvent(event);
+    const color = (event.detail as { color?: HighlightColor }).color;
+    if (highlight === null || color === undefined) {
+      return;
+    }
+    void this.changeHighlightColor(highlight, color);
+  };
+
+  private highlightFromEvent(event: Event): Highlight | null {
+    const cardEl = event.composedPath().find(
+      (node) => node instanceof HTMLElement && node.tagName === 'MARKWELL-PROJECT-HIGHLIGHT-CARD',
+    ) as (HTMLElement & { highlight?: Highlight }) | undefined;
+    return cardEl?.highlight ?? null;
+  }
+
+  private async excludeHighlightFromProject(highlight: Highlight): Promise<void> {
+    if (this.selectedProjectId === '') {
+      return;
+    }
+    await removeHighlightFromProject(this.selectedProjectId, highlight.id);
+    await this.loadHighlightsForProject();
+    this.showStatus('プロジェクトから除外しました');
+  }
+
+  private async jumpToHighlight(highlight: Highlight): Promise<void> {
+    const ok = await jumpToHighlightOnOpenTabs(highlight);
+    if (!ok) {
+      this.showStatus('ハイライトが見つかりません');
+    }
+  }
+
+  private async changeHighlightColor(highlight: Highlight, color: HighlightColor): Promise<void> {
+    const updated = await updateHighlight(highlight.id, { color });
+    const index = this.highlights.findIndex((item) => item.id === highlight.id);
+    if (index >= 0) {
+      this.highlights = [
+        ...this.highlights.slice(0, index),
+        updated,
+        ...this.highlights.slice(index + 1),
+      ];
+    }
+    await updateHighlightColorOnOpenTabs(updated, color);
+  }
+
   private moveHighlight(index: number, direction: -1 | 1): void {
     const target = index + direction;
     if (target < 0 || target >= this.highlights.length) {
@@ -237,7 +413,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       return html`<p class="empty">プロジェクトがありません。上のセレクタから「+ 新規プロジェクト」を選んで作成してください。</p>`;
     }
     if (this.highlights.length === 0) {
-      return html`<p class="empty">このプロジェクトにハイライトがありません</p>`;
+      return html`<p class="empty">${EMPTY_PROJECT_HIGHLIGHTS_MESSAGE}</p>`;
     }
 
     return html`
@@ -269,9 +445,49 @@ export class MarkwellSidePanelRoot extends LitElement {
                   ↓
                 </button>
               </div>
-              <div>
+              <div class="highlight-body">
                 <p class="highlight-text">${highlight.selected_text}</p>
                 <p class="highlight-meta">${highlight.page_title} · ${highlight.domain}</p>
+                <div class="highlight-actions">
+                  <label class="color-label">
+                    <span class="sr-only">色</span>
+                    <select
+                      class="color-select"
+                      .value=${highlight.color}
+                      @change=${(event: Event) => {
+                        const select = event.target;
+                        if (!(select instanceof HTMLSelectElement)) {
+                          return;
+                        }
+                        void this.handleColorChange(highlight, select.value as HighlightColor);
+                      }}
+                    >
+                      ${HIGHLIGHT_COLORS.map(
+                        (color) => html`
+                          <option value=${color}>${COLOR_LABELS[color]}</option>
+                        `,
+                      )}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    class="card-btn"
+                    @click=${() => {
+                      void this.handleJump(highlight);
+                    }}
+                  >
+                    ジャンプ
+                  </button>
+                  <button
+                    type="button"
+                    class="card-btn card-btn--exclude"
+                    @click=${() => {
+                      void this.handleExcludeFromProject(highlight);
+                    }}
+                  >
+                    除外
+                  </button>
+                </div>
               </div>
             </li>
           `,

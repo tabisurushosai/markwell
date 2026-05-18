@@ -122,9 +122,12 @@ export const sidePanelStyles = [
       background: var(--surface);
     }
 
-    .highlight-text {
+    .highlight-body {
       flex: 1;
       min-width: 0;
+    }
+
+    .highlight-text {
       margin: 0;
       font-size: var(--font-size-base);
       line-height: 1.45;
@@ -165,6 +168,66 @@ export const sidePanelStyles = [
     .reorder-btn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    .highlight-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+
+    .color-label {
+      display: flex;
+      align-items: center;
+    }
+
+    .color-select {
+      padding: 4px var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .card-btn {
+      padding: 4px var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .card-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .card-btn--exclude {
+      color: #e57373;
+      border-color: color-mix(in srgb, #e57373 40%, var(--border));
+    }
+
+    .card-btn--exclude:hover {
+      border-color: #e57373;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .synthesis {

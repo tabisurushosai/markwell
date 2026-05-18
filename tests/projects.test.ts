@@ -10,6 +10,7 @@ import {
   getProject,
   listProjects,
   ProjectLimitError,
+  removeHighlightFromProject,
   reorderHighlightsInProject,
   updateProject,
 } from '../src/shared/storage/projects.js';
@@ -111,6 +112,12 @@ describe('project CRUD', () => {
     await reorderHighlightsInProject(project.id, [h2.id, h1.id]);
     current = await getProject(project.id);
     expect(current?.highlight_order).toEqual([h2.id, h1.id]);
+
+    await removeHighlightFromProject(project.id, h1.id);
+    current = await getProject(project.id);
+    expect(current?.highlight_order).toEqual([h2.id]);
+    expect((await getHighlight(h1.id))?.project_id).toBeNull();
+    expect((await getHighlight(h2.id))?.project_id).toBe(project.id);
 
     await deleteProject(project.id);
     expect(await getProject(project.id)).toBeNull();

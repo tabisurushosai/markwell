@@ -157,6 +157,31 @@ export async function addHighlightToProject(projectId: string, highlightId: stri
   await updateHighlight(highlightId, { project_id: projectId });
 }
 
+/** プロジェクトから除外（ハイライト自体は storage に残す） */
+export async function removeHighlightFromProject(
+  projectId: string,
+  highlightId: string,
+): Promise<void> {
+  const project = await getProject(projectId);
+  if (project === null) {
+    throw new Error(`Project not found: ${projectId}`);
+  }
+
+  const highlight = await getHighlight(highlightId);
+  if (highlight === null) {
+    throw new Error(`Highlight not found: ${highlightId}`);
+  }
+
+  if (highlight.project_id !== projectId) {
+    return;
+  }
+
+  await updateProject(projectId, {
+    highlight_order: project.highlight_order.filter((id) => id !== highlightId),
+  });
+  await updateHighlight(highlightId, { project_id: null });
+}
+
 export async function reorderHighlightsInProject(
   projectId: string,
   newOrder: string[],
