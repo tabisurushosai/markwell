@@ -16,6 +16,7 @@ import { listTags } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
+import { popupDesignTokens } from '../styles.js';
 import { getCanonicalUrlForActiveTab } from '../utils/tab-url.js';
 
 @customElement('markwell-current-page-view')
@@ -32,7 +33,9 @@ export class MarkwellCurrentPageView extends LitElement {
 
   @state() private loading = true;
 
-  static styles = css`
+  static styles = [
+    popupDesignTokens,
+    css`
     :host {
       display: block;
     }
@@ -60,7 +63,8 @@ export class MarkwellCurrentPageView extends LitElement {
       flex-direction: column;
       gap: var(--space-2);
     }
-  `;
+  `,
+  ];
 
   connectedCallback(): void {
     super.connectedCallback();

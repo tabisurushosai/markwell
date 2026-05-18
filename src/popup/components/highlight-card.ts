@@ -428,15 +428,13 @@ export class MarkwellHighlightCard extends LitElement {
             </div>
             <button
               type="button"
-              class="action-btn action-btn--danger action-btn--icon"
-              aria-label="削除"
-              title="削除"
+              class="action-btn action-btn--danger"
               @click=${(event: Event) => {
                 event.stopPropagation();
                 void this.handleDelete();
               }}
             >
-              🗑
+              削除
             </button>
             ${isSearch
               ? ''
@@ -444,7 +442,8 @@ export class MarkwellHighlightCard extends LitElement {
                   <button
                     type="button"
                     class="action-btn"
-                    @click=${() => {
+                    @click=${(event: Event) => {
+                      event.stopPropagation();
                       void this.handleJump();
                     }}
                   >
