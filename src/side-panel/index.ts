@@ -99,9 +99,6 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private historyModalOpen = false;
 
-  /** 履歴から結果を復元したあと（instruction を編集して再生成可能） */
-  @state() private synthesisRestoredFromHistory = false;
-
   @state() private synthesisHistory: Synthesis[] = [];
 
   @state() private createDialogOpen = false;
@@ -568,10 +565,9 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private viewSynthesisFromHistory(synthesis: Synthesis): void {
-    // synthesisPrompt（userInstruction）は触らず、合成結果のみ復元する
+    this.synthesisPrompt = extractUserInstructionFromPrompt(synthesis.prompt);
     this.synthesisMarkdown = synthesis.result_markdown;
     this.resultVisible = true;
-    this.synthesisRestoredFromHistory = true;
     this.closeHistoryModal();
   }
 
@@ -624,7 +620,6 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     this.resultVisible = false;
     this.synthesisMarkdown = '';
-    this.synthesisRestoredFromHistory = false;
   }
 
   private closePremiumModal(): void {
@@ -831,25 +826,19 @@ export class MarkwellSidePanelRoot extends LitElement {
                   class="btn btn--primary"
                   ?disabled=${this.synthesizing || this.highlights.length === 0}
                   @click=${() => {
-                    void this.handleSynthesize();
+                    if (this.resultVisible) {
+                      void this.handleRegenerate();
+                    } else {
+                      void this.handleSynthesize();
+                    }
                   }}
                 >
-                  ${this.synthesizing ? '生成中…' : '合成する'}
+                  ${this.synthesizing
+                    ? '生成中…'
+                    : this.resultVisible
+                      ? '再生成'
+                      : '合成する'}
                 </button>
-                ${this.synthesisRestoredFromHistory && this.resultVisible
-                  ? html`
-                      <button
-                        type="button"
-                        class="btn btn--primary"
-                        ?disabled=${this.synthesizing || this.highlights.length === 0}
-                        @click=${() => {
-                          void this.handleRegenerate();
-                        }}
-                      >
-                        ${this.synthesizing ? '生成中…' : '再生成'}
-                      </button>
-                    `
-                  : nothing}
                 <button
                   type="button"
                   class="btn"

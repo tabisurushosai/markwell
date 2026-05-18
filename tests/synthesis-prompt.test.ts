@@ -4,6 +4,7 @@ import {
   buildSynthesisPrompt,
   DEFAULT_SYNTHESIS_INSTRUCTION,
   estimateTokens,
+  extractUserInstructionFromPrompt,
   getSynthesisTokenWarning,
   SYNTHESIS_TOKEN_WARNING_THRESHOLD,
 } from '../src/shared/ai/synthesis-prompt.js';
@@ -118,5 +119,15 @@ describe('synthesis-prompt', () => {
 
       出力形式: 日本語の Markdown。各論点ごとに見出し + 関連するハイライト番号 [N] を引用形式で本文中に挿入。"
     `);
+  });
+
+  it('extractUserInstructionFromPrompt restores custom instruction', () => {
+    const prompt = buildSynthesisPrompt(tenHighlights, '比較表にまとめて');
+    expect(extractUserInstructionFromPrompt(prompt)).toBe('比較表にまとめて');
+  });
+
+  it('extractUserInstructionFromPrompt returns empty for default instruction', () => {
+    const prompt = buildSynthesisPrompt(tenHighlights, '');
+    expect(extractUserInstructionFromPrompt(prompt)).toBe('');
   });
 });

@@ -26,6 +26,19 @@ function resolveInstruction(userInstruction: string): string {
   return trimmed === '' ? DEFAULT_SYNTHESIS_INSTRUCTION : trimmed;
 }
 
+/** 保存済みプロンプトから userInstruction を復元（既定指示のときは空文字） */
+export function extractUserInstructionFromPrompt(savedPrompt: string): string {
+  const match = savedPrompt.match(/^指示: (.+)$/m);
+  if (match === null) {
+    return '';
+  }
+  const instruction = match[1]?.trim() ?? '';
+  if (instruction === DEFAULT_SYNTHESIS_INSTRUCTION) {
+    return '';
+  }
+  return instruction;
+}
+
 function formatHighlightEntry(index: number, highlight: Highlight): string {
   const number = index + 1;
   return `[${number}] ${highlight.selected_text} (出典: ${highlight.page_title}, ${highlight.domain})
