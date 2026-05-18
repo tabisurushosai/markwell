@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { callGemini, GeminiError, redactGeminiUrl } from '../src/shared/ai/gemini.js';
+import {
+  buildChatRequestBody,
+  callGemini,
+  callGeminiChat,
+  GeminiError,
+  redactGeminiUrl,
+} from '../src/shared/ai/gemini.js';
 
 const API_KEY = 'test-gemini-key-secret';
 const MODEL = 'gemini-2.0-flash';
@@ -184,5 +190,45 @@ describe('gemini', () => {
     expect(redactGeminiUrl(`https://example.com?key=${API_KEY}&alt=sse`)).toBe(
       'https://example.com?key=***&alt=sse',
     );
+  });
+
+  it('buildChatRequestBody includes systemInstruction and turns', () => {
+    const body = JSON.parse(
+      buildChatRequestBody('system', [
+        { role: 'user', text: 'hi' },
+        { role: 'model', text: 'hello' },
+      ]),
+    );
+
+    expect(body.systemInstruction.parts[0].text).toBe('system');
+    expect(body.contents).toEqual([
+      { role: 'user', parts: [{ text: 'hi' }] },
+      { role: 'model', parts: [{ text: 'hello' }] },
+    ]);
+  });
+
+  it('streams chat via callGeminiChat', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      sseResponse([
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: 'A' }] } }] }),
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: 'B' }] } }] }),
+      ]),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chunks: string[] = [];
+    for await (const chunk of callGeminiChat(
+      'sys',
+      [{ role: 'user', text: 'q' }],
+      { stream: true },
+    )) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks).toEqual(['A', 'B']);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const parsed = JSON.parse(init.body as string);
+    expect(parsed.systemInstruction.parts[0].text).toBe('sys');
+    expect(parsed.contents[0].role).toBe('user');
   });
 });

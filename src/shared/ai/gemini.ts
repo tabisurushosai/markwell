@@ -47,6 +47,11 @@ function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
+export type GeminiChatTurn = {
+  role: 'user' | 'model';
+  text: string;
+};
+
 function buildRequestBody(prompt: string): string {
   return JSON.stringify({
     contents: [
@@ -54,6 +59,21 @@ function buildRequestBody(prompt: string): string {
         parts: [{ text: prompt }],
       },
     ],
+  });
+}
+
+export function buildChatRequestBody(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+): string {
+  return JSON.stringify({
+    systemInstruction: {
+      parts: [{ text: systemInstruction }],
+    },
+    contents: turns.map((turn) => ({
+      role: turn.role,
+      parts: [{ text: turn.text }],
+    })),
   });
 }
 
@@ -211,15 +231,10 @@ function buildGeminiRequestInit(body: string, signal?: AbortSignal): RequestInit
   return init;
 }
 
-async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
-  const { apiKey, model } = await resolveCredentials();
-  const url = buildEndpoint(model, 'generateContent', apiKey);
-  const response = await fetchWithRetry(
-    url,
-    buildGeminiRequestInit(buildRequestBody(prompt), signal),
-    apiKey,
-  );
-
+async function parseGenerateContentResponse(
+  response: Response,
+  apiKey: string,
+): Promise<string> {
   const payload = (await response.json()) as GenerateContentResponse;
   if (payload.error !== undefined) {
     const message = maskSecret(payload.error.message ?? 'Gemini API error', apiKey);
@@ -229,18 +244,41 @@ async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promis
   return extractText(payload);
 }
 
-async function* streamGeminiChunks(
-  prompt: string,
-  signal?: AbortSignal,
-): AsyncGenerator<string, void, undefined> {
+async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
-  const url = buildEndpoint(model, 'streamGenerateContent', apiKey);
+  const url = buildEndpoint(model, 'generateContent', apiKey);
   const response = await fetchWithRetry(
     url,
     buildGeminiRequestInit(buildRequestBody(prompt), signal),
     apiKey,
   );
 
+  return parseGenerateContentResponse(response, apiKey);
+}
+
+async function callGeminiChatNonStream(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  signal?: AbortSignal,
+): Promise<string> {
+  const { apiKey, model } = await resolveCredentials();
+  const url = buildEndpoint(model, 'generateContent', apiKey);
+  const body = buildChatRequestBody(systemInstruction, turns);
+  const response = await fetchWithRetry(
+    url,
+    buildGeminiRequestInit(body, signal),
+    apiKey,
+  );
+
+  return parseGenerateContentResponse(response, apiKey);
+}
+
+async function* streamGeminiResponseBody(
+  body: string,
+  signal: AbortSignal | undefined,
+  apiKey: string,
+  response: Response,
+): AsyncGenerator<string, void, undefined> {
   if (response.body === null) {
     throw new GeminiError('Empty stream body', 'SERVER', response.status);
   }
@@ -314,6 +352,36 @@ async function* streamGeminiChunks(
   }
 }
 
+async function* streamGeminiChunks(
+  prompt: string,
+  signal?: AbortSignal,
+): AsyncGenerator<string, void, undefined> {
+  const { apiKey, model } = await resolveCredentials();
+  const url = buildEndpoint(model, 'streamGenerateContent', apiKey);
+  const response = await fetchWithRetry(
+    url,
+    buildGeminiRequestInit(buildRequestBody(prompt), signal),
+    apiKey,
+  );
+  yield* streamGeminiResponseBody(buildRequestBody(prompt), signal, apiKey, response);
+}
+
+async function* streamGeminiChatChunks(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  signal?: AbortSignal,
+): AsyncGenerator<string, void, undefined> {
+  const { apiKey, model } = await resolveCredentials();
+  const url = buildEndpoint(model, 'streamGenerateContent', apiKey);
+  const body = buildChatRequestBody(systemInstruction, turns);
+  const response = await fetchWithRetry(
+    url,
+    buildGeminiRequestInit(body, signal),
+    apiKey,
+  );
+  yield* streamGeminiResponseBody(body, signal, apiKey, response);
+}
+
 export async function callGemini(
   prompt: string,
   opts?: CallGeminiOptions & { stream?: false },
@@ -330,6 +398,27 @@ export function callGemini(
     return streamGeminiChunks(prompt, opts.signal);
   }
   return callGeminiNonStream(prompt, opts?.signal);
+}
+
+export function callGeminiChat(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  opts: CallGeminiOptions & { stream: true },
+): AsyncGenerator<string, void, undefined>;
+export function callGeminiChat(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  opts?: CallGeminiOptions & { stream?: false },
+): Promise<string>;
+export function callGeminiChat(
+  systemInstruction: string,
+  turns: GeminiChatTurn[],
+  opts?: CallGeminiOptions,
+): Promise<string> | AsyncGenerator<string, void, undefined> {
+  if (opts?.stream === true) {
+    return streamGeminiChatChunks(systemInstruction, turns, opts.signal);
+  }
+  return callGeminiChatNonStream(systemInstruction, turns, opts?.signal);
 }
 
 /** @internal テスト用: URL から API キーをマスク */

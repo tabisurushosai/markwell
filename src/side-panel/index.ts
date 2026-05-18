@@ -1,7 +1,13 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import { callGemini } from '../shared/ai/gemini.js';
+import { callGemini, callGeminiChat } from '../shared/ai/gemini.js';
+import {
+  buildGeminiTurnsFromSession,
+  buildProjectQaSystemInstruction,
+  canUseProjectQa,
+  type QaChatMessage,
+} from '../shared/ai/project-qa.js';
 import {
   buildSynthesisPrompt,
   estimateTokens,
@@ -101,7 +107,15 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private premiumModalOpen = false;
 
-  @state() private premiumModalContext: 'synthesis' | 'export' = 'synthesis';
+  @state() private premiumModalContext: 'synthesis' | 'export' | 'qa' = 'synthesis';
+
+  @state() private activeBottomTab: 'synthesis' | 'qa' = 'synthesis';
+
+  @state() private qaMessages: QaChatMessage[] = [];
+
+  @state() private qaInput = '';
+
+  @state() private qaStreaming = false;
 
   @state() private currentTier: LicenseTier = 'free';
 
@@ -137,6 +151,8 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private synthesisAbortController: AbortController | null = null;
 
+  private qaAbortController: AbortController | null = null;
+
   static styles = sidePanelStyles;
 
   connectedCallback(): void {
@@ -155,6 +171,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     this.synthesisAbortController?.abort();
     this.synthesisAbortController = null;
+    this.qaAbortController?.abort();
+    this.qaAbortController = null;
   }
 
   private readonly onSystemThemeChange = (): void => {
@@ -229,7 +247,16 @@ export class MarkwellSidePanelRoot extends LitElement {
     }, 3000);
   }
 
+  private resetQaSession(): void {
+    this.qaAbortController?.abort();
+    this.qaAbortController = null;
+    this.qaMessages = [];
+    this.qaInput = '';
+    this.qaStreaming = false;
+  }
+
   private async selectProject(projectId: string): Promise<void> {
+    this.resetQaSession();
     this.selectedProjectId = projectId;
     await setLastProjectId(projectId);
     await this.loadHighlightsForProject();
@@ -622,7 +649,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     };
   }
 
-  private openPremiumModal(context: 'synthesis' | 'export'): void {
+  private openPremiumModal(context: 'synthesis' | 'export' | 'qa'): void {
     this.premiumModalContext = context;
     this.premiumModalOpen = true;
   }
@@ -802,7 +829,289 @@ export class MarkwellSidePanelRoot extends LitElement {
     if (this.premiumModalContext === 'export') {
       return 'Obsidian 形式・Roam Research 形式のエクスポートは Premium で利用できます。';
     }
+    if (this.premiumModalContext === 'qa') {
+      return 'プロジェクト Q&A は Premium（またはトライアル）で利用できます。';
+    }
     return 'ハイライトの AI 合成は Premium（またはトライアル）で利用できます。';
+  }
+
+  private onBottomTabClick(tab: 'synthesis' | 'qa'): void {
+    if (tab === 'qa' && !canUseProjectQa(this.currentTier)) {
+      this.openPremiumModal('qa');
+      return;
+    }
+    this.activeBottomTab = tab;
+  }
+
+  private onQaInput(event: Event): void {
+    const textarea = event.target;
+    if (!(textarea instanceof HTMLTextAreaElement)) {
+      return;
+    }
+    this.qaInput = textarea.value;
+  }
+
+  private handleCancelQa(): void {
+    this.qaAbortController?.abort();
+  }
+
+  private scrollQaMessagesToEnd(): void {
+    const container = this.renderRoot.querySelector('#qa-messages');
+    if (container instanceof HTMLElement) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  private async handleQaSend(): Promise<void> {
+    if (!canUseProjectQa(this.currentTier)) {
+      this.openPremiumModal('qa');
+      return;
+    }
+
+    const userMessage = this.qaInput.trim();
+    if (userMessage === '' || this.qaStreaming) {
+      return;
+    }
+
+    if (this.highlights.length === 0) {
+      this.showStatus('ハイライトがありません');
+      return;
+    }
+
+    this.qaInput = '';
+    const priorMessages = [...this.qaMessages];
+    this.qaMessages = [
+      ...priorMessages,
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: '' },
+    ];
+    const assistantIndex = this.qaMessages.length - 1;
+
+    this.qaStreaming = true;
+    this.qaAbortController?.abort();
+    const abortController = new AbortController();
+    this.qaAbortController = abortController;
+
+    const systemInstruction = buildProjectQaSystemInstruction(this.highlights);
+    const turns = buildGeminiTurnsFromSession([
+      ...priorMessages,
+      { role: 'user', content: userMessage },
+    ]);
+
+    try {
+      for await (const chunk of callGeminiChat(systemInstruction, turns, {
+        stream: true,
+        signal: abortController.signal,
+      })) {
+        const messages = [...this.qaMessages];
+        const assistant = messages[assistantIndex];
+        if (assistant === undefined) {
+          continue;
+        }
+        messages[assistantIndex] = {
+          role: 'assistant',
+          content: assistant.content + chunk,
+        };
+        this.qaMessages = messages;
+        this.scrollQaMessagesToEnd();
+      }
+
+      const finalAssistant = this.qaMessages[assistantIndex];
+      if (finalAssistant !== undefined && finalAssistant.content.trim() === '') {
+        this.qaMessages = this.qaMessages.filter((_, index) => index !== assistantIndex);
+      }
+    } catch (error) {
+      if (isSynthesisAbortError(error)) {
+        const assistant = this.qaMessages[assistantIndex];
+        if (assistant === undefined || assistant.content.trim() === '') {
+          this.qaMessages = this.qaMessages.filter((_, index) => index !== assistantIndex);
+        }
+        return;
+      }
+      const messages = [...this.qaMessages];
+      const assistant = messages[assistantIndex];
+      if (assistant !== undefined) {
+        messages[assistantIndex] = {
+          role: 'assistant',
+          content: formatSynthesisError(error),
+        };
+        this.qaMessages = messages;
+      }
+    } finally {
+      this.qaStreaming = false;
+      if (this.qaAbortController === abortController) {
+        this.qaAbortController = null;
+      }
+      this.scrollQaMessagesToEnd();
+    }
+  }
+
+  private renderBottomTabs() {
+    return html`
+      <div class="bottom-tabs" role="tablist" aria-label="AI 機能">
+        <button
+          type="button"
+          class="bottom-tab ${this.activeBottomTab === 'synthesis' ? 'bottom-tab--active' : ''}"
+          role="tab"
+          aria-selected=${this.activeBottomTab === 'synthesis'}
+          aria-controls="synthesis-panel"
+          id="tab-synthesis"
+          @click=${() => {
+            this.onBottomTabClick('synthesis');
+          }}
+        >
+          合成
+        </button>
+        <button
+          type="button"
+          class="bottom-tab ${this.activeBottomTab === 'qa' ? 'bottom-tab--active' : ''}"
+          role="tab"
+          aria-selected=${this.activeBottomTab === 'qa'}
+          aria-controls="qa-panel"
+          id="tab-qa"
+          @click=${() => {
+            this.onBottomTabClick('qa');
+          }}
+        >
+          💬 Q&A
+        </button>
+      </div>
+    `;
+  }
+
+  private renderSynthesisTab() {
+    return html`
+      <div
+        id="synthesis-panel"
+        class="bottom-tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-synthesis"
+        ?hidden=${this.activeBottomTab !== 'synthesis'}
+      >
+        <p class="synthesis-label">合成プロンプト</p>
+        <textarea
+          class="synthesis-prompt"
+          placeholder="プロジェクトのハイライトをどうまとめるか指示してください…"
+          .value=${this.synthesisPrompt}
+          @input=${(event: Event) => {
+            this.onSynthesisPromptInput(event);
+          }}
+        ></textarea>
+        <div class="synthesis-actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            ?disabled=${this.synthesizing || this.highlights.length === 0}
+            @click=${() => {
+              if (this.resultVisible) {
+                void this.handleRegenerate();
+              } else {
+                void this.handleSynthesize();
+              }
+            }}
+          >
+            ${this.synthesizing ? '生成中…' : this.resultVisible ? '再生成' : '合成する'}
+          </button>
+          <button
+            type="button"
+            class="btn"
+            ?disabled=${!this.synthesizing && !this.resultVisible}
+            @click=${() => {
+              this.handleCancelSynthesis();
+            }}
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            class="btn"
+            ?disabled=${this.selectedProjectId === ''}
+            @click=${() => {
+              void this.openHistoryModal();
+            }}
+          >
+            保存履歴を見る
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderQaTab() {
+    return html`
+      <div
+        id="qa-panel"
+        class="bottom-tab-panel bottom-tab-panel--qa"
+        role="tabpanel"
+        aria-labelledby="tab-qa"
+        ?hidden=${this.activeBottomTab !== 'qa'}
+      >
+        <div id="qa-messages" class="qa-messages" aria-live="polite">
+          ${this.qaMessages.length === 0
+            ? html`<p class="qa-empty">プロジェクトのハイライトについて質問できます</p>`
+            : this.qaMessages.map((message) =>
+                message.role === 'user'
+                  ? html`
+                      <div class="qa-message qa-message--user">
+                        <p class="qa-message__text">${message.content}</p>
+                      </div>
+                    `
+                  : html`
+                      <div class="qa-message qa-message--assistant">
+                        ${message.content === '' && this.qaStreaming
+                          ? html`<p class="qa-message__placeholder">応答中…</p>`
+                          : html`<markdown-it .content=${message.content}></markdown-it>`}
+                      </div>
+                    `,
+              )}
+        </div>
+        <form
+          class="qa-composer"
+          @submit=${(event: SubmitEvent) => {
+            event.preventDefault();
+            void this.handleQaSend();
+          }}
+        >
+          <textarea
+            class="qa-input"
+            placeholder="ハイライトについて質問…"
+            rows="2"
+            .value=${this.qaInput}
+            ?disabled=${this.qaStreaming}
+            @input=${(event: Event) => {
+              this.onQaInput(event);
+            }}
+            @keydown=${(event: KeyboardEvent) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                void this.handleQaSend();
+              }
+            }}
+          ></textarea>
+          <div class="qa-actions">
+            <button
+              type="submit"
+              class="btn btn--primary"
+              ?disabled=${this.qaStreaming ||
+              this.qaInput.trim() === '' ||
+              this.highlights.length === 0}
+            >
+              ${this.qaStreaming ? '応答中…' : '送信'}
+            </button>
+            <button
+              type="button"
+              class="btn"
+              ?disabled=${!this.qaStreaming}
+              @click=${() => {
+                this.handleCancelQa();
+              }}
+            >
+              停止
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
   }
 
   private renderHighlightList() {
@@ -989,63 +1298,19 @@ export class MarkwellSidePanelRoot extends LitElement {
               ${this.renderHighlightList()}
             </section>
 
-            <section class="synthesis" aria-label="合成プロンプト">
-              <p class="synthesis-label">合成プロンプト</p>
-              <textarea
-                class="synthesis-prompt"
-                placeholder="プロジェクトのハイライトをどうまとめるか指示してください…"
-                .value=${this.synthesisPrompt}
-                @input=${(event: Event) => {
-                  this.onSynthesisPromptInput(event);
-                }}
-              ></textarea>
-              <div class="synthesis-actions">
-                <button
-                  type="button"
-                  class="btn btn--primary"
-                  ?disabled=${this.synthesizing || this.highlights.length === 0}
-                  @click=${() => {
-                    if (this.resultVisible) {
-                      void this.handleRegenerate();
-                    } else {
-                      void this.handleSynthesize();
-                    }
-                  }}
-                >
-                  ${this.synthesizing
-                    ? '生成中…'
-                    : this.resultVisible
-                      ? '再生成'
-                      : '合成する'}
-                </button>
-                <button
-                  type="button"
-                  class="btn"
-                  ?disabled=${!this.synthesizing && !this.resultVisible}
-                  @click=${() => {
-                    this.handleCancelSynthesis();
-                  }}
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="button"
-                  class="btn"
-                  ?disabled=${this.selectedProjectId === ''}
-                  @click=${() => {
-                    void this.openHistoryModal();
-                  }}
-                >
-                  保存履歴を見る
-                </button>
-              </div>
+            <section class="bottom-panel" aria-label="AI">
+              ${this.renderBottomTabs()}
+              ${this.renderSynthesisTab()}
+              ${this.renderQaTab()}
             </section>
           </div>
 
           <aside
-            class="result-panel ${this.resultVisible ? 'result-panel--visible' : ''}"
+            class="result-panel ${this.resultVisible && this.activeBottomTab === 'synthesis'
+              ? 'result-panel--visible'
+              : ''}"
             aria-label="合成結果"
-            aria-hidden=${!this.resultVisible}
+            aria-hidden=${!this.resultVisible || this.activeBottomTab !== 'synthesis'}
           >
             ${this.resultVisible
               ? html`
