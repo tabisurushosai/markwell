@@ -27,7 +27,7 @@
       "all_frames": false
     }
   ],
-  "permissions": ["sidePanel", "storage"],
+  "permissions": ["contextMenus", "sidePanel", "storage"],
   "commands": {
     "quick_highlight": {
       "suggested_key": {

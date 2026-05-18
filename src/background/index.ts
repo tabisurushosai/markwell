@@ -1,3 +1,4 @@
+import { initContextMenu, registerContextMenus } from './context-menu.js';
 import { runMigrations } from '../shared/storage/migrations.js';
 
 type MarkwellCommand = 'quick_highlight' | 'open_synthesis';
@@ -7,8 +8,11 @@ type ContentRunCommandMessage = {
   command: 'quick_highlight';
 };
 
+initContextMenu();
+
 chrome.runtime.onInstalled.addListener(() => {
   void runMigrations();
+  void registerContextMenus();
 });
 
 chrome.runtime.onMessage.addListener((message: unknown) => {

@@ -1,5 +1,5 @@
 import { createHighlight } from '../shared/storage/highlights.js';
-import type { HighlightColor } from '../shared/types/highlight.js';
+import type { Highlight, HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
 import {
   applyHighlight,
@@ -13,7 +13,7 @@ export async function saveHighlightFromRange(
   range: Range,
   color: HighlightColor,
   note = '',
-): Promise<void> {
+): Promise<Highlight> {
   const selectedText = range.toString();
   const serialized = serializeRange(range);
   const { before, after } = getSelectionContext(range);
@@ -42,4 +42,5 @@ export async function saveHighlightFromRange(
 
   applyHighlight(range, highlight.color, highlight.id);
   syncHighlightNoteInDom(highlight.id, highlight.note);
+  return highlight;
 }
