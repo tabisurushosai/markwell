@@ -12,7 +12,7 @@
     "open_in_tab": true
   },
   "side_panel": {
-    "default_path": "src/sidepanel/index.html"
+    "default_path": "src/side-panel/index.html"
   },
   "permissions": ["sidePanel", "storage"]
 }

@@ -9,7 +9,7 @@ export default defineConfig({
       input: {
         popup: 'src/popup/index.html',
         options: 'src/options/index.html',
-        'side-panel': 'src/sidepanel/index.html',
+        'side-panel': 'src/side-panel/index.html',
         onboarding: 'src/onboarding/index.html',
       },
     },
