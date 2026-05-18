@@ -1,7 +1,10 @@
 import { css } from 'lit';
 
-/** Popup 用デザイントークン + コンポーネントスタイル（Lit CSS-in-JS） */
-export const popupStyles = css`
+/**
+ * Popup デザイントークン（Lit CSS-in-JS）。
+ * 子コンポーネントの Shadow DOM でも継承される CSS 変数を :host に定義する。
+ */
+export const popupDesignTokens = css`
   :host {
     /* カラー */
     --bg: #1a1a1a;
@@ -9,17 +12,17 @@ export const popupStyles = css`
     --surface-raised: #2e2e2e;
     --border: #333333;
     --text: #e0e0e0;
-    --text-muted: #888888;
+    --text-muted: #888;
     --accent: #ffd34e;
 
     --hl-yellow: rgba(255, 235, 59, 0.5);
     --hl-green: rgba(129, 199, 132, 0.5);
-    --hl-blue: rgba(100, 181, 246, 0.5);
     --hl-pink: rgba(244, 143, 177, 0.5);
+    --hl-blue: rgba(100, 181, 246, 0.5);
     --hl-orange: rgba(255, 183, 77, 0.5);
     --hl-purple: rgba(186, 104, 200, 0.5);
 
-    /* スペーシング (4 / 8 / 12 / 16 / 24 px) */
+    /* スペーシング: 4 / 8 / 12 / 16 / 24 px */
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -34,7 +37,12 @@ export const popupStyles = css`
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;
+  }
+`;
 
+/** markwell-popup-root 用レイアウト + コンポーネントスタイル */
+const popupLayoutStyles = css`
+  :host {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -256,3 +264,5 @@ export const popupStyles = css`
     pointer-events: none;
   }
 `;
+
+export const popupStyles = [popupDesignTokens, popupLayoutStyles];

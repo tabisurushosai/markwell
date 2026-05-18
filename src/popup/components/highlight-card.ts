@@ -7,6 +7,7 @@ import type { Tag } from '../../shared/types/tag.js';
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
+import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
 const DELETE_CONFIRM_MESSAGE =
@@ -28,7 +29,9 @@ export class MarkwellHighlightCard extends LitElement {
 
   @property({ reflect: true }) mode: 'page' | 'search' = 'page';
 
-  static styles = css`
+  static styles = [
+    popupDesignTokens,
+    css`
     :host {
       display: block;
     }
@@ -154,7 +157,8 @@ export class MarkwellHighlightCard extends LitElement {
       font-size: 14px;
       line-height: 1;
     }
-  `;
+  `,
+  ];
 
   private dispatchRefresh(): void {
     this.dispatchEvent(
