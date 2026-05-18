@@ -1,0 +1,17 @@
+import { defineConfig } from 'vite';
+import { crx } from '@crxjs/vite-plugin';
+import manifest from './manifest.json';
+
+export default defineConfig({
+  plugins: [crx({ manifest })],
+  build: {
+    rollupOptions: {
+      input: {
+        popup: 'src/popup/index.html',
+        options: 'src/options/index.html',
+        'side-panel': 'src/sidepanel/index.html',
+        onboarding: 'src/onboarding/index.html',
+      },
+    },
+  },
+});

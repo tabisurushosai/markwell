@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Markwell",
+  "version": "0.0.0",
+  "description": "Web ハイライト & AI 合成 Chrome 拡張",
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Markwell"
+  },
+  "options_ui": {
+    "page": "src/options/index.html",
+    "open_in_tab": true
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "permissions": ["sidePanel", "storage"]
+}
