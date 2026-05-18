@@ -14,6 +14,7 @@ import {
 import './general-section.js';
 import './ai-section.js';
 import './data-section.js';
+import './about-section.js';
 import './tag-manager.js';
 import './project-manager.js';
 
@@ -430,7 +431,7 @@ export class MwOptions extends LitElement {
     return html`
       <h1>About</h1>
       <p class="section-lead">Markwell のバージョン情報とリンクです。</p>
-      <p class="placeholder">Markwell — ウェブハイライトと AI 支援のための拡張機能です。</p>
+      <mw-about-section></mw-about-section>
     `;
   }
 
