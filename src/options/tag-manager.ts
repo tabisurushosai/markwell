@@ -485,6 +485,7 @@ export class MwTagManager extends LitElement {
           <label class="sr-only" for=${`merge-target-${tag.id}`}>他のタグに統合</label>
           <select
             id=${`merge-target-${tag.id}`}
+            class="merge-select"
             aria-label="他のタグに統合"
             .value=${this.mergeTargetId}
             @change=${(event: Event) => {
@@ -494,7 +495,7 @@ export class MwTagManager extends LitElement {
               }
             }}
           >
-            <option value="">他のタグに統合先を選択</option>
+            <option value="">他のタグに統合</option>
             ${targets.map(
               (entry) => html`
                 <option value=${entry.tag.id}>${entry.tag.name}</option>
@@ -507,7 +508,7 @@ export class MwTagManager extends LitElement {
             ?disabled=${this.mergeTargetId === ''}
             @click=${() => void this.handleMerge(tag.id)}
           >
-            統合を実行
+            統合する
           </button>
           <button type="button" class="btn" @click=${() => this.cancelMerge()}>キャンセル</button>
         </div>

@@ -319,7 +319,7 @@ export class MwOptions extends LitElement {
 
       <section aria-labelledby="tags-title">
         <h2 id="tags-title">タグ</h2>
-        <p class="hint">タグの作成・名前変更・統合・削除ができます。検索で絞り込めます。</p>
+        <p class="hint">タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。</p>
         <mw-tag-manager></mw-tag-manager>
       </section>
 
