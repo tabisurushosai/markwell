@@ -2,6 +2,13 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import {
+  canUseRephrase,
+  getRephraseStyleLabel,
+  REPHRASE_STYLES,
+  rephraseHighlightText,
+  type RephraseStyle,
+} from '../../shared/ai/rephrase.js';
+import {
   getCachedTranslation,
   getTranslateLanguageLabel,
   mergeTranslationCache,
@@ -51,6 +58,18 @@ export class MarkwellHighlightCard extends LitElement {
   @state() private translationBody = '';
 
   @state() private translating = false;
+
+  @state() private rephraseStyleModalOpen = false;
+
+  @state() private rephraseResultModalOpen = false;
+
+  @state() private rephrasePremiumModalOpen = false;
+
+  @state() private rephraseStyle: RephraseStyle = 'polite';
+
+  @state() private rephrasing = false;
+
+  @state() private rephraseResultText = '';
 
   private copyLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -258,6 +277,160 @@ export class MarkwellHighlightCard extends LitElement {
       font-size: var(--font-size-sm);
       color: var(--text-muted);
     }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3);
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .dialog {
+      width: min(360px, 100%);
+      max-height: min(80vh, 480px);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface-raised);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .dialog-title {
+      margin: 0 0 var(--space-2);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+    }
+
+    .dialog-message {
+      margin: 0 0 var(--space-3);
+      font-size: var(--font-size-sm);
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .dialog-body {
+      flex: 1;
+      min-height: 0;
+      margin: 0 0 var(--space-3);
+      padding: var(--space-2);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      font-size: var(--font-size-base);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
+    .dialog-btn {
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .dialog-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .dialog-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .dialog-btn--primary {
+      background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+      font-weight: 600;
+    }
+
+    .style-label {
+      margin: 0 0 var(--space-1);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .style-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin: 0 0 var(--space-3);
+    }
+
+    .style-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      margin-bottom: var(--space-3);
+    }
+
+    .style-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      margin-bottom: var(--space-3);
+    }
+
+    .style-list .style-btn {
+      width: 100%;
+      text-align: left;
+    }
+
+    .style-btn {
+      width: 100%;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .style-options .style-btn {
+      width: auto;
+      padding: var(--space-1) var(--space-2);
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .style-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .style-btn--selected {
+      border-color: var(--accent);
+      color: var(--text);
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    }
+
+    .rephrase-status {
+      margin: 0 0 var(--space-3);
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+    }
   `,
   ];
 
@@ -411,6 +584,75 @@ export class MarkwellHighlightCard extends LitElement {
       this.showRelatedAction &&
       (this.licenseTier === 'trial' || this.licenseTier === 'premium')
     );
+  }
+
+  private handleRephraseClick(event: Event): void {
+    event.stopPropagation();
+    if (!canUseRephrase(this.licenseTier)) {
+      this.rephrasePremiumModalOpen = true;
+      return;
+    }
+    this.rephraseStyleModalOpen = true;
+  }
+
+  private closeRephraseStyleModal(): void {
+    this.rephraseStyleModalOpen = false;
+  }
+
+  private closeRephraseResultModal(): void {
+    this.rephraseResultModalOpen = false;
+    this.rephraseResultText = '';
+    this.rephrasing = false;
+  }
+
+  private closeRephrasePremiumModal(): void {
+    this.rephrasePremiumModalOpen = false;
+  }
+
+  private formatRephraseError(error: unknown): string {
+    if (error instanceof Error) {
+      if (error.message === 'API key not set') {
+        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+      }
+      if (error.message === 'Premium required') {
+        return 'Premium（またはトライアル）で利用できます。';
+      }
+      return error.message;
+    }
+    return '言い換えに失敗しました';
+  }
+
+  private async handleRephraseStyleSelect(style: RephraseStyle): Promise<void> {
+    this.rephraseStyleModalOpen = false;
+    this.rephraseStyle = style;
+    this.rephraseResultModalOpen = true;
+    this.rephrasing = true;
+    this.rephraseResultText = '';
+
+    try {
+      this.rephraseResultText = await rephraseHighlightText(
+        this.highlight.selected_text,
+        style,
+      );
+    } catch (error) {
+      this.closeRephraseResultModal();
+      if (error instanceof Error && error.message === 'Premium required') {
+        this.rephrasePremiumModalOpen = true;
+        return;
+      }
+      this.showToast(this.formatRephraseError(error));
+    } finally {
+      this.rephrasing = false;
+    }
+  }
+
+  private async copyRephraseResult(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.rephraseResultText);
+      this.showToast('言い換えをコピーしました');
+    } catch {
+      this.showToast('コピーに失敗しました');
+    }
   }
 
   private handleFindRelated(event: Event): void {
@@ -602,6 +844,17 @@ export class MarkwellHighlightCard extends LitElement {
             >
               ${this.translating ? '翻訳中…' : '🌐 翻訳'}
             </button>
+            <button
+              type="button"
+              class="action-btn"
+              title="言い換え（Premium / Trial）"
+              ?disabled=${this.rephrasing}
+              @click=${(event: Event) => {
+                this.handleRephraseClick(event);
+              }}
+            >
+              ${this.rephrasing ? '言い換え中…' : '✍️ 言い換え'}
+            </button>
             ${this.canUseRelatedHighlights()
               ? html`
                   <button
@@ -643,6 +896,161 @@ export class MarkwellHighlightCard extends LitElement {
             : nothing}
         </div>
       </article>
+      ${this.renderRephraseStyleModal()}
+      ${this.renderRephraseResultModal()}
+      ${this.renderRephrasePremiumModal()}
+    `;
+  }
+
+  private renderRephraseStyleModal() {
+    if (!this.rephraseStyleModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeRephraseStyleModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rephrase-style-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="rephrase-style-title" class="dialog-title">言い換えスタイル</h3>
+          <div class="style-list" role="listbox">
+            ${REPHRASE_STYLES.map(
+              (style) => html`
+                <button
+                  type="button"
+                  class="style-btn"
+                  role="option"
+                  @click=${() => {
+                    void this.handleRephraseStyleSelect(style.id);
+                  }}
+                >
+                  ${style.label}
+                </button>
+              `,
+            )}
+          </div>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn"
+              @click=${() => {
+                this.closeRephraseStyleModal();
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderRephraseResultModal() {
+    if (!this.rephraseResultModalOpen) {
+      return nothing;
+    }
+
+    const styleLabel = getRephraseStyleLabel(this.rephraseStyle);
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeRephraseResultModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rephrase-result-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="rephrase-result-title" class="dialog-title">
+            言い換え（${styleLabel}）
+          </h3>
+          <div class="dialog-body" aria-live="polite">
+            ${this.rephrasing ? '言い換え中…' : this.rephraseResultText}
+          </div>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn"
+              @click=${() => {
+                this.closeRephraseResultModal();
+              }}
+            >
+              閉じる
+            </button>
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              ?disabled=${this.rephrasing || this.rephraseResultText === ''}
+              @click=${() => {
+                void this.copyRephraseResult();
+              }}
+            >
+              コピー
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderRephrasePremiumModal() {
+    if (!this.rephrasePremiumModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeRephrasePremiumModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rephrase-premium-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="rephrase-premium-title" class="dialog-title">Premium で解放</h3>
+          <p class="dialog-message">
+            言い換えは Premium（またはトライアル）で利用できます。
+          </p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              @click=${() => {
+                this.closeRephrasePremiumModal();
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      </div>
     `;
   }
 }
