@@ -2,8 +2,11 @@ import { z } from 'zod';
 
 import { HighlightColorSchema, type HighlightColor } from './highlight.js';
 
+export type ThemePreference = 'auto' | 'dark' | 'light';
+
 export type Settings = {
   default_color: HighlightColor;
+  theme: ThemePreference;
   font_scale: number;
   density: 'compact' | 'normal' | 'comfortable';
   blocked_domains: string[];
@@ -22,6 +25,7 @@ export type Settings = {
 
 export const SettingsSchema = z.object({
   default_color: HighlightColorSchema,
+  theme: z.enum(['auto', 'dark', 'light']).default('dark'),
   font_scale: z.number(),
   density: z.enum(['compact', 'normal', 'comfortable']),
   blocked_domains: z.array(z.string()),

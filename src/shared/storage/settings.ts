@@ -6,6 +6,7 @@ const AES_KEY_STORAGE_KEY = 'markwell:crypto:aes-gcm-key';
 
 const DEFAULT_SETTINGS: Settings = {
   default_color: 'yellow',
+  theme: 'dark',
   font_scale: 1.0,
   density: 'normal',
   blocked_domains: [],

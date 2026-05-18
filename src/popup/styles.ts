@@ -6,7 +6,7 @@ import { css } from 'lit';
  */
 export const popupDesignTokens = css`
   :host {
-    /* カラー */
+    /* カラー（既定: ダーク） */
     --bg: #1a1a1a;
     --surface: #242424;
     --surface-raised: #2e2e2e;
@@ -37,6 +37,16 @@ export const popupDesignTokens = css`
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;
+  }
+
+  :host-context(html[data-theme='light']) {
+    --bg: #f4f4f5;
+    --surface: #ffffff;
+    --surface-raised: #ececee;
+    --border: #d4d4d8;
+    --text: #18181b;
+    --text-muted: #71717a;
+    --accent: #b8860b;
   }
 `;
 
@@ -245,6 +255,14 @@ const popupLayoutStyles = css`
     background: var(--surface-raised);
     color: var(--text);
     border-color: var(--accent);
+  }
+
+  .footer-theme-btn {
+    flex: 0 0 auto;
+    min-width: 36px;
+    padding: var(--space-2);
+    font-size: 16px;
+    line-height: 1;
   }
 
   .toast {

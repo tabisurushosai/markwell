@@ -1,10 +1,19 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getCurrentTier } from '../shared/storage/license.js';
+import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { listProjects } from '../shared/storage/projects.js';
 import { listTags } from '../shared/storage/tags.js';
 import type { Project } from '../shared/types/project.js';
 import type { Tag } from '../shared/types/tag.js';
+import type { ThemePreference } from '../shared/types/settings.js';
+import {
+  applyDocumentTheme,
+  nextThemePreference,
+  resolveEffectiveTheme,
+  themeToggleIcon,
+  themeToggleLabel,
+} from './utils/theme.js';
 import { DEFAULT_DATE_FILTER, type DateFilterValue } from './utils/date-filter.js';
 import type { ProjectFilterValue } from './utils/tag-filter.js';
 import './components/tag-chips.js';
@@ -41,6 +50,10 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private licenseTier: 'free' | 'trial' | 'premium' = 'free';
 
+  @state() private themePreference: ThemePreference = 'dark';
+
+  private systemThemeQuery: MediaQueryList | null = null;
+
   static styles = popupStyles;
 
   connectedCallback(): void {
@@ -50,7 +63,10 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-tag-toggle', this.onTagToggle);
     this.addEventListener('mw-project-filter', this.onProjectFilter);
     this.addEventListener('mw-date-filter', this.onDateFilter);
+    this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+    this.systemThemeQuery.addEventListener('change', this.onSystemThemeChange);
     void this.loadFilterData();
+    void this.loadTheme();
   }
 
   disconnectedCallback(): void {
@@ -60,6 +76,31 @@ export class MarkwellPopupRoot extends LitElement {
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
     this.removeEventListener('mw-project-filter', this.onProjectFilter);
     this.removeEventListener('mw-date-filter', this.onDateFilter);
+    this.systemThemeQuery?.removeEventListener('change', this.onSystemThemeChange);
+    this.systemThemeQuery = null;
+  }
+
+  private readonly onSystemThemeChange = (): void => {
+    if (this.themePreference === 'auto') {
+      this.syncThemeToDocument();
+    }
+  };
+
+  private async loadTheme(): Promise<void> {
+    const settings = await getSettings();
+    this.themePreference = settings.theme;
+    this.syncThemeToDocument();
+  }
+
+  private syncThemeToDocument(): void {
+    applyDocumentTheme(resolveEffectiveTheme(this.themePreference));
+  }
+
+  private async handleThemeToggle(): Promise<void> {
+    const next = nextThemePreference(this.themePreference);
+    await setSettings({ theme: next });
+    this.themePreference = next;
+    this.syncThemeToDocument();
   }
 
   private async loadFilterData(): Promise<void> {
@@ -259,6 +300,17 @@ export class MarkwellPopupRoot extends LitElement {
         : ''}
 
       <footer class="footer">
+        <button
+          type="button"
+          class="footer-btn footer-theme-btn"
+          aria-label=${themeToggleLabel(this.themePreference)}
+          title=${themeToggleLabel(this.themePreference)}
+          @click=${() => {
+            void this.handleThemeToggle();
+          }}
+        >
+          ${themeToggleIcon(this.themePreference)}
+        </button>
         <button
           type="button"
           class="footer-btn"

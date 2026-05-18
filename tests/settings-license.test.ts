@@ -68,6 +68,7 @@ describe('settings + license storage', () => {
     expect(settings.ai.model).toBe('gemini-2.0-flash');
     expect(settings.shortcuts.quick_highlight).toBe('Alt+H');
     expect(settings.onboarding_seen).toBe(false);
+    expect(settings.theme).toBe('dark');
   });
 
   it('encrypts and decrypts API key without storing plaintext', async () => {
