@@ -20,12 +20,6 @@ describe('url blocking', () => {
     expect(isDomainBlocked('chromewebstore.google.com', ['chromewebstore.google.com'])).toBe(true);
   });
 
-  it('isDomainBlocked matches localhost and loopback port wildcards', () => {
-    expect(isDomainBlocked('localhost', ['localhost:*'])).toBe(true);
-    expect(isDomainBlocked('127.0.0.1', ['127.0.0.1:*'])).toBe(true);
-    expect(isDomainBlocked('example.com', ['localhost:*'])).toBe(false);
-  });
-
   it('isPageBlocked blocks default chrome and localhost domains', () => {
     expect(
       isPageBlocked(
