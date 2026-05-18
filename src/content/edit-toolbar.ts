@@ -11,6 +11,7 @@ import {
   syncHighlightNoteInDom,
   updateHighlightColorInDom,
 } from './highlighter.js';
+import { closeDeleteConfirmDialog, openDeleteConfirmDialog } from './delete-confirm-dialog.js';
 import { closeNoteDialog, openNoteDialog } from './note-dialog.js';
 
 const TOOLBAR_OFFSET_PX = 8;
@@ -183,6 +184,7 @@ let activeHighlightId: string | null = null;
 
 function hideEditToolbar(): void {
   closeNoteDialog();
+  closeDeleteConfirmDialog();
   activeToolbar?.remove();
   activeToolbar = null;
   activeHighlightId = null;
@@ -243,15 +245,17 @@ async function showEditToolbar(highlightId: string): Promise<void> {
   };
 
   toolbar.onDeleteRequest = () => {
-    void (async () => {
-      if (activeHighlightId === null) {
-        return;
-      }
-      const id = activeHighlightId;
-      await deleteHighlight(id);
-      removeHighlightFromDom(id);
-      hideEditToolbar();
-    })();
+    openDeleteConfirmDialog({
+      onConfirm: async () => {
+        if (activeHighlightId === null) {
+          return;
+        }
+        const id = activeHighlightId;
+        await deleteHighlight(id);
+        removeHighlightFromDom(id);
+        hideEditToolbar();
+      },
+    });
   };
 
   toolbar.onCloseRequest = () => {
@@ -294,9 +298,14 @@ function handleHighlightClick(event: MouseEvent): void {
   void showEditToolbar(highlightId);
 }
 
-function isNoteDialogInPath(path: EventTarget[]): boolean {
+const OVERLAY_DIALOG_TAGS = new Set([
+  'markwell-note-dialog',
+  'markwell-delete-confirm-dialog',
+]);
+
+function isOverlayDialogInPath(path: EventTarget[]): boolean {
   return path.some(
-    (node) => node instanceof HTMLElement && node.localName === 'markwell-note-dialog',
+    (node) => node instanceof HTMLElement && OVERLAY_DIALOG_TAGS.has(node.localName),
   );
 }
 
@@ -306,7 +315,7 @@ function handleOutsidePointerDown(event: MouseEvent): void {
   }
 
   const path = event.composedPath();
-  if (path.includes(activeToolbar) || isNoteDialogInPath(path)) {
+  if (path.includes(activeToolbar) || isOverlayDialogInPath(path)) {
     return;
   }
 

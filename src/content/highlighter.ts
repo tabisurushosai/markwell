@@ -32,6 +32,7 @@ interface RangyWrappedRange {
 
 interface RangyClassApplier {
   applyToRange(range: RangyWrappedRange): void;
+  undoToRange(range: RangyWrappedRange): void;
 }
 
 interface RangyExtended {
@@ -358,17 +359,33 @@ export function syncHighlightNoteInDom(id: string, note: string): void {
   }
 }
 
+function getHighlightColorFromMark(mark: HTMLElement): HighlightColor {
+  for (const color of HIGHLIGHT_COLORS) {
+    if (mark.classList.contains(`markwell-mark-${color}`)) {
+      return color;
+    }
+  }
+  return 'yellow';
+}
+
+/** Unwrap mark elements via Rangy ClassApplier (spec: removeHighlights). */
 export function removeHighlightFromDom(id: string): void {
-  for (const mark of findHighlightMarks(id)) {
-    const parent = mark.parentNode;
-    if (parent === null) {
+  ensureRangyReady();
+  const marks = findHighlightMarks(id);
+  if (marks.length === 0) {
+    return;
+  }
+
+  const color = getHighlightColorFromMark(marks[0]);
+  const applier = createApplier(color, id);
+
+  for (let i = marks.length - 1; i >= 0; i--) {
+    const mark = marks[i];
+    if (mark.parentNode === null) {
       continue;
     }
-
-    while (mark.firstChild !== null) {
-      parent.insertBefore(mark.firstChild, mark);
-    }
-    parent.removeChild(mark);
-    parent.normalize();
+    const range = document.createRange();
+    range.selectNodeContents(mark);
+    applier.undoToRange(toRangyRange(range));
   }
 }
