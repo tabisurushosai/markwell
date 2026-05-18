@@ -302,7 +302,8 @@ export class MarkwellSidePanelRoot extends LitElement {
       return;
     }
     const next = reorderByIndex(this.highlights, index, insertIndex);
-    if (next === this.highlights) {
+    const unchanged = next.every((item, i) => item.id === this.highlights[i]?.id);
+    if (unchanged) {
       return;
     }
     const movedId = this.highlights[index]?.id;
@@ -348,6 +349,20 @@ export class MarkwellSidePanelRoot extends LitElement {
     event.preventDefault();
     if (event.dataTransfer !== null) {
       event.dataTransfer.dropEffect = 'move';
+    }
+    const list = event.currentTarget;
+    if (!(list instanceof HTMLElement)) {
+      return;
+    }
+    const rows = list.querySelectorAll<HTMLElement>('.highlight-item');
+    if (rows.length === 0) {
+      this.dropInsertIndex = 0;
+      return;
+    }
+    const last = rows[rows.length - 1];
+    const rect = last.getBoundingClientRect();
+    if (event.clientY > rect.bottom) {
+      this.dropInsertIndex = this.highlights.length;
     }
   }
 
@@ -455,6 +470,7 @@ export class MarkwellSidePanelRoot extends LitElement {
               ? html`<li class="drop-line" aria-hidden="true"></li>`
               : nothing}
             <li
+              id="highlight-row-${highlight.id}"
               class="highlight-item ${this.dragSourceId === highlight.id
                 ? 'highlight-item--ghost'
                 : ''} ${this.focusedHighlightId === highlight.id
