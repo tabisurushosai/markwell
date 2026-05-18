@@ -77,6 +77,37 @@ describe('synthesis CRUD', () => {
     expect(await getSynthesis(created.id)).toEqual(created);
   });
 
+  it('lists syntheses by created_at descending', async () => {
+    let timestamp = 1_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => {
+      timestamp += 1_000;
+      return timestamp;
+    });
+
+    const older = await createSynthesis({
+      project_id: 'proj-sort',
+      prompt: 'old',
+      result_markdown: 'old',
+      model: 'gemini-2.0-flash',
+      token_input: 1,
+      token_output: 1,
+    });
+    const newer = await createSynthesis({
+      project_id: 'proj-sort',
+      prompt: 'new',
+      result_markdown: 'new',
+      model: 'gemini-2.0-flash',
+      token_input: 2,
+      token_output: 2,
+    });
+    nowSpy.mockRestore();
+
+    const listed = await listSyntheses({ project_id: 'proj-sort' });
+    expect(listed[0]?.created_at).toBeGreaterThan(listed[1]?.created_at ?? 0);
+    expect(listed[0]?.id).toBe(newer.id);
+    expect(listed[1]?.id).toBe(older.id);
+  });
+
   it('updates and deletes synthesis', async () => {
     const created = await createSynthesis({
       project_id: 'proj-a',

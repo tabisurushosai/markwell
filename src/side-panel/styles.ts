@@ -446,7 +446,7 @@ export const sidePanelStyles = [
       gap: var(--space-2);
     }
 
-    .history-item {
+    .history-card {
       display: flex;
       flex-direction: column;
       gap: var(--space-2);
@@ -456,7 +456,32 @@ export const sidePanelStyles = [
       background: var(--bg);
     }
 
-    .history-item__meta {
+    .history-card__main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .history-card__main:hover {
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+
+    .history-card__main:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .history-card__meta {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-2);
@@ -465,26 +490,27 @@ export const sidePanelStyles = [
       color: var(--text-muted);
     }
 
-    .history-item__model {
+    .history-card__model {
       font-size: var(--font-size-sm);
       color: var(--text-muted);
     }
 
-    .history-item__preview {
-      margin: var(--space-1) 0 0;
+    .history-card__preview {
+      margin: 0;
       font-size: var(--font-size-sm);
       line-height: 1.45;
       color: var(--text);
     }
 
-    .history-item__actions {
+    .history-card__actions {
       display: flex;
-      flex-direction: row;
+      flex-wrap: wrap;
       gap: var(--space-2);
     }
 
-    .history-item__actions .btn {
-      flex: 1;
+    .history-card__actions .btn {
+      flex: 1 1 calc(33% - var(--space-2));
+      min-width: 6.5rem;
     }
 
     @media (max-width: 1023px) {

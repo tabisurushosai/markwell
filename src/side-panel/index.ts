@@ -37,6 +37,10 @@ import {
 import { computeInsertIndex, reorderByIndex } from './utils/drag-reorder.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import {
+  copySynthesisMarkdown,
+  downloadSynthesisMarkdown,
+} from './utils/synthesis-export.js';
+import {
   formatSynthesisError,
   isSynthesisAbortError,
 } from './utils/synthesis-errors.js';
@@ -548,15 +552,33 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private viewSynthesisFromHistory(synthesis: Synthesis): void {
+    // synthesisPrompt（userInstruction）は触らず、合成結果のみ復元する
     this.synthesisMarkdown = synthesis.result_markdown;
     this.resultVisible = true;
     this.closeHistoryModal();
   }
 
-  private async deleteSynthesisFromHistory(synthesis: Synthesis): Promise<void> {
+  private async deleteSynthesisFromHistory(synthesis: Synthesis, event: Event): Promise<void> {
+    event.stopPropagation();
     await deleteSynthesis(synthesis.id);
     this.synthesisHistory = await listSyntheses({ project_id: this.selectedProjectId });
     this.showStatus('履歴を削除しました');
+  }
+
+  private async copySynthesisFromHistory(synthesis: Synthesis, event: Event): Promise<void> {
+    event.stopPropagation();
+    try {
+      await copySynthesisMarkdown(synthesis.result_markdown);
+      this.showStatus('Markdown をコピーしました');
+    } catch {
+      this.showStatus('コピーに失敗しました');
+    }
+  }
+
+  private downloadSynthesisFromHistory(synthesis: Synthesis, event: Event): void {
+    event.stopPropagation();
+    downloadSynthesisMarkdown(synthesis.result_markdown, synthesis.created_at);
+    this.showStatus('Markdown をダウンロードしました');
   }
 
   private formatHistoryDate(timestamp: number): string {
@@ -914,34 +936,52 @@ export class MarkwellSidePanelRoot extends LitElement {
                       <ul class="history-list">
                         ${this.synthesisHistory.map(
                           (synthesis) => html`
-                            <li class="history-item">
-                              <div class="history-item__meta">
-                                <time datetime=${new Date(synthesis.created_at).toISOString()}>
-                                  ${this.formatHistoryDate(synthesis.created_at)}
-                                </time>
-                                <span class="history-item__model"
-                                  >${synthesis.model} · 入力 ${String(synthesis.token_input)} /
-                                  出力 ${String(synthesis.token_output)}</span
+                            <li class="history-card">
+                              <button
+                                type="button"
+                                class="history-card__main"
+                                @click=${() => {
+                                  this.viewSynthesisFromHistory(synthesis);
+                                }}
+                              >
+                                <span class="history-card__meta">
+                                  <time datetime=${new Date(synthesis.created_at).toISOString()}>
+                                    ${this.formatHistoryDate(synthesis.created_at)}
+                                  </time>
+                                  <span class="history-card__model"
+                                    >${synthesis.model} · 入力
+                                    ${String(synthesis.token_input)} / 出力
+                                    ${String(synthesis.token_output)}</span
+                                  >
+                                </span>
+                                <span class="history-card__preview"
+                                  >${this.previewMarkdown(synthesis.result_markdown)}</span
                                 >
-                              </div>
-                              <p class="history-item__preview">
-                                ${this.previewMarkdown(synthesis.result_markdown)}
-                              </p>
-                              <div class="history-item__actions">
+                              </button>
+                              <div class="history-card__actions">
                                 <button
                                   type="button"
                                   class="btn"
-                                  @click=${() => {
-                                    this.viewSynthesisFromHistory(synthesis);
+                                  @click=${(event: Event) => {
+                                    void this.copySynthesisFromHistory(synthesis, event);
                                   }}
                                 >
-                                  表示
+                                  Markdown コピー
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn"
+                                  @click=${(event: Event) => {
+                                    this.downloadSynthesisFromHistory(synthesis, event);
+                                  }}
+                                >
+                                  .md ダウンロード
                                 </button>
                                 <button
                                   type="button"
                                   class="btn card-btn--exclude"
-                                  @click=${() => {
-                                    void this.deleteSynthesisFromHistory(synthesis);
+                                  @click=${(event: Event) => {
+                                    void this.deleteSynthesisFromHistory(synthesis, event);
                                   }}
                                 >
                                   削除
