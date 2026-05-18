@@ -4,9 +4,13 @@ import { customElement, property } from 'lit/decorators.js';
 import { deleteHighlight } from '../../shared/storage/highlights.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
+import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
 import { getActiveTabId } from '../utils/tab-url.js';
+
+const DELETE_CONFIRM_MESSAGE =
+  'このハイライトを削除しますか？この操作は取り消せません。';
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
   yellow: 'var(--hl-yellow)',
@@ -143,6 +147,13 @@ export class MarkwellHighlightCard extends LitElement {
       border-color: #e57373;
       color: #e57373;
     }
+
+    .action-btn--icon {
+      min-width: 32px;
+      padding: var(--space-1);
+      font-size: 14px;
+      line-height: 1;
+    }
   `;
 
   private dispatchRefresh(): void {
@@ -156,7 +167,12 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   private async handleDelete(): Promise<void> {
-    await deleteHighlight(this.highlight.id);
+    if (!window.confirm(DELETE_CONFIRM_MESSAGE)) {
+      return;
+    }
+    const highlight = this.highlight;
+    await deleteHighlight(highlight.id);
+    await notifyHighlightRemovedOnOpenTabs(highlight);
     this.dispatchRefresh();
   }
 
@@ -253,12 +269,15 @@ export class MarkwellHighlightCard extends LitElement {
             </button>
             <button
               type="button"
-              class="action-btn action-btn--danger"
-              @click=${() => {
+              class="action-btn action-btn--danger action-btn--icon"
+              aria-label="削除"
+              title="削除"
+              @click=${(event: Event) => {
+                event.stopPropagation();
                 void this.handleDelete();
               }}
             >
-              削除
+              🗑
             </button>
             ${isSearch
               ? ''

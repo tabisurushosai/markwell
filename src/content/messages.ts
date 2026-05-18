@@ -1,4 +1,4 @@
-import { jumpToHighlight } from './highlighter.js';
+import { jumpToHighlight, removeHighlightFromDom } from './highlighter.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
 import { handleHighlightWithNoteCommand, handleQuickHighlightCommand } from './shortcuts.js';
 
@@ -9,6 +9,7 @@ export type ContentRunCommand =
 export type ContentMessage =
   | { type: 'GET_CANONICAL_URL' }
   | { type: 'JUMP_TO_HIGHLIGHT'; id: string }
+  | { type: 'REMOVE_HIGHLIGHT_FROM_DOM'; id: string }
   | { type: 'RUN_COMMAND'; command: ContentRunCommand };
 
 export type JumpToHighlightResponse = { ok: boolean };
@@ -30,6 +31,10 @@ export function initContentMessaging(): void {
         sendResponse({ ok } satisfies JumpToHighlightResponse);
         return true;
       }
+      case 'REMOVE_HIGHLIGHT_FROM_DOM':
+        removeHighlightFromDom(msg.id);
+        sendResponse({ ok: true });
+        return true;
       case 'RUN_COMMAND': {
         void (async () => {
           const ok =

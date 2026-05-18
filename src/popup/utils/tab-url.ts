@@ -8,7 +8,7 @@ export function canonicalizeHref(href: string): string {
   }
 }
 
-function isCanonicalResponse(value: unknown): value is { url_canonical: string } {
+export function isCanonicalResponse(value: unknown): value is { url_canonical: string } {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
