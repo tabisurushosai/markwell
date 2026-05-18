@@ -122,6 +122,24 @@ export const sidePanelStyles = [
       background: var(--surface);
     }
 
+    .highlight-marker {
+      flex-shrink: 0;
+      width: 4px;
+      align-self: stretch;
+      border-radius: var(--radius-sm);
+    }
+
+    .status-toast {
+      margin: 0 0 var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      color: var(--text);
+      font-size: var(--font-size-sm);
+      line-height: 1.45;
+    }
+
     .highlight-body {
       flex: 1;
       min-width: 0;

@@ -6,6 +6,7 @@ import { getCurrentTier } from '../shared/storage/license.js';
 import {
   assertProjectLimit,
   createProject,
+  getProject,
   listProjects,
   ProjectLimitError,
   removeHighlightFromProject,
@@ -40,6 +41,14 @@ const COLOR_LABELS: Record<HighlightColor, string> = {
   pink: 'ピンク',
   blue: '青',
   orange: 'オレンジ',
+};
+
+const COLOR_VAR: Record<HighlightColor, string> = {
+  yellow: 'var(--hl-yellow)',
+  green: 'var(--hl-green)',
+  pink: 'var(--hl-pink)',
+  blue: 'var(--hl-blue)',
+  orange: 'var(--hl-orange)',
 };
 
 const EMPTY_PROJECT_HIGHLIGHTS_MESSAGE =
@@ -253,11 +262,8 @@ export class MarkwellSidePanelRoot extends LitElement {
       return;
     }
     await removeHighlightFromProject(this.selectedProjectId, highlight.id);
-    const project = this.projects.find((item) => item.id === this.selectedProjectId);
-    if (project !== undefined) {
-      project.highlight_order = project.highlight_order.filter((id) => id !== highlight.id);
-    }
     await this.loadHighlightsForProject();
+    this.showStatus('プロジェクトから除外しました（ハイライト自体は削除されません）');
   }
 
   private async handleJump(highlight: Highlight): Promise<void> {
@@ -273,100 +279,6 @@ export class MarkwellSidePanelRoot extends LitElement {
       item.id === updated.id ? updated : item,
     );
     await notifyHighlightColorOnOpenTabs(updated, color);
-  }
-
-  private readonly onHighlightReorder = (event: Event): void => {
-    if (!(event instanceof CustomEvent)) {
-      return;
-    }
-    const direction = (event.detail as { direction?: -1 | 1 }).direction;
-    const card = event.target;
-    if (!(card instanceof HTMLElement) || direction === undefined) {
-      return;
-    }
-    const index = this.highlights.findIndex((highlight) => {
-      const item = card.closest('markwell-project-highlight-card');
-      return item?.highlight?.id === highlight.id;
-    });
-    // find index from composed path
-    const path = event.composedPath();
-    const cardEl = path.find(
-      (node): node is HTMLElement & { highlight: Highlight } =>
-        node instanceof HTMLElement && node.tagName === 'MARKWELL-PROJECT-HIGHLIGHT-CARD',
-    );
-    if (cardEl === undefined) {
-      return;
-    }
-    const highlightId = (cardEl as { highlight?: Highlight }).highlight?.id;
-    const idx = this.highlights.findIndex((h) => h.id === highlightId);
-    if (idx < 0) {
-      return;
-    }
-    this.moveHighlight(idx, direction);
-  };
-
-  private readonly onHighlightExclude = (event: Event): void => {
-    const highlight = this.highlightFromEvent(event);
-    if (highlight === null || this.selectedProjectId === '') {
-      return;
-    }
-    void this.excludeHighlightFromProject(highlight);
-  };
-
-  private readonly onHighlightJump = (event: Event): void => {
-    const highlight = this.highlightFromEvent(event);
-    if (highlight === null) {
-      return;
-    }
-    void this.jumpToHighlight(highlight);
-  };
-
-  private readonly onHighlightColor = (event: Event): void => {
-    if (!(event instanceof CustomEvent)) {
-      return;
-    }
-    const highlight = this.highlightFromEvent(event);
-    const color = (event.detail as { color?: HighlightColor }).color;
-    if (highlight === null || color === undefined) {
-      return;
-    }
-    void this.changeHighlightColor(highlight, color);
-  };
-
-  private highlightFromEvent(event: Event): Highlight | null {
-    const cardEl = event.composedPath().find(
-      (node) => node instanceof HTMLElement && node.tagName === 'MARKWELL-PROJECT-HIGHLIGHT-CARD',
-    ) as (HTMLElement & { highlight?: Highlight }) | undefined;
-    return cardEl?.highlight ?? null;
-  }
-
-  private async excludeHighlightFromProject(highlight: Highlight): Promise<void> {
-    if (this.selectedProjectId === '') {
-      return;
-    }
-    await removeHighlightFromProject(this.selectedProjectId, highlight.id);
-    await this.loadHighlightsForProject();
-    this.showStatus('プロジェクトから除外しました');
-  }
-
-  private async jumpToHighlight(highlight: Highlight): Promise<void> {
-    const ok = await jumpToHighlightOnOpenTabs(highlight);
-    if (!ok) {
-      this.showStatus('ハイライトが見つかりません');
-    }
-  }
-
-  private async changeHighlightColor(highlight: Highlight, color: HighlightColor): Promise<void> {
-    const updated = await updateHighlight(highlight.id, { color });
-    const index = this.highlights.findIndex((item) => item.id === highlight.id);
-    if (index >= 0) {
-      this.highlights = [
-        ...this.highlights.slice(0, index),
-        updated,
-        ...this.highlights.slice(index + 1),
-      ];
-    }
-    await updateHighlightColorOnOpenTabs(updated, color);
   }
 
   private moveHighlight(index: number, direction: -1 | 1): void {
@@ -421,6 +333,11 @@ export class MarkwellSidePanelRoot extends LitElement {
         ${this.highlights.map(
           (highlight, index) => html`
             <li class="highlight-item">
+              <div
+                class="highlight-marker"
+                style="background: ${COLOR_VAR[highlight.color]}"
+                aria-hidden="true"
+              ></div>
               <div class="reorder">
                 <button
                   type="button"
@@ -527,6 +444,9 @@ export class MarkwellSidePanelRoot extends LitElement {
 
             <section class="highlights" aria-label="ハイライト一覧">
               <h2 class="panel-title">ハイライト</h2>
+              ${this.statusMessage
+                ? html`<p class="status-toast" role="status">${this.statusMessage}</p>`
+                : nothing}
               ${this.renderHighlightList()}
             </section>
 
