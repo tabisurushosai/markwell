@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { popupStyles } from './styles.js';
+import './views/current-page.js';
 
 type TabId = 'page' | 'all' | 'projects';
 type TierBadge = 'FREE' | 'TRIAL' | 'PREMIUM';
@@ -34,10 +35,7 @@ export class MarkwellPopupRoot extends LitElement {
   private renderTabPanel() {
     switch (this.activeTab) {
       case 'page':
-        return html`
-          <h2 class="panel-title">このページのハイライト</h2>
-          <p class="placeholder">ハイライトはまだありません</p>
-        `;
+        return html`<markwell-current-page-view></markwell-current-page-view>`;
       case 'all':
         return html`
           <h2 class="panel-title">全ページ横断検索</h2>
