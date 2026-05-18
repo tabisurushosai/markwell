@@ -274,40 +274,6 @@ function rangesEqual(a: Range, b: Range): boolean {
   );
 }
 
-export function restoreHighlight(highlight: Highlight): boolean {
-  ensureRangyReady();
-  ensureHighlightStyles();
-
-  if (document.querySelector(`[data-markwell-id="${highlight.id}"]`) !== null) {
-    syncHighlightNoteInDom(highlight.id, highlight.note);
-    return true;
-  }
-
-  let range: Range | null = null;
-
-  if (highlight.anchor.serialized !== '') {
-    range = deserializeRange(highlight.anchor.serialized);
-  }
-
-  if (range === null) {
-    range = restoreByFallback(highlight);
-  }
-
-  if (range === null) {
-    return false;
-  }
-
-  applyHighlight(range, highlight.color, highlight.id);
-  syncHighlightNoteInDom(highlight.id, highlight.note);
-  return true;
-}
-
-export function restoreHighlights(highlights: Highlight[]): void {
-  for (const highlight of highlights) {
-    restoreHighlight(highlight);
-  }
-}
-
 const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'pink', 'blue', 'orange'];
 
 export function findHighlightMarks(id: string): HTMLElement[] {

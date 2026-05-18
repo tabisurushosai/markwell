@@ -1,17 +1,11 @@
-import { listHighlights } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
-import type { Highlight } from '../shared/types/highlight.js';
-import { restoreHighlights } from './highlighter.js';
 import { initHashJump } from './hash-jump.js';
 import { initContentMessaging } from './messages.js';
 import { initEditToolbar } from './edit-toolbar.js';
 import { initMiniToolbar } from './mini-toolbar.js';
+import { scheduleRestoreOnLoad } from './restore.js';
 import { initSelectionDetection } from './selection.js';
-import { getCanonicalUrl, isPageBlocked } from '../shared/utils/url.js';
-
-function renderHighlights(highlights: Highlight[]): void {
-  restoreHighlights(highlights);
-}
+import { isPageBlocked } from '../shared/utils/url.js';
 
 async function bootstrap(): Promise<void> {
   const settings = await getSettings();
@@ -38,8 +32,7 @@ async function bootstrap(): Promise<void> {
       // Background may not be listening yet.
     });
 
-  const highlights = await listHighlights({ url_canonical: getCanonicalUrl() });
-  renderHighlights(highlights);
+  scheduleRestoreOnLoad();
   initHashJump();
 }
 
