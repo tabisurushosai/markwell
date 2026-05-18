@@ -9,6 +9,11 @@ import {
   type QaChatMessage,
 } from '../shared/ai/project-qa.js';
 import {
+  buildQuoteDownloadFilename,
+  buildQuoteExtractorPrompt,
+  canUseQuoteExtractor,
+} from '../shared/ai/quote-extractor.js';
+import {
   buildSynthesisPrompt,
   estimateTokens,
   extractUserInstructionFromPrompt,
@@ -45,6 +50,7 @@ import { computeInsertIndex, reorderByIndex } from './utils/drag-reorder.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import {
   copySynthesisMarkdown,
+  downloadTextFile,
   exportSynthesis,
   isPremiumSynthesisExportFormat,
   SynthesisExportTierError,
@@ -107,7 +113,15 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private premiumModalOpen = false;
 
-  @state() private premiumModalContext: 'synthesis' | 'export' | 'qa' = 'synthesis';
+  @state() private premiumModalContext: 'synthesis' | 'export' | 'qa' | 'quotes' = 'synthesis';
+
+  @state() private resultPanelMode: 'synthesis' | 'quotes' = 'synthesis';
+
+  @state() private quotesMarkdown = '';
+
+  @state() private extractingQuotes = false;
+
+  @state() private quotesExportCreatedAt = Date.now();
 
   @state() private activeBottomTab: 'synthesis' | 'qa' = 'synthesis';
 
@@ -153,6 +167,8 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private qaAbortController: AbortController | null = null;
 
+  private quoteAbortController: AbortController | null = null;
+
   static styles = sidePanelStyles;
 
   connectedCallback(): void {
@@ -173,6 +189,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.synthesisAbortController = null;
     this.qaAbortController?.abort();
     this.qaAbortController = null;
+    this.quoteAbortController?.abort();
+    this.quoteAbortController = null;
   }
 
   private readonly onSystemThemeChange = (): void => {
@@ -537,6 +555,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     this.synthesizing = true;
+    this.resultPanelMode = 'synthesis';
     this.resultVisible = true;
     this.synthesisMarkdown = '';
 
@@ -615,6 +634,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.synthesisMarkdown = synthesis.result_markdown;
     this.synthesisExportCreatedAt = synthesis.created_at;
     this.lastSynthesisModel = synthesis.model;
+    this.resultPanelMode = 'synthesis';
     this.resultVisible = true;
     this.closeHistoryModal();
   }
@@ -649,7 +669,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     };
   }
 
-  private openPremiumModal(context: 'synthesis' | 'export' | 'qa'): void {
+  private openPremiumModal(context: 'synthesis' | 'export' | 'qa' | 'quotes'): void {
     this.premiumModalContext = context;
     this.premiumModalOpen = true;
   }
@@ -816,9 +836,167 @@ export class MarkwellSidePanelRoot extends LitElement {
       this.synthesizing = false;
       return;
     }
+    if (this.extractingQuotes) {
+      this.quoteAbortController?.abort();
+      this.extractingQuotes = false;
+      return;
+    }
+    this.closeResultPanel();
+  }
+
+  private closeResultPanel(): void {
     this.resultVisible = false;
     this.synthesisMarkdown = '';
+    this.quotesMarkdown = '';
     this.closeExportMenus();
+  }
+
+  private isResultPanelVisible(): boolean {
+    if (!this.resultVisible) {
+      return false;
+    }
+    if (this.resultPanelMode === 'quotes') {
+      return true;
+    }
+    return this.activeBottomTab === 'synthesis';
+  }
+
+  private async handleQuoteExtract(): Promise<void> {
+    if (!canUseQuoteExtractor(this.currentTier)) {
+      this.openPremiumModal('quotes');
+      return;
+    }
+
+    if (this.highlights.length === 0) {
+      this.showStatus('ハイライトがありません');
+      return;
+    }
+
+    this.synthesisAbortController?.abort();
+    this.quoteAbortController?.abort();
+    const abortController = new AbortController();
+    this.quoteAbortController = abortController;
+
+    this.extractingQuotes = true;
+    this.resultPanelMode = 'quotes';
+    this.resultVisible = true;
+    this.quotesMarkdown = '';
+    this.quotesExportCreatedAt = Date.now();
+
+    const prompt = buildQuoteExtractorPrompt(this.highlights);
+
+    try {
+      for await (const chunk of callGemini(prompt, {
+        stream: true,
+        signal: abortController.signal,
+      })) {
+        this.quotesMarkdown += chunk;
+      }
+    } catch (error) {
+      if (isSynthesisAbortError(error)) {
+        if (this.quotesMarkdown === '') {
+          this.resultVisible = false;
+        }
+        return;
+      }
+      this.quotesMarkdown = formatSynthesisError(error);
+    } finally {
+      this.extractingQuotes = false;
+      if (this.quoteAbortController === abortController) {
+        this.quoteAbortController = null;
+      }
+    }
+  }
+
+  private async copyQuotesMarkdown(): Promise<void> {
+    try {
+      await copySynthesisMarkdown(this.quotesMarkdown);
+      this.showStatus('Markdown をコピーしました');
+    } catch {
+      this.showStatus('コピーに失敗しました');
+    }
+  }
+
+  private downloadQuotesMarkdown(): void {
+    downloadTextFile(
+      this.quotesMarkdown,
+      buildQuoteDownloadFilename(this.quotesExportCreatedAt),
+    );
+    this.showStatus('引用 Markdown をダウンロードしました');
+  }
+
+  private renderResultPanel() {
+    if (this.resultPanelMode === 'quotes') {
+      return html`
+        <div class="result-header">
+          <h2 class="result-header__title">引用抽出</h2>
+          <div class="result-header__actions">
+            ${this.extractingQuotes
+              ? html`<span class="result-badge">抽出中</span>`
+              : nothing}
+            ${this.renderQuoteResultActions()}
+          </div>
+        </div>
+        <div class="result-body">
+          ${this.extractingQuotes && this.quotesMarkdown === ''
+            ? html`<p class="result-placeholder">抽出中…</p>`
+            : html`<markdown-it .content=${this.quotesMarkdown}></markdown-it>`}
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="result-header">
+        <h2 class="result-header__title">合成結果</h2>
+        <div class="result-header__actions">
+          ${this.synthesizing ? html`<span class="result-badge">生成中</span>` : nothing}
+          ${!this.synthesizing && !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
+            ? this.renderExportMenu(
+                this.synthesisMarkdown,
+                this.synthesisExportCreatedAt,
+                this.lastSynthesisModel,
+                'result',
+                this.exportMenuOpen,
+              )
+            : nothing}
+        </div>
+      </div>
+      <div class="result-body">
+        ${this.synthesizing && this.synthesisMarkdown === ''
+          ? html`<p class="result-placeholder">生成中…</p>`
+          : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
+      </div>
+    `;
+  }
+
+  private renderQuoteResultActions(): ReturnType<typeof html> | typeof nothing {
+    if (
+      this.extractingQuotes ||
+      this.quotesMarkdown === '' ||
+      this.isSynthesisErrorMarkdown(this.quotesMarkdown)
+    ) {
+      return nothing;
+    }
+    return html`
+      <button
+        type="button"
+        class="btn"
+        @click=${() => {
+          void this.copyQuotesMarkdown();
+        }}
+      >
+        コピー
+      </button>
+      <button
+        type="button"
+        class="btn"
+        @click=${() => {
+          this.downloadQuotesMarkdown();
+        }}
+      >
+        .md ダウンロード
+      </button>
+    `;
   }
 
   private closePremiumModal(): void {
@@ -831,6 +1009,9 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     if (this.premiumModalContext === 'qa') {
       return 'プロジェクト Q&A は Premium（またはトライアル）で利用できます。';
+    }
+    if (this.premiumModalContext === 'quotes') {
+      return '引用抽出は Premium（またはトライアル）で利用できます。';
     }
     return 'ハイライトの AI 合成は Premium（またはトライアル）で利用できます。';
   }
@@ -1003,19 +1184,23 @@ export class MarkwellSidePanelRoot extends LitElement {
             class="btn btn--primary"
             ?disabled=${this.synthesizing || this.highlights.length === 0}
             @click=${() => {
-              if (this.resultVisible) {
+              if (this.resultVisible && this.resultPanelMode === 'synthesis') {
                 void this.handleRegenerate();
               } else {
                 void this.handleSynthesize();
               }
             }}
           >
-            ${this.synthesizing ? '生成中…' : this.resultVisible ? '再生成' : '合成する'}
+            ${this.synthesizing
+              ? '生成中…'
+              : this.resultVisible && this.resultPanelMode === 'synthesis'
+                ? '再生成'
+                : '合成する'}
           </button>
           <button
             type="button"
             class="btn"
-            ?disabled=${!this.synthesizing && !this.resultVisible}
+            ?disabled=${!this.synthesizing && !this.extractingQuotes && !this.resultVisible}
             @click=${() => {
               this.handleCancelSynthesis();
             }}
@@ -1031,6 +1216,16 @@ export class MarkwellSidePanelRoot extends LitElement {
             }}
           >
             保存履歴を見る
+          </button>
+          <button
+            type="button"
+            class="btn"
+            ?disabled=${this.extractingQuotes || this.highlights.length === 0}
+            @click=${() => {
+              void this.handleQuoteExtract();
+            }}
+          >
+            ${this.extractingQuotes ? '抽出中…' : '✂️ 引用抽出'}
           </button>
         </div>
       </div>
@@ -1306,21 +1501,26 @@ export class MarkwellSidePanelRoot extends LitElement {
           </div>
 
           <aside
-            class="result-panel ${this.resultVisible && this.activeBottomTab === 'synthesis'
-              ? 'result-panel--visible'
-              : ''}"
-            aria-label="合成結果"
-            aria-hidden=${!this.resultVisible || this.activeBottomTab !== 'synthesis'}
+            class="result-panel ${this.isResultPanelVisible() ? 'result-panel--visible' : ''}"
+            aria-label=${this.resultPanelMode === 'quotes' ? '引用抽出' : '合成結果'}
+            aria-hidden=${!this.isResultPanelVisible()}
           >
-            ${this.resultVisible
+            ${this.isResultPanelVisible()
               ? html`
                   <div class="result-header">
-                    <h2 class="result-header__title">合成結果</h2>
+                    <h2 class="result-header__title">
+                      ${this.resultPanelMode === 'quotes' ? '引用抽出' : '合成結果'}
+                    </h2>
                     <div class="result-header__actions">
-                      ${this.synthesizing
+                      ${this.resultPanelMode === 'synthesis' && this.synthesizing
                         ? html`<span class="result-badge">生成中</span>`
                         : nothing}
-                      ${!this.synthesizing && !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
+                      ${this.resultPanelMode === 'quotes' && this.extractingQuotes
+                        ? html`<span class="result-badge">抽出中</span>`
+                        : nothing}
+                      ${this.resultPanelMode === 'synthesis' &&
+                      !this.synthesizing &&
+                      !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
                         ? this.renderExportMenu(
                             this.synthesisMarkdown,
                             this.synthesisExportCreatedAt,
@@ -1329,12 +1529,17 @@ export class MarkwellSidePanelRoot extends LitElement {
                             this.exportMenuOpen,
                           )
                         : nothing}
+                      ${this.resultPanelMode === 'quotes' ? this.renderQuoteResultActions() : nothing}
                     </div>
                   </div>
                   <div class="result-body">
-                    ${this.synthesizing && this.synthesisMarkdown === ''
-                      ? html`<p class="result-placeholder">生成中…</p>`
-                      : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
+                    ${this.resultPanelMode === 'quotes'
+                      ? this.extractingQuotes && this.quotesMarkdown === ''
+                        ? html`<p class="result-placeholder">抽出中…</p>`
+                        : html`<markdown-it .content=${this.quotesMarkdown}></markdown-it>`
+                      : this.synthesizing && this.synthesisMarkdown === ''
+                        ? html`<p class="result-placeholder">生成中…</p>`
+                        : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
                   </div>
                 `
               : nothing}
