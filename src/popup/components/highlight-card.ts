@@ -1,9 +1,10 @@
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import { deleteHighlight } from '../../shared/storage/highlights.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
+import { formatHighlightAsMarkdown } from '../utils/format-highlight-markdown.js';
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
@@ -12,6 +13,7 @@ import { getActiveTabId } from '../utils/tab-url.js';
 
 const DELETE_CONFIRM_MESSAGE =
   'このハイライトを削除しますか？この操作は取り消せません。';
+const COPY_LONG_PRESS_MS = 300;
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
   yellow: 'var(--hl-yellow)',
@@ -28,6 +30,12 @@ export class MarkwellHighlightCard extends LitElement {
   @property({ attribute: false }) tagsById: ReadonlyMap<string, Tag> = new Map();
 
   @property({ reflect: true }) mode: 'page' | 'search' = 'page';
+
+  @state() private copyMenuOpen = false;
+
+  private copyLongPressTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private copyLongPressTriggered = false;
 
   static styles = [
     popupDesignTokens,
@@ -157,8 +165,64 @@ export class MarkwellHighlightCard extends LitElement {
       font-size: 14px;
       line-height: 1;
     }
+
+    .copy-wrap {
+      position: relative;
+    }
+
+    .copy-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 4px);
+      z-index: 10;
+      min-width: 180px;
+      padding: var(--space-1) 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-raised);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .copy-menu-item {
+      display: block;
+      width: 100%;
+      padding: var(--space-2) var(--space-3);
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .copy-menu-item:hover {
+      background: var(--surface);
+    }
   `,
   ];
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.addEventListener('pointerdown', this.onDocumentPointerDown, true);
+  }
+
+  disconnectedCallback(): void {
+    this.clearCopyLongPressTimer();
+    this.removeEventListener('pointerdown', this.onDocumentPointerDown, true);
+    super.disconnectedCallback();
+  }
+
+  private readonly onDocumentPointerDown = (event: Event): void => {
+    if (!this.copyMenuOpen) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof Node && this.renderRoot.contains(target)) {
+      return;
+    }
+    this.copyMenuOpen = false;
+  };
 
   private dispatchRefresh(): void {
     this.dispatchEvent(
@@ -176,9 +240,55 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
-  private async handleCopy(): Promise<void> {
+  private clearCopyLongPressTimer(): void {
+    if (this.copyLongPressTimer !== null) {
+      clearTimeout(this.copyLongPressTimer);
+      this.copyLongPressTimer = null;
+    }
+  }
+
+  private onCopyPointerDown(event: PointerEvent): void {
+    if (event.button !== 0) {
+      return;
+    }
+    this.copyLongPressTriggered = false;
+    this.clearCopyLongPressTimer();
+    this.copyLongPressTimer = setTimeout(() => {
+      this.copyLongPressTriggered = true;
+      this.copyLongPressTimer = null;
+      void this.handleCopyMarkdown();
+    }, COPY_LONG_PRESS_MS);
+  }
+
+  private onCopyPointerUp(): void {
+    this.clearCopyLongPressTimer();
+  }
+
+  private onCopyClick(event: Event): void {
+    event.stopPropagation();
+    if (this.copyLongPressTriggered) {
+      this.copyLongPressTriggered = false;
+      return;
+    }
+    void this.handleCopyPlain();
+  }
+
+  private onCopyContextMenu(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.copyMenuOpen = true;
+  }
+
+  private async handleCopyPlain(): Promise<void> {
     await navigator.clipboard.writeText(this.highlight.selected_text);
     this.showToast('コピーしました');
+  }
+
+  private async handleCopyMarkdown(): Promise<void> {
+    this.copyMenuOpen = false;
+    const markdown = formatHighlightAsMarkdown(this.highlight);
+    await navigator.clipboard.writeText(markdown);
+    this.showToast('Markdown をコピーしました');
   }
 
   private async handleDelete(): Promise<void> {
@@ -267,18 +377,55 @@ export class MarkwellHighlightCard extends LitElement {
             </time>
           </div>
           <div class="actions">
-            <button
-              type="button"
-              class="action-btn action-btn--icon"
-              aria-label="コピー"
-              title="コピー"
-              @click=${(event: Event) => {
-                event.stopPropagation();
-                void this.handleCopy();
-              }}
-            >
-              📋
-            </button>
+            <div class="copy-wrap">
+              <button
+                type="button"
+                class="action-btn"
+                title="クリック: テキスト / 長押し・右クリック: Markdown"
+                @pointerdown=${(event: PointerEvent) => {
+                  this.onCopyPointerDown(event);
+                }}
+                @pointerup=${() => {
+                  this.onCopyPointerUp();
+                }}
+                @pointerleave=${() => {
+                  this.onCopyPointerUp();
+                }}
+                @pointercancel=${() => {
+                  this.onCopyPointerUp();
+                }}
+                @click=${(event: Event) => {
+                  this.onCopyClick(event);
+                }}
+                @contextmenu=${(event: MouseEvent) => {
+                  this.onCopyContextMenu(event);
+                }}
+              >
+                コピー
+              </button>
+              ${this.copyMenuOpen
+                ? html`
+                    <div
+                      class="copy-menu"
+                      role="menu"
+                      @click=${(event: Event) => {
+                        event.stopPropagation();
+                      }}
+                    >
+                      <button
+                        type="button"
+                        class="copy-menu-item"
+                        role="menuitem"
+                        @click=${() => {
+                          void this.handleCopyMarkdown();
+                        }}
+                      >
+                        Markdown 形式でコピー
+                      </button>
+                    </div>
+                  `
+                : nothing}
+            </div>
             <button
               type="button"
               class="action-btn action-btn--danger action-btn--icon"
