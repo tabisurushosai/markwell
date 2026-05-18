@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { filterHighlightsByTagIds } from '../utils/tag-filter.js';
 
 import { listHighlights } from '../../shared/storage/highlights.js';
 import { listTags } from '../../shared/storage/tags.js';
@@ -10,6 +11,8 @@ import { getCanonicalUrlForActiveTab } from '../utils/tab-url.js';
 
 @customElement('markwell-current-page-view')
 export class MarkwellCurrentPageView extends LitElement {
+  @property({ attribute: false }) selectedTagIds: string[] = [];
+
   @state() private highlights: Highlight[] = [];
 
   @state() private tagsById: ReadonlyMap<string, Tag> = new Map();
@@ -76,6 +79,10 @@ export class MarkwellCurrentPageView extends LitElement {
     void this.loadHighlights();
   }
 
+  private get filteredHighlights(): Highlight[] {
+    return filterHighlightsByTagIds(this.highlights, this.selectedTagIds);
+  }
+
   render() {
     if (this.loading) {
       return html`
@@ -93,10 +100,18 @@ export class MarkwellCurrentPageView extends LitElement {
       `;
     }
 
+    const visible = this.filteredHighlights;
+    if (visible.length === 0) {
+      return html`
+        <h2 class="panel-title">このページのハイライト</h2>
+        <p class="empty">選択したタグに一致するハイライトはありません</p>
+      `;
+    }
+
     return html`
-      <h2 class="panel-title">このページのハイライト (${this.highlights.length})</h2>
+      <h2 class="panel-title">このページのハイライト (${visible.length})</h2>
       <div class="list">
-        ${this.highlights.map(
+        ${visible.map(
           (highlight) => html`
             <markwell-highlight-card
               .highlight=${highlight}

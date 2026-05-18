@@ -1,5 +1,8 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { listTags } from '../shared/storage/tags.js';
+import type { Tag } from '../shared/types/tag.js';
+import './components/tag-chips.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
 import './views/current-page.js';
@@ -21,17 +24,50 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private toastMessage = '';
 
+  @state() private tags: Tag[] = [];
+
+  @state() private selectedTagIds: string[] = [];
+
   static styles = popupStyles;
 
   connectedCallback(): void {
     super.connectedCallback();
     this.addEventListener('mw-toast', this.onToast);
+    this.addEventListener('mw-refresh', this.onDataRefresh);
+    this.addEventListener('mw-tag-toggle', this.onTagToggle);
+    void this.loadTags();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener('mw-toast', this.onToast);
+    this.removeEventListener('mw-refresh', this.onDataRefresh);
+    this.removeEventListener('mw-tag-toggle', this.onTagToggle);
   }
+
+  private async loadTags(): Promise<void> {
+    const tags = await listTags();
+    this.tags = tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  }
+
+  private readonly onDataRefresh = (): void => {
+    void this.loadTags();
+  };
+
+  private readonly onTagToggle = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const tagId = (event.detail as { tagId?: string }).tagId;
+    if (typeof tagId !== 'string') {
+      return;
+    }
+    if (this.selectedTagIds.includes(tagId)) {
+      this.selectedTagIds = this.selectedTagIds.filter((id) => id !== tagId);
+      return;
+    }
+    this.selectedTagIds = [...this.selectedTagIds, tagId];
+  };
 
   private readonly onToast = (event: Event): void => {
     if (!(event instanceof CustomEvent)) {
@@ -63,10 +99,17 @@ export class MarkwellPopupRoot extends LitElement {
   private renderTabPanel() {
     switch (this.activeTab) {
       case 'page':
-        return html`<markwell-current-page-view></markwell-current-page-view>`;
+        return html`
+          <markwell-current-page-view
+            .selectedTagIds=${this.selectedTagIds}
+          ></markwell-current-page-view>
+        `;
       case 'all':
         return html`
-          <markwell-all-highlights-view .searchQuery=${this.searchQuery}></markwell-all-highlights-view>
+          <markwell-all-highlights-view
+            .searchQuery=${this.searchQuery}
+            .selectedTagIds=${this.selectedTagIds}
+          ></markwell-all-highlights-view>
         `;
       case 'projects':
         return html`
@@ -123,6 +166,8 @@ export class MarkwellPopupRoot extends LitElement {
         />
         <span class="tier-badge" data-tier=${this.tier}>${this.tier}</span>
       </header>
+
+      <markwell-tag-chips .tags=${this.tags} .selectedTagIds=${this.selectedTagIds}></markwell-tag-chips>
 
       <nav class="tabs" role="tablist">
         ${TABS.map(

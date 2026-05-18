@@ -7,13 +7,15 @@ import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
 import { buildHighlightOpenUrl } from '../utils/highlight-url.js';
-import { filterHighlights } from '../utils/search.js';
+import { applyHighlightFilters } from '../utils/tag-filter.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
 
 @customElement('markwell-all-highlights-view')
 export class MarkwellAllHighlightsView extends LitElement {
   @property() searchQuery = '';
+
+  @property({ attribute: false }) selectedTagIds: string[] = [];
 
   @state() private debouncedQuery = '';
 
@@ -72,6 +74,9 @@ export class MarkwellAllHighlightsView extends LitElement {
   }
 
   updated(changed: Map<string, unknown>): void {
+    if (changed.has('selectedTagIds')) {
+      this.applyFilter();
+    }
     if (changed.has('searchQuery')) {
       if (this.debounceTimer !== undefined) {
         window.clearTimeout(this.debounceTimer);
@@ -94,12 +99,22 @@ export class MarkwellAllHighlightsView extends LitElement {
     this.loading = false;
   }
 
+  private hasActiveFilter(): boolean {
+    return this.debouncedQuery.trim() !== '' || this.selectedTagIds.length > 0;
+  }
+
   private applyFilter(): void {
     if (!this.indexReady) {
       return;
     }
-    const trimmed = this.debouncedQuery.trim();
-    this.results = trimmed === '' ? [] : filterHighlights(this.allHighlights, trimmed);
+    if (!this.hasActiveFilter()) {
+      this.results = [];
+      return;
+    }
+    this.results = applyHighlightFilters(this.allHighlights, {
+      searchQuery: this.debouncedQuery,
+      tagIds: this.selectedTagIds,
+    });
   }
 
   private handleRefresh(): void {
@@ -125,18 +140,17 @@ export class MarkwellAllHighlightsView extends LitElement {
       `;
     }
 
-    const trimmed = this.debouncedQuery.trim();
-    if (trimmed === '') {
+    if (!this.hasActiveFilter()) {
       return html`
         <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">検索ボックスにキーワードを入力してください</p>
+        <p class="empty">検索キーワードまたはタグを選択してください</p>
       `;
     }
 
     if (this.results.length === 0) {
       return html`
         <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">「${trimmed}」に一致するハイライトはありません</p>
+        <p class="empty">条件に一致するハイライトはありません</p>
       `;
     }
 
