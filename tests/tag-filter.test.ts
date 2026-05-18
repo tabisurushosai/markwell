@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Highlight } from '../src/shared/types/highlight.js';
-import { applyHighlightFilters, filterHighlightsByTagIds } from '../src/popup/utils/tag-filter.js';
+import {
+  applyHighlightFilters,
+  filterHighlightsByProject,
+  filterHighlightsByTagIds,
+} from '../src/popup/utils/tag-filter.js';
 
 const base: Omit<Highlight, 'id' | 'created_at' | 'updated_at'> = {
   url: 'https://example.com',
@@ -21,9 +25,9 @@ const base: Omit<Highlight, 'id' | 'created_at' | 'updated_at'> = {
 
 describe('tag-filter', () => {
   const highlights: Highlight[] = [
-    { ...base, id: '1', created_at: 100, updated_at: 100, tag_ids: ['t1'] },
-    { ...base, id: '2', created_at: 200, updated_at: 200, tag_ids: ['t1', 't2'] },
-    { ...base, id: '3', created_at: 300, updated_at: 300, tag_ids: ['t2'] },
+    { ...base, id: '1', created_at: 100, updated_at: 100, tag_ids: ['t1'], project_id: 'p1' },
+    { ...base, id: '2', created_at: 200, updated_at: 200, tag_ids: ['t1', 't2'], project_id: null },
+    { ...base, id: '3', created_at: 300, updated_at: 300, tag_ids: ['t2'], project_id: 'p1' },
   ];
 
   it('filters by AND tag ids', () => {
@@ -36,5 +40,18 @@ describe('tag-filter', () => {
       searchQuery: 'beta',
     });
     expect(results.map((h) => h.id)).toEqual(['2', '1']);
+  });
+
+  it('filters unassigned project highlights', () => {
+    expect(filterHighlightsByProject(highlights, 'unassigned').map((h) => h.id)).toEqual(['2']);
+  });
+
+  it('combines project, tag, and search filters with AND', () => {
+    const results = applyHighlightFilters(highlights, {
+      projectFilter: 'p1',
+      tagIds: ['t1'],
+      searchQuery: 'alpha',
+    });
+    expect(results.map((h) => h.id)).toEqual(['1']);
   });
 });

@@ -1,6 +1,29 @@
 import type { Highlight } from '../../shared/types/highlight.js';
 import { filterHighlights } from './search.js';
 
+export const PROJECT_FILTER_ALL = 'all';
+export const PROJECT_FILTER_UNASSIGNED = 'unassigned';
+
+/** `all` | `unassigned` | プロジェクト ID */
+export type ProjectFilterValue = string;
+
+export function isProjectFilterActive(projectFilter: ProjectFilterValue): boolean {
+  return projectFilter !== PROJECT_FILTER_ALL;
+}
+
+export function filterHighlightsByProject(
+  highlights: Highlight[],
+  projectFilter: ProjectFilterValue,
+): Highlight[] {
+  if (projectFilter === PROJECT_FILTER_ALL) {
+    return highlights;
+  }
+  if (projectFilter === PROJECT_FILTER_UNASSIGNED) {
+    return highlights.filter((highlight) => highlight.project_id === null);
+  }
+  return highlights.filter((highlight) => highlight.project_id === projectFilter);
+}
+
 /** 選択タグをすべて含むハイライトのみ（AND） */
 export function filterHighlightsByTagIds(highlights: Highlight[], tagIds: string[]): Highlight[] {
   if (tagIds.length === 0) {
@@ -15,9 +38,14 @@ export function filterHighlightsByTagIds(highlights: Highlight[], tagIds: string
 
 export function applyHighlightFilters(
   highlights: Highlight[],
-  options: { searchQuery?: string; tagIds?: string[] },
+  options: {
+    searchQuery?: string;
+    tagIds?: string[];
+    projectFilter?: ProjectFilterValue;
+  },
 ): Highlight[] {
-  let result = filterHighlightsByTagIds(highlights, options.tagIds ?? []);
+  let result = filterHighlightsByProject(highlights, options.projectFilter ?? PROJECT_FILTER_ALL);
+  result = filterHighlightsByTagIds(result, options.tagIds ?? []);
   const query = options.searchQuery?.trim() ?? '';
   if (query !== '') {
     result = filterHighlights(result, query);

@@ -1,7 +1,10 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { listProjects } from '../shared/storage/projects.js';
 import { listTags } from '../shared/storage/tags.js';
+import type { Project } from '../shared/types/project.js';
 import type { Tag } from '../shared/types/tag.js';
+import type { ProjectFilterValue } from './utils/tag-filter.js';
 import './components/tag-chips.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
@@ -28,6 +31,10 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private selectedTagIds: string[] = [];
 
+  @state() private projects: Project[] = [];
+
+  @state() private selectedProjectFilter: ProjectFilterValue = 'all';
+
   static styles = popupStyles;
 
   connectedCallback(): void {
@@ -35,7 +42,8 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-toast', this.onToast);
     this.addEventListener('mw-refresh', this.onDataRefresh);
     this.addEventListener('mw-tag-toggle', this.onTagToggle);
-    void this.loadTags();
+    this.addEventListener('mw-project-filter', this.onProjectFilter);
+    void this.loadFilterData();
   }
 
   disconnectedCallback(): void {
@@ -43,15 +51,28 @@ export class MarkwellPopupRoot extends LitElement {
     this.removeEventListener('mw-toast', this.onToast);
     this.removeEventListener('mw-refresh', this.onDataRefresh);
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
+    this.removeEventListener('mw-project-filter', this.onProjectFilter);
   }
 
-  private async loadTags(): Promise<void> {
-    const tags = await listTags();
+  private async loadFilterData(): Promise<void> {
+    const [tags, projects] = await Promise.all([listTags(), listProjects()]);
     this.tags = tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    this.projects = projects.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
   }
 
   private readonly onDataRefresh = (): void => {
-    void this.loadTags();
+    void this.loadFilterData();
+  };
+
+  private readonly onProjectFilter = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const projectFilter = (event.detail as { projectFilter?: ProjectFilterValue }).projectFilter;
+    if (projectFilter === undefined) {
+      return;
+    }
+    this.selectedProjectFilter = projectFilter;
   };
 
   private readonly onTagToggle = (event: Event): void => {
@@ -102,6 +123,7 @@ export class MarkwellPopupRoot extends LitElement {
         return html`
           <markwell-current-page-view
             .selectedTagIds=${this.selectedTagIds}
+            .selectedProjectFilter=${this.selectedProjectFilter}
           ></markwell-current-page-view>
         `;
       case 'all':
@@ -109,6 +131,7 @@ export class MarkwellPopupRoot extends LitElement {
           <markwell-all-highlights-view
             .searchQuery=${this.searchQuery}
             .selectedTagIds=${this.selectedTagIds}
+            .selectedProjectFilter=${this.selectedProjectFilter}
           ></markwell-all-highlights-view>
         `;
       case 'projects':
@@ -167,7 +190,12 @@ export class MarkwellPopupRoot extends LitElement {
         <span class="tier-badge" data-tier=${this.tier}>${this.tier}</span>
       </header>
 
-      <markwell-tag-chips .tags=${this.tags} .selectedTagIds=${this.selectedTagIds}></markwell-tag-chips>
+      <markwell-tag-chips
+        .tags=${this.tags}
+        .projects=${this.projects}
+        .selectedTagIds=${this.selectedTagIds}
+        .selectedProjectFilter=${this.selectedProjectFilter}
+      ></markwell-tag-chips>
 
       <nav class="tabs" role="tablist">
         ${TABS.map(

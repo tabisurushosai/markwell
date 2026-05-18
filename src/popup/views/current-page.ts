@@ -1,6 +1,10 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { filterHighlightsByTagIds } from '../utils/tag-filter.js';
+import {
+  filterHighlightsByProject,
+  filterHighlightsByTagIds,
+  type ProjectFilterValue,
+} from '../utils/tag-filter.js';
 
 import { listHighlights } from '../../shared/storage/highlights.js';
 import { listTags } from '../../shared/storage/tags.js';
@@ -12,6 +16,8 @@ import { getCanonicalUrlForActiveTab } from '../utils/tab-url.js';
 @customElement('markwell-current-page-view')
 export class MarkwellCurrentPageView extends LitElement {
   @property({ attribute: false }) selectedTagIds: string[] = [];
+
+  @property() selectedProjectFilter: ProjectFilterValue = 'all';
 
   @state() private highlights: Highlight[] = [];
 
@@ -80,7 +86,8 @@ export class MarkwellCurrentPageView extends LitElement {
   }
 
   private get filteredHighlights(): Highlight[] {
-    return filterHighlightsByTagIds(this.highlights, this.selectedTagIds);
+    const byProject = filterHighlightsByProject(this.highlights, this.selectedProjectFilter);
+    return filterHighlightsByTagIds(byProject, this.selectedTagIds);
   }
 
   render() {
@@ -104,7 +111,7 @@ export class MarkwellCurrentPageView extends LitElement {
     if (visible.length === 0) {
       return html`
         <h2 class="panel-title">このページのハイライト</h2>
-        <p class="empty">選択したタグに一致するハイライトはありません</p>
+        <p class="empty">選択した条件に一致するハイライトはありません</p>
       `;
     }
 

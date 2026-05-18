@@ -7,7 +7,7 @@ import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
 import { buildHighlightOpenUrl } from '../utils/highlight-url.js';
-import { applyHighlightFilters } from '../utils/tag-filter.js';
+import { applyHighlightFilters, isProjectFilterActive, type ProjectFilterValue } from '../utils/tag-filter.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
 
@@ -16,6 +16,8 @@ export class MarkwellAllHighlightsView extends LitElement {
   @property() searchQuery = '';
 
   @property({ attribute: false }) selectedTagIds: string[] = [];
+
+  @property() selectedProjectFilter: ProjectFilterValue = 'all';
 
   @state() private debouncedQuery = '';
 
@@ -74,7 +76,7 @@ export class MarkwellAllHighlightsView extends LitElement {
   }
 
   updated(changed: Map<string, unknown>): void {
-    if (changed.has('selectedTagIds')) {
+    if (changed.has('selectedTagIds') || changed.has('selectedProjectFilter')) {
       this.applyFilter();
     }
     if (changed.has('searchQuery')) {
@@ -100,7 +102,11 @@ export class MarkwellAllHighlightsView extends LitElement {
   }
 
   private hasActiveFilter(): boolean {
-    return this.debouncedQuery.trim() !== '' || this.selectedTagIds.length > 0;
+    return (
+      this.debouncedQuery.trim() !== '' ||
+      this.selectedTagIds.length > 0 ||
+      isProjectFilterActive(this.selectedProjectFilter)
+    );
   }
 
   private applyFilter(): void {
@@ -114,6 +120,7 @@ export class MarkwellAllHighlightsView extends LitElement {
     this.results = applyHighlightFilters(this.allHighlights, {
       searchQuery: this.debouncedQuery,
       tagIds: this.selectedTagIds,
+      projectFilter: this.selectedProjectFilter,
     });
   }
 
@@ -143,7 +150,7 @@ export class MarkwellAllHighlightsView extends LitElement {
     if (!this.hasActiveFilter()) {
       return html`
         <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">検索キーワードまたはタグを選択してください</p>
+        <p class="empty">検索・タグ・プロジェクトのいずれかで絞り込んでください</p>
       `;
     }
 
