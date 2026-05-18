@@ -254,3 +254,54 @@ export function restoreHighlights(highlights: Highlight[]): void {
     restoreHighlight(highlight);
   }
 }
+
+const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'green', 'pink', 'blue', 'orange'];
+
+export function findHighlightMarks(id: string): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>(`mark[data-markwell-id="${id}"]`)];
+}
+
+export function getHighlightMarksRect(marks: HTMLElement[]): DOMRect {
+  if (marks.length === 0) {
+    return new DOMRect(0, 0, 0, 0);
+  }
+
+  let top = Infinity;
+  let left = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+
+  for (const mark of marks) {
+    const rect = mark.getBoundingClientRect();
+    top = Math.min(top, rect.top);
+    left = Math.min(left, rect.left);
+    right = Math.max(right, rect.right);
+    bottom = Math.max(bottom, rect.bottom);
+  }
+
+  return new DOMRect(left, top, right - left, bottom - top);
+}
+
+export function updateHighlightColorInDom(id: string, color: HighlightColor): void {
+  for (const mark of findHighlightMarks(id)) {
+    for (const c of HIGHLIGHT_COLORS) {
+      mark.classList.remove(`markwell-mark-${c}`);
+    }
+    mark.classList.add('markwell-mark', `markwell-mark-${color}`);
+  }
+}
+
+export function removeHighlightFromDom(id: string): void {
+  for (const mark of findHighlightMarks(id)) {
+    const parent = mark.parentNode;
+    if (parent === null) {
+      continue;
+    }
+
+    while (mark.firstChild !== null) {
+      parent.insertBefore(mark.firstChild, mark);
+    }
+    parent.removeChild(mark);
+    parent.normalize();
+  }
+}

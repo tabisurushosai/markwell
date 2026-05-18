@@ -1,12 +1,18 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import { deleteHighlight, getHighlight, updateHighlight } from '../shared/storage/highlights.js';
+import { setSettings } from '../shared/storage/settings.js';
 import type { HighlightColor } from '../shared/types/highlight.js';
-import { getSettings, setSettings } from '../shared/storage/settings.js';
-import { saveHighlightFromRange } from './highlight-save.js';
-import { MARKWELL_SELECTION_EVENT, type MarkwellSelectionDetail } from './selection.js';
+import {
+  findHighlightMarks,
+  getHighlightMarksRect,
+  removeHighlightFromDom,
+  updateHighlightColorInDom,
+} from './highlighter.js';
 
 const TOOLBAR_OFFSET_PX = 8;
+const HIDE_TOOLBARS_EVENT = 'markwell:hide-toolbars';
 
 const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string }> = [
   { id: 'yellow', hex: '#ffd34e' },
@@ -16,8 +22,8 @@ const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string }> = [
   { id: 'orange', hex: '#ffb347' },
 ];
 
-@customElement('markwell-toolbar')
-export class MarkwellToolbar extends LitElement {
+@customElement('markwell-edit-toolbar')
+export class MarkwellEditToolbar extends LitElement {
   static override styles = css`
     :host {
       all: initial;
@@ -61,7 +67,12 @@ export class MarkwellToolbar extends LitElement {
       transform: scale(1.08);
     }
 
-    .note-btn,
+    .color-dot.selected {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px #7eb6ff;
+    }
+
+    .delete-btn,
     .close-btn {
       border: none;
       background: transparent;
@@ -73,9 +84,13 @@ export class MarkwellToolbar extends LitElement {
       border-radius: 6px;
     }
 
-    .note-btn:hover,
+    .delete-btn:hover,
     .close-btn:hover {
       background: #2a2a2a;
+    }
+
+    .delete-btn {
+      color: #ff8a8a;
     }
 
     .close-btn {
@@ -85,41 +100,33 @@ export class MarkwellToolbar extends LitElement {
     }
   `;
 
+  @property({ type: String })
+  currentColor: HighlightColor = 'yellow';
+
   @property({ attribute: false })
   onColorSelect: ((color: HighlightColor) => void) | null = null;
 
   @property({ attribute: false })
-  onNoteRequest: (() => void) | null = null;
+  onDeleteRequest: (() => void) | null = null;
 
   @property({ attribute: false })
   onCloseRequest: (() => void) | null = null;
 
-  private handleColorClick(color: HighlightColor): void {
-    this.onColorSelect?.(color);
-  }
-
-  private handleNoteClick(): void {
-    this.onNoteRequest?.();
-  }
-
-  private handleCloseClick(): void {
-    this.onCloseRequest?.();
-  }
-
   override render() {
     return html`
-      <div class="toolbar" role="toolbar" aria-label="Markwell highlight toolbar">
+      <div class="toolbar" role="toolbar" aria-label="Markwell edit highlight toolbar">
         <div class="colors">
           ${COLOR_OPTIONS.map(
             (option) => html`
               <button
                 type="button"
-                class="color-dot"
+                class="color-dot ${option.id === this.currentColor ? 'selected' : ''}"
                 style="background-color: ${option.hex}"
                 title=${option.id}
-                aria-label=${`Highlight ${option.id}`}
+                aria-label=${`Change color to ${option.id}`}
+                aria-pressed=${option.id === this.currentColor ? 'true' : 'false'}
                 @click=${() => {
-                  this.handleColorClick(option.id);
+                  this.onColorSelect?.(option.id);
                 }}
               ></button>
             `,
@@ -127,19 +134,19 @@ export class MarkwellToolbar extends LitElement {
         </div>
         <button
           type="button"
-          class="note-btn"
+          class="delete-btn"
           @click=${() => {
-            this.handleNoteClick();
+            this.onDeleteRequest?.();
           }}
         >
-          メモ追加
+          削除
         </button>
         <button
           type="button"
           class="close-btn"
           aria-label="Close"
           @click=${() => {
-            this.handleCloseClick();
+            this.onCloseRequest?.();
           }}
         >
           ×
@@ -151,84 +158,110 @@ export class MarkwellToolbar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'markwell-toolbar': MarkwellToolbar;
+    'markwell-edit-toolbar': MarkwellEditToolbar;
   }
 }
 
-let activeToolbar: MarkwellToolbar | null = null;
-let activeRange: Range | null = null;
+let activeToolbar: MarkwellEditToolbar | null = null;
+let activeHighlightId: string | null = null;
 
-const HIDE_TOOLBARS_EVENT = 'markwell:hide-toolbars';
-
-function hideToolbar(): void {
+function hideEditToolbar(): void {
   activeToolbar?.remove();
   activeToolbar = null;
-  activeRange = null;
+  activeHighlightId = null;
 }
 
 function dispatchHideAllToolbars(): void {
   document.dispatchEvent(new CustomEvent(HIDE_TOOLBARS_EVENT));
 }
 
-function isSelectionCollapsed(): boolean {
-  const selection = document.getSelection();
-  return selection === null || selection.rangeCount === 0 || selection.isCollapsed;
-}
-
-function positionToolbar(toolbar: MarkwellToolbar, range: Range): void {
-  const selectionRect = range.getBoundingClientRect();
+function positionToolbar(toolbar: MarkwellEditToolbar, rect: DOMRect): void {
   const toolbarRect = toolbar.getBoundingClientRect();
-  const top = selectionRect.top - TOOLBAR_OFFSET_PX - toolbarRect.height;
-  const left = selectionRect.left + selectionRect.width / 2 - toolbarRect.width / 2;
+  const top = rect.top - TOOLBAR_OFFSET_PX - toolbarRect.height;
+  const left = rect.left + rect.width / 2 - toolbarRect.width / 2;
 
   toolbar.style.top = `${String(Math.max(8, top))}px`;
   toolbar.style.left = `${String(Math.max(8, left))}px`;
 }
 
-function showToolbar(range: Range): void {
-  dispatchHideAllToolbars();
-  activeRange = range.cloneRange();
+async function showEditToolbar(highlightId: string): Promise<void> {
+  const highlight = await getHighlight(highlightId);
+  if (highlight === null) {
+    return;
+  }
 
-  const toolbar = document.createElement('markwell-toolbar');
+  const marks = findHighlightMarks(highlightId);
+  if (marks.length === 0) {
+    return;
+  }
+
+  dispatchHideAllToolbars();
+
+  const toolbar = document.createElement('markwell-edit-toolbar');
+  toolbar.currentColor = highlight.color;
+
   toolbar.onColorSelect = (color) => {
     void (async () => {
-      if (activeRange === null) {
+      if (activeHighlightId === null) {
         return;
       }
       await setSettings({ default_color: color });
-      await saveHighlightFromRange(activeRange, color);
-      hideToolbar();
-      document.getSelection()?.removeAllRanges();
+      await updateHighlight(activeHighlightId, { color });
+      updateHighlightColorInDom(activeHighlightId, color);
+      toolbar.currentColor = color;
     })();
   };
 
-  toolbar.onNoteRequest = () => {
+  toolbar.onDeleteRequest = () => {
     void (async () => {
-      if (activeRange === null) {
+      if (activeHighlightId === null) {
         return;
       }
-      // Note dialog UI: follow-up prompt.
-      console.log('[markwell] note dialog pending (next prompt)');
-      const settings = await getSettings();
-      await saveHighlightFromRange(activeRange, settings.default_color, '');
-      hideToolbar();
-      document.getSelection()?.removeAllRanges();
+      const id = activeHighlightId;
+      await deleteHighlight(id);
+      removeHighlightFromDom(id);
+      hideEditToolbar();
     })();
   };
 
   toolbar.onCloseRequest = () => {
-    hideToolbar();
-    document.getSelection()?.removeAllRanges();
+    hideEditToolbar();
   };
 
   document.body.appendChild(toolbar);
   activeToolbar = toolbar;
+  activeHighlightId = highlightId;
 
+  const rect = getHighlightMarksRect(marks);
   requestAnimationFrame(() => {
-    if (activeToolbar === toolbar && activeRange !== null) {
-      positionToolbar(toolbar, activeRange);
+    if (activeToolbar === toolbar) {
+      positionToolbar(toolbar, rect);
     }
   });
+}
+
+function getHighlightIdFromEventTarget(target: EventTarget | null): string | null {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+  const mark = target.closest('mark[data-markwell-id]');
+  return mark?.getAttribute('data-markwell-id') ?? null;
+}
+
+function handleHighlightClick(event: MouseEvent): void {
+  if (event.metaKey || event.ctrlKey) {
+    return;
+  }
+
+  const highlightId = getHighlightIdFromEventTarget(event.target);
+  if (highlightId === null) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  void showEditToolbar(highlightId);
 }
 
 function handleOutsidePointerDown(event: MouseEvent): void {
@@ -241,25 +274,15 @@ function handleOutsidePointerDown(event: MouseEvent): void {
     return;
   }
 
-  hideToolbar();
+  hideEditToolbar();
 }
 
-export function initMiniToolbar(): void {
+export function initEditToolbar(): void {
   document.addEventListener(HIDE_TOOLBARS_EVENT, () => {
-    hideToolbar();
+    hideEditToolbar();
   });
 
-  window.addEventListener(MARKWELL_SELECTION_EVENT, (event: Event) => {
-    const detail = (event as CustomEvent<MarkwellSelectionDetail>).detail;
-    showToolbar(detail.range);
-  });
-
-  document.addEventListener('selectionchange', () => {
-    if (isSelectionCollapsed()) {
-      hideToolbar();
-    }
-  });
-
-  document.addEventListener('scroll', hideToolbar, true);
+  document.addEventListener('click', handleHighlightClick, true);
+  document.addEventListener('scroll', hideEditToolbar, true);
   document.addEventListener('mousedown', handleOutsidePointerDown, true);
 }

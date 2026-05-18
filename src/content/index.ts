@@ -3,6 +3,7 @@ import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
 import { restoreHighlights } from './highlighter.js';
 import { initContentMessaging } from './messages.js';
+import { initEditToolbar } from './edit-toolbar.js';
 import { initMiniToolbar } from './mini-toolbar.js';
 import { initSelectionDetection } from './selection.js';
 import { getCanonicalUrl, isPageBlocked } from '../shared/utils/url.js';
@@ -24,6 +25,7 @@ async function bootstrap(): Promise<void> {
 
   initSelectionDetection();
   initMiniToolbar();
+  initEditToolbar();
   initContentMessaging();
 
   chrome.runtime
