@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { callGemini } from '../shared/ai/gemini.js';
 import {
   buildSynthesisPrompt,
+  estimateTokens,
   getSynthesisTokenWarning,
 } from '../shared/ai/synthesis-prompt.js';
 import { listHighlights, updateHighlight } from '../shared/storage/highlights.js';
@@ -19,9 +20,15 @@ import {
 } from '../shared/storage/projects.js';
 import { getLastProjectId, setLastProjectId } from '../shared/storage/ui-state.js';
 import { getSettings } from '../shared/storage/settings.js';
+import {
+  createSynthesis,
+  deleteSynthesis,
+  listSyntheses,
+} from '../shared/storage/syntheses.js';
 import type { Highlight } from '../shared/types/highlight.js';
 import type { HighlightColor } from '../shared/types/highlight.js';
 import type { Project } from '../shared/types/project.js';
+import type { Synthesis } from '../shared/types/synthesis.js';
 import { applyDocumentTheme, resolveEffectiveTheme } from '../popup/utils/theme.js';
 import {
   jumpToHighlightFromSidePanel,
@@ -84,6 +91,10 @@ export class MarkwellSidePanelRoot extends LitElement {
   @state() private synthesizing = false;
 
   @state() private premiumModalOpen = false;
+
+  @state() private historyModalOpen = false;
+
+  @state() private synthesisHistory: Synthesis[] = [];
 
   @state() private createDialogOpen = false;
 
@@ -472,6 +483,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.resultVisible = true;
     this.synthesisMarkdown = '';
 
+    let synthesisSucceeded = false;
+
     try {
       for await (const chunk of callGemini(prompt, {
         stream: true,
@@ -479,6 +492,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       })) {
         this.synthesisMarkdown += chunk;
       }
+      synthesisSucceeded = true;
     } catch (error) {
       if (isSynthesisAbortError(error)) {
         if (this.synthesisMarkdown === '') {
@@ -493,6 +507,74 @@ export class MarkwellSidePanelRoot extends LitElement {
         this.synthesisAbortController = null;
       }
     }
+
+    if (
+      synthesisSucceeded &&
+      this.synthesisMarkdown.trim() !== '' &&
+      !this.isSynthesisErrorMarkdown(this.synthesisMarkdown) &&
+      this.selectedProjectId !== ''
+    ) {
+      await this.persistSynthesisRecord(prompt, this.synthesisMarkdown);
+    }
+  }
+
+  private isSynthesisErrorMarkdown(markdown: string): boolean {
+    return markdown.startsWith('**エラー:**');
+  }
+
+  private async persistSynthesisRecord(prompt: string, resultMarkdown: string): Promise<void> {
+    const settings = await getSettings();
+    await createSynthesis({
+      project_id: this.selectedProjectId,
+      prompt,
+      result_markdown: resultMarkdown,
+      model: settings.ai.model,
+      token_input: Math.round(estimateTokens(prompt)),
+      token_output: Math.round(estimateTokens(resultMarkdown)),
+    });
+    this.showStatus('合成結果を保存しました');
+  }
+
+  private async openHistoryModal(): Promise<void> {
+    if (this.selectedProjectId === '') {
+      return;
+    }
+    this.synthesisHistory = await listSyntheses({ project_id: this.selectedProjectId });
+    this.historyModalOpen = true;
+  }
+
+  private closeHistoryModal(): void {
+    this.historyModalOpen = false;
+  }
+
+  private viewSynthesisFromHistory(synthesis: Synthesis): void {
+    this.synthesisMarkdown = synthesis.result_markdown;
+    this.resultVisible = true;
+    this.closeHistoryModal();
+  }
+
+  private async deleteSynthesisFromHistory(synthesis: Synthesis): Promise<void> {
+    await deleteSynthesis(synthesis.id);
+    this.synthesisHistory = await listSyntheses({ project_id: this.selectedProjectId });
+    this.showStatus('履歴を削除しました');
+  }
+
+  private formatHistoryDate(timestamp: number): string {
+    return new Date(timestamp).toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  private previewMarkdown(markdown: string, maxLength = 120): string {
+    const singleLine = markdown.replace(/\s+/g, ' ').trim();
+    if (singleLine.length <= maxLength) {
+      return singleLine;
+    }
+    return `${singleLine.slice(0, maxLength)}…`;
   }
 
   private handleCancelSynthesis(): void {
@@ -724,6 +806,16 @@ export class MarkwellSidePanelRoot extends LitElement {
                 >
                   キャンセル
                 </button>
+                <button
+                  type="button"
+                  class="btn"
+                  ?disabled=${this.selectedProjectId === ''}
+                  @click=${() => {
+                    void this.openHistoryModal();
+                  }}
+                >
+                  保存履歴を見る
+                </button>
               </div>
             </section>
           </div>
@@ -783,6 +875,86 @@ export class MarkwellSidePanelRoot extends LitElement {
                     class="btn btn--primary"
                     @click=${() => {
                       this.closePremiumModal();
+                    }}
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            </div>
+          `
+        : nothing}
+      ${this.historyModalOpen
+        ? html`
+            <div
+              class="dialog-backdrop"
+              role="presentation"
+              @click=${(event: Event) => {
+                if (event.target === event.currentTarget) {
+                  this.closeHistoryModal();
+                }
+              }}
+            >
+              <div
+                class="dialog dialog--history"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="history-modal-title"
+                @keydown=${(event: KeyboardEvent) => {
+                  if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    this.closeHistoryModal();
+                  }
+                }}
+              >
+                <h2 id="history-modal-title" class="dialog-title">保存履歴</h2>
+                ${this.synthesisHistory.length === 0
+                  ? html`<p class="dialog-message">このプロジェクトの保存履歴はありません。</p>`
+                  : html`
+                      <ul class="history-list">
+                        ${this.synthesisHistory.map(
+                          (synthesis) => html`
+                            <li class="history-item">
+                              <div class="history-item__meta">
+                                <time datetime=${new Date(synthesis.created_at).toISOString()}>
+                                  ${this.formatHistoryDate(synthesis.created_at)}
+                                </time>
+                                <span class="history-item__model">${synthesis.model}</span>
+                              </div>
+                              <p class="history-item__preview">
+                                ${this.previewMarkdown(synthesis.result_markdown)}
+                              </p>
+                              <div class="history-item__actions">
+                                <button
+                                  type="button"
+                                  class="btn"
+                                  @click=${() => {
+                                    this.viewSynthesisFromHistory(synthesis);
+                                  }}
+                                >
+                                  表示
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn card-btn--exclude"
+                                  @click=${() => {
+                                    void this.deleteSynthesisFromHistory(synthesis);
+                                  }}
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            </li>
+                          `,
+                        )}
+                      </ul>
+                    `}
+                <div class="dialog-actions">
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    @click=${() => {
+                      this.closeHistoryModal();
                     }}
                   >
                     閉じる
