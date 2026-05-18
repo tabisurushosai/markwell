@@ -56,6 +56,18 @@ export const sidePanelStyles = [
       border-bottom: 1px solid var(--border);
     }
 
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+
+    .header-top .panel-title {
+      margin: 0;
+    }
+
     .project-select {
       width: 100%;
       padding: var(--space-2);

@@ -2,6 +2,17 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { estimateTokenCostUsd, formatUsdEstimate, GEMINI_FLASH_PRICING } from '../shared/ai/pricing.js';
+import { consumeOptionsSectionRequest } from '../shared/license/navigate-options.js';
+import {
+  formatTrialRemainingLabel,
+  getTrialDaysRemaining,
+  isTrialUrgent,
+} from '../shared/license/trial-countdown.js';
+import type { LicenseTier } from '../shared/storage/highlights.js';
+import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
+import '../shared/ui/tier-badge.js';
+import '../shared/ui/premium-dialog.js';
+import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
 import {
   AI_USAGE_FEATURE_LABELS,
   AI_USAGE_FEATURES,
@@ -47,6 +58,16 @@ export class MwOptions extends LitElement {
 
   @state() private usageMessage = '';
 
+  @state() private licenseTier: LicenseTier = 'free';
+
+  @state() private trialRemainingLabel = '';
+
+  @state() private trialUrgent = false;
+
+  @state() private premiumDialogOpen = false;
+
+  @state() private premiumDialogMode: PremiumDialogMode = 'purchase';
+
   static styles = css`
     :host {
       display: block;
@@ -74,9 +95,17 @@ export class MwOptions extends LitElement {
       background: #141414;
     }
 
-    .brand {
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       margin: 0 0 20px;
       padding: 0 20px;
+    }
+
+    .brand {
+      margin: 0;
       font-size: 18px;
       font-weight: 700;
       color: #ffd34e;
@@ -273,7 +302,38 @@ export class MwOptions extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    void this.bootstrap();
+  }
+
+  private async bootstrap(): Promise<void> {
+    const section = await consumeOptionsSectionRequest();
+    if (section === 'premium') {
+      this.activeSection = 'premium';
+    }
+    await this.refreshLicenseTier();
     void this.loadUsage();
+  }
+
+  private async refreshLicenseTier(): Promise<void> {
+    const [tier, license] = await Promise.all([getCurrentTier(), getLicenseStatus()]);
+    this.licenseTier = tier;
+    if (tier === 'trial' && license.trial_end !== null) {
+      const days = getTrialDaysRemaining(license.trial_end);
+      this.trialRemainingLabel = formatTrialRemainingLabel(days);
+      this.trialUrgent = isTrialUrgent(days);
+    } else {
+      this.trialRemainingLabel = '';
+      this.trialUrgent = false;
+    }
+  }
+
+  private openPurchaseModal(): void {
+    this.premiumDialogMode = 'purchase';
+    this.premiumDialogOpen = true;
+  }
+
+  private closePremiumDialog(): void {
+    this.premiumDialogOpen = false;
   }
 
   private async loadUsage(): Promise<void> {
@@ -461,7 +521,17 @@ export class MwOptions extends LitElement {
     return html`
       <div class="shell">
         <nav class="sidebar" aria-label="設定セクション">
-          <p class="brand">Markwell</p>
+          <div class="brand-row">
+            <p class="brand">Markwell</p>
+            <mw-tier-badge
+              .tier=${this.licenseTier}
+              .trialRemainingLabel=${this.trialRemainingLabel}
+              ?trialUrgent=${this.trialUrgent}
+              @mw-tier-badge-click=${() => {
+                this.openPurchaseModal();
+              }}
+            ></mw-tier-badge>
+          </div>
           <div class="nav">
             ${SECTIONS.map(
               (section) => html`
@@ -481,6 +551,13 @@ export class MwOptions extends LitElement {
         </nav>
         <main class="main">${this.renderMainContent()}</main>
       </div>
+      <mw-premium-dialog
+        .open=${this.premiumDialogOpen}
+        .mode=${this.premiumDialogMode}
+        @mw-close=${() => {
+          this.closePremiumDialog();
+        }}
+      ></mw-premium-dialog>
     `;
   }
 }

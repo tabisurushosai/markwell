@@ -15,7 +15,12 @@ import {
   rephraseHighlightText,
   type RephraseStyle,
 } from '../../shared/ai/rephrase.js';
-import { AiAccessError, canUseAiFeature, formatAiButtonTitle } from '../../shared/license/ai-access.js';
+import {
+  AiAccessError,
+  canUseAiFeature,
+  formatAiButtonTitle,
+  type AiFeature,
+} from '../../shared/license/ai-access.js';
 import {
   getCachedTranslation,
   getTranslateLanguageLabel,
@@ -78,9 +83,6 @@ export class MarkwellHighlightCard extends LitElement {
 
   @state() private rephraseResultModalOpen = false;
 
-  @state() private rephrasePremiumModalOpen = false;
-
-  @state() private relatedPremiumModalOpen = false;
 
   @state() private rephraseStyle: RephraseStyle = 'polite';
 
@@ -90,7 +92,6 @@ export class MarkwellHighlightCard extends LitElement {
 
   @state() private factCheckModalOpen = false;
 
-  @state() private factCheckPremiumModalOpen = false;
 
   @state() private factChecking = false;
 
@@ -952,10 +953,20 @@ export class MarkwellHighlightCard extends LitElement {
     return canUseAiFeature(this.licenseTier, 'related');
   }
 
+  private requestPremiumUnlock(feature: AiFeature): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-premium-unlock', {
+        bubbles: true,
+        composed: true,
+        detail: { feature },
+      }),
+    );
+  }
+
   private handleRephraseClick(event: Event): void {
     event.stopPropagation();
     if (!canUseRephrase(this.licenseTier)) {
-      this.rephrasePremiumModalOpen = true;
+      this.requestPremiumUnlock('rephrase');
       return;
     }
     this.rephraseStyleModalOpen = true;
@@ -971,14 +982,10 @@ export class MarkwellHighlightCard extends LitElement {
     this.rephrasing = false;
   }
 
-  private closeRephrasePremiumModal(): void {
-    this.rephrasePremiumModalOpen = false;
-  }
-
   private handleFactCheckClick(event: Event): void {
     event.stopPropagation();
     if (!canUseFactCheck(this.licenseTier)) {
-      this.factCheckPremiumModalOpen = true;
+      this.requestPremiumUnlock('fact_check');
       return;
     }
     void this.runFactCheck();
@@ -1017,7 +1024,7 @@ export class MarkwellHighlightCard extends LitElement {
     } catch (error) {
       this.closeFactCheckModal();
       if (error instanceof AiAccessError) {
-        this.factCheckPremiumModalOpen = true;
+        this.requestPremiumUnlock('fact_check');
         return;
       }
       this.showToast(this.formatFactCheckError(error));
@@ -1066,7 +1073,7 @@ export class MarkwellHighlightCard extends LitElement {
     } catch (error) {
       this.closeRephraseResultModal();
       if (error instanceof AiAccessError) {
-        this.rephrasePremiumModalOpen = true;
+        this.requestPremiumUnlock('rephrase');
         return;
       }
       this.showToast(this.formatRephraseError(error));
@@ -1084,14 +1091,10 @@ export class MarkwellHighlightCard extends LitElement {
     }
   }
 
-  private closeRelatedPremiumModal(): void {
-    this.relatedPremiumModalOpen = false;
-  }
-
   private handleFindRelated(event: Event): void {
     event.stopPropagation();
     if (!this.canUseRelatedHighlights()) {
-      this.relatedPremiumModalOpen = true;
+      this.requestPremiumUnlock('related');
       return;
     }
     this.dispatchEvent(
@@ -1373,54 +1376,10 @@ export class MarkwellHighlightCard extends LitElement {
       </article>
       ${this.renderRephraseStyleModal()}
       ${this.renderRephraseResultModal()}
-      ${this.renderRephrasePremiumModal()}
       ${this.renderFactCheckModal()}
-      ${this.renderFactCheckPremiumModal()}
-      ${this.renderRelatedPremiumModal()}
     `;
   }
 
-  private renderRelatedPremiumModal() {
-    if (!this.relatedPremiumModalOpen) {
-      return nothing;
-    }
-
-    return html`
-      <div
-        class="dialog-backdrop"
-        role="presentation"
-        @click=${(event: Event) => {
-          if (event.target === event.currentTarget) {
-            this.closeRelatedPremiumModal();
-          }
-        }}
-      >
-        <div
-          class="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="related-premium-title"
-          @click=${(event: Event) => event.stopPropagation()}
-        >
-          <h3 id="related-premium-title" class="dialog-title">トライアルで解放</h3>
-          <p class="dialog-message">
-            関連ハイライトはトライアルまたは Premium で利用できます。
-          </p>
-          <div class="dialog-actions">
-            <button
-              type="button"
-              class="dialog-btn dialog-btn--primary"
-              @click=${() => {
-                this.closeRelatedPremiumModal();
-              }}
-            >
-              閉じる
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   private renderRephraseStyleModal() {
     if (!this.rephraseStyleModalOpen) {
@@ -1613,89 +1572,6 @@ export class MarkwellHighlightCard extends LitElement {
     `;
   }
 
-  private renderFactCheckPremiumModal() {
-    if (!this.factCheckPremiumModalOpen) {
-      return nothing;
-    }
-
-    return html`
-      <div
-        class="dialog-backdrop"
-        role="presentation"
-        @click=${(event: Event) => {
-          if (event.target === event.currentTarget) {
-            this.closeFactCheckPremiumModal();
-          }
-        }}
-      >
-        <div
-          class="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="fact-check-premium-title"
-          @click=${(event: Event) => event.stopPropagation()}
-        >
-          <h3 id="fact-check-premium-title" class="dialog-title">Premium で解放</h3>
-          <p class="dialog-message">
-            ファクトチェックは Premium で利用できます。
-          </p>
-          <div class="dialog-actions">
-            <button
-              type="button"
-              class="dialog-btn dialog-btn--primary"
-              @click=${() => {
-                this.closeFactCheckPremiumModal();
-              }}
-            >
-              閉じる
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderRephrasePremiumModal() {
-    if (!this.rephrasePremiumModalOpen) {
-      return nothing;
-    }
-
-    return html`
-      <div
-        class="dialog-backdrop"
-        role="presentation"
-        @click=${(event: Event) => {
-          if (event.target === event.currentTarget) {
-            this.closeRephrasePremiumModal();
-          }
-        }}
-      >
-        <div
-          class="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rephrase-premium-title"
-          @click=${(event: Event) => event.stopPropagation()}
-        >
-          <h3 id="rephrase-premium-title" class="dialog-title">Premium で解放</h3>
-          <p class="dialog-message">
-            言い換えは Premium（またはトライアル）で利用できます。
-          </p>
-          <div class="dialog-actions">
-            <button
-              type="button"
-              class="dialog-btn dialog-btn--primary"
-              @click=${() => {
-                this.closeRephrasePremiumModal();
-              }}
-            >
-              閉じる
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 }
 
 declare global {

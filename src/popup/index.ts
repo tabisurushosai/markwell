@@ -31,12 +31,15 @@ import {
   isEditableElement,
   shouldCycleViewTabs,
 } from './utils/keyboard-navigation.js';
+import '../shared/ui/tier-badge.js';
+import '../shared/ui/premium-dialog.js';
+import type { AiFeature } from '../shared/license/ai-access.js';
+import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
 import './views/current-page.js';
 
 type TabId = 'page' | 'all' | 'projects';
-type TierBadge = 'FREE' | 'TRIAL' | 'PREMIUM';
 
 const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
   { id: 'page', label: '現在のページ' },
@@ -50,11 +53,15 @@ const TAB_IDS: TabId[] = ['page', 'all', 'projects'];
 export class MarkwellPopupRoot extends LitElement {
   @state() private activeTab: TabId = 'page';
   @state() private searchQuery = '';
-  @state() private tier: TierBadge = 'FREE';
-
   @state() private trialRemainingLabel = '';
 
   @state() private trialUrgent = false;
+
+  @state() private premiumDialogOpen = false;
+
+  @state() private premiumDialogMode: PremiumDialogMode = 'purchase';
+
+  @state() private premiumHighlightFeature: AiFeature | null = null;
 
   @state() private toastMessage = '';
 
@@ -97,6 +104,8 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-date-filter', this.onDateFilter);
     this.addEventListener('mw-find-related', this.onFindRelated);
     this.addEventListener('mw-open-highlight', this.onOpenHighlightFromRelated);
+    this.addEventListener('mw-tier-badge-click', this.onTierBadgeClick);
+    this.addEventListener('mw-premium-unlock', this.onPremiumUnlock);
     this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
     this.systemThemeQuery.addEventListener('change', this.onSystemThemeChange);
     window.addEventListener('keydown', this.onKeyDown, true);
@@ -114,6 +123,8 @@ export class MarkwellPopupRoot extends LitElement {
     this.removeEventListener('mw-date-filter', this.onDateFilter);
     this.removeEventListener('mw-find-related', this.onFindRelated);
     this.removeEventListener('mw-open-highlight', this.onOpenHighlightFromRelated);
+    this.removeEventListener('mw-tier-badge-click', this.onTierBadgeClick);
+    this.removeEventListener('mw-premium-unlock', this.onPremiumUnlock);
     this.systemThemeQuery?.removeEventListener('change', this.onSystemThemeChange);
     this.systemThemeQuery = null;
   }
@@ -158,7 +169,6 @@ export class MarkwellPopupRoot extends LitElement {
     this.projects = projects.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
     this.licenseTier = tier;
     this.translateTargetLang = settings.translate_target_lang;
-    this.tier = tier === 'premium' ? 'PREMIUM' : tier === 'trial' ? 'TRIAL' : 'FREE';
     if (tier === 'trial' && license.trial_end !== null) {
       const days = getTrialDaysRemaining(license.trial_end);
       this.trialRemainingLabel = formatTrialRemainingLabel(days);
@@ -438,6 +448,35 @@ export class MarkwellPopupRoot extends LitElement {
     void chrome.runtime.openOptionsPage();
   }
 
+  private readonly onTierBadgeClick = (): void => {
+    this.openPurchaseModal();
+  };
+
+  private readonly onPremiumUnlock = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const feature = (event.detail as { feature?: AiFeature }).feature;
+    this.openUnlockModal(feature ?? null);
+  };
+
+  private openPurchaseModal(): void {
+    this.premiumDialogMode = 'purchase';
+    this.premiumHighlightFeature = null;
+    this.premiumDialogOpen = true;
+  }
+
+  private openUnlockModal(feature: AiFeature | null): void {
+    this.premiumDialogMode = 'unlock';
+    this.premiumHighlightFeature = feature;
+    this.premiumDialogOpen = true;
+  }
+
+  private closePremiumDialog(): void {
+    this.premiumDialogOpen = false;
+    this.premiumHighlightFeature = null;
+  }
+
   private handleOpenSidePanel(): void {
     void (async () => {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -560,18 +599,11 @@ export class MarkwellPopupRoot extends LitElement {
             this.onSearchInput(event);
           }}
         />
-        <span
-          class="tier-badge"
-          data-tier=${this.tier}
-          ?data-urgent=${this.trialUrgent}
-        >
-          ${this.tier === 'TRIAL' && this.trialRemainingLabel !== ''
-            ? html`
-                <span class="tier-badge__tier">TRIAL</span>
-                <span class="tier-badge__days">${this.trialRemainingLabel}</span>
-              `
-            : this.tier}
-        </span>
+        <mw-tier-badge
+          .tier=${this.licenseTier}
+          .trialRemainingLabel=${this.trialRemainingLabel}
+          ?trialUrgent=${this.trialUrgent}
+        ></mw-tier-badge>
       </header>
 
       <markwell-tag-chips
@@ -608,6 +640,15 @@ export class MarkwellPopupRoot extends LitElement {
       ${this.toastMessage
         ? html`<div class="toast" role="status">${this.toastMessage}</div>`
         : ''}
+
+      <mw-premium-dialog
+        .open=${this.premiumDialogOpen}
+        .mode=${this.premiumDialogMode}
+        .highlightFeature=${this.premiumHighlightFeature}
+        @mw-close=${() => {
+          this.closePremiumDialog();
+        }}
+      ></mw-premium-dialog>
 
       <footer class="footer">
         <button

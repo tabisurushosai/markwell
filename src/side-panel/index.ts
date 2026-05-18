@@ -4,7 +4,20 @@ import { customElement, state } from 'lit/decorators.js';
 import { streamProjectQaReply } from '../shared/ai/project-qa.js';
 import { streamQuoteExtraction } from '../shared/ai/quote-extractor.js';
 import { streamProjectSynthesis } from '../shared/ai/synthesis-run.js';
-import { formatAiButtonLabel, formatAiButtonTitle } from '../shared/license/ai-access.js';
+import {
+  formatAiButtonLabel,
+  formatAiButtonTitle,
+  type AiFeature,
+} from '../shared/license/ai-access.js';
+import {
+  formatTrialRemainingLabel,
+  getTrialDaysRemaining,
+  isTrialUrgent,
+} from '../shared/license/trial-countdown.js';
+import '../shared/ui/tier-badge.js';
+import '../shared/ui/premium-dialog.js';
+import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
+import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import {
   buildGeminiTurnsFromSession,
   buildProjectQaSystemInstruction,
@@ -23,7 +36,6 @@ import {
   getSynthesisTokenWarning,
 } from '../shared/ai/synthesis-prompt.js';
 import { listHighlights, updateHighlight, type LicenseTier } from '../shared/storage/highlights.js';
-import { getCurrentTier } from '../shared/storage/license.js';
 import {
   assertProjectLimit,
   createProject,
@@ -115,9 +127,15 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private synthesizing = false;
 
-  @state() private premiumModalOpen = false;
+  @state() private premiumDialogOpen = false;
 
-  @state() private premiumModalContext: 'synthesis' | 'export' | 'qa' | 'quotes' = 'synthesis';
+  @state() private premiumDialogMode: PremiumDialogMode = 'unlock';
+
+  @state() private premiumHighlightFeature: AiFeature | null = null;
+
+  @state() private trialRemainingLabel = '';
+
+  @state() private trialUrgent = false;
 
   @state() private resultPanelMode: 'synthesis' | 'quotes' = 'synthesis';
 
@@ -203,8 +221,21 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async bootstrap(): Promise<void> {
     await this.applyThemeFromSettings();
-    this.currentTier = await getCurrentTier();
+    await this.refreshLicenseTier();
     await this.loadProjects();
+  }
+
+  private async refreshLicenseTier(): Promise<void> {
+    const [tier, license] = await Promise.all([getCurrentTier(), getLicenseStatus()]);
+    this.currentTier = tier;
+    if (tier === 'trial' && license.trial_end !== null) {
+      const days = getTrialDaysRemaining(license.trial_end);
+      this.trialRemainingLabel = formatTrialRemainingLabel(days);
+      this.trialUrgent = isTrialUrgent(days);
+    } else {
+      this.trialRemainingLabel = '';
+      this.trialUrgent = false;
+    }
   }
 
   private async applyThemeFromSettings(): Promise<void> {
@@ -539,7 +570,7 @@ export class MarkwellSidePanelRoot extends LitElement {
   private async runSynthesis(opts: { savedStatusMessage: string }): Promise<void> {
     const tier = await getCurrentTier();
     if (tier === 'free') {
-      this.openPremiumModal('synthesis');
+      this.openPremiumUnlockModal('synthesis');
       return;
     }
 
@@ -672,9 +703,36 @@ export class MarkwellSidePanelRoot extends LitElement {
     };
   }
 
-  private openPremiumModal(context: 'synthesis' | 'export' | 'qa' | 'quotes'): void {
-    this.premiumModalContext = context;
-    this.premiumModalOpen = true;
+  private sidePanelContextToFeature(
+    context: 'synthesis' | 'export' | 'qa' | 'quotes',
+  ): AiFeature | null {
+    switch (context) {
+      case 'synthesis':
+        return 'synthesis';
+      case 'qa':
+        return 'qa';
+      case 'quotes':
+        return 'quote_extract';
+      default:
+        return null;
+    }
+  }
+
+  private openPremiumUnlockModal(context: 'synthesis' | 'export' | 'qa' | 'quotes'): void {
+    this.premiumDialogMode = 'unlock';
+    this.premiumHighlightFeature = this.sidePanelContextToFeature(context);
+    this.premiumDialogOpen = true;
+  }
+
+  private openPurchaseModal(): void {
+    this.premiumDialogMode = 'purchase';
+    this.premiumHighlightFeature = null;
+    this.premiumDialogOpen = true;
+  }
+
+  private closePremiumDialog(): void {
+    this.premiumDialogOpen = false;
+    this.premiumHighlightFeature = null;
   }
 
   private closeExportMenus(): void {
@@ -717,7 +775,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     event?.stopPropagation();
     if (isPremiumSynthesisExportFormat(format) && this.currentTier !== 'premium') {
       this.closeExportMenus();
-      this.openPremiumModal('export');
+      this.openPremiumUnlockModal('export');
       return;
     }
 
@@ -732,7 +790,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     } catch (error) {
       if (error instanceof SynthesisExportTierError) {
         this.closeExportMenus();
-        this.openPremiumModal('export');
+        this.openPremiumUnlockModal('export');
         return;
       }
       this.showStatus('エクスポートに失敗しました');
@@ -866,7 +924,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async handleQuoteExtract(): Promise<void> {
     if (!canUseQuoteExtractor(this.currentTier)) {
-      this.openPremiumModal('quotes');
+      this.openPremiumUnlockModal('quotes');
       return;
     }
 
@@ -1001,26 +1059,9 @@ export class MarkwellSidePanelRoot extends LitElement {
     `;
   }
 
-  private closePremiumModal(): void {
-    this.premiumModalOpen = false;
-  }
-
-  private renderPremiumModalMessage(): string {
-    if (this.premiumModalContext === 'export') {
-      return 'Obsidian 形式・Roam Research 形式のエクスポートは Premium で利用できます。';
-    }
-    if (this.premiumModalContext === 'qa') {
-      return 'プロジェクト Q&A は Premium（またはトライアル）で利用できます。';
-    }
-    if (this.premiumModalContext === 'quotes') {
-      return '引用抽出は Premium（またはトライアル）で利用できます。';
-    }
-    return 'ハイライトの AI 合成は Premium（またはトライアル）で利用できます。';
-  }
-
   private onBottomTabClick(tab: 'synthesis' | 'qa'): void {
     if (tab === 'qa' && !canUseProjectQa(this.currentTier)) {
-      this.openPremiumModal('qa');
+      this.openPremiumUnlockModal('qa');
       return;
     }
     this.activeBottomTab = tab;
@@ -1047,7 +1088,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async handleQaSend(): Promise<void> {
     if (!canUseProjectQa(this.currentTier)) {
-      this.openPremiumModal('qa');
+      this.openPremiumUnlockModal('qa');
       return;
     }
 
@@ -1472,7 +1513,17 @@ export class MarkwellSidePanelRoot extends LitElement {
         <div class="workspace">
           <div class="main-column">
             <header class="header">
-              <label class="panel-title" for="project-select">プロジェクト</label>
+              <div class="header-top">
+                <label class="panel-title" for="project-select">プロジェクト</label>
+                <mw-tier-badge
+                  .tier=${this.currentTier}
+                  .trialRemainingLabel=${this.trialRemainingLabel}
+                  ?trialUrgent=${this.trialUrgent}
+                  @mw-tier-badge-click=${() => {
+                    this.openPurchaseModal();
+                  }}
+                ></mw-tier-badge>
+              </div>
               <select
                 id="project-select"
                 class="project-select"
@@ -1520,46 +1571,14 @@ export class MarkwellSidePanelRoot extends LitElement {
         </div>
       </div>
 
-      ${this.premiumModalOpen
-        ? html`
-            <div
-              class="dialog-backdrop"
-              role="presentation"
-              @click=${(event: Event) => {
-                if (event.target === event.currentTarget) {
-                  this.closePremiumModal();
-                }
-              }}
-            >
-              <div
-                class="dialog"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="premium-modal-title"
-                @keydown=${(event: KeyboardEvent) => {
-                  if (event.key === 'Escape') {
-                    event.stopPropagation();
-                    this.closePremiumModal();
-                  }
-                }}
-              >
-                <h2 id="premium-modal-title" class="dialog-title">Premium で解放</h2>
-                <p class="dialog-message">${this.renderPremiumModalMessage()}</p>
-                <div class="dialog-actions">
-                  <button
-                    type="button"
-                    class="btn btn--primary"
-                    @click=${() => {
-                      this.closePremiumModal();
-                    }}
-                  >
-                    閉じる
-                  </button>
-                </div>
-              </div>
-            </div>
-          `
-        : nothing}
+      <mw-premium-dialog
+        .open=${this.premiumDialogOpen}
+        .mode=${this.premiumDialogMode}
+        .highlightFeature=${this.premiumHighlightFeature}
+        @mw-close=${() => {
+          this.closePremiumDialog();
+        }}
+      ></mw-premium-dialog>
       ${this.historyModalOpen
         ? html`
             <div

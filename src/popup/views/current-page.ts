@@ -51,7 +51,6 @@ export class MarkwellCurrentPageView extends LitElement {
 
   @state() private summaryText = '';
 
-  @state() private premiumModalOpen = false;
 
   static styles = [
     popupDesignTokens,
@@ -240,8 +239,14 @@ export class MarkwellCurrentPageView extends LitElement {
     this.summaryText = '';
   }
 
-  private closePremiumModal(): void {
-    this.premiumModalOpen = false;
+  private requestPremiumUnlock(): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-premium-unlock', {
+        bubbles: true,
+        composed: true,
+        detail: { feature: 'page_summary' },
+      }),
+    );
   }
 
   private async copySummary(): Promise<void> {
@@ -268,7 +273,7 @@ export class MarkwellCurrentPageView extends LitElement {
 
   private async handlePageSummary(): Promise<void> {
     if (!canUsePageSummary(this.licenseTier)) {
-      this.premiumModalOpen = true;
+      this.requestPremiumUnlock();
       return;
     }
 
@@ -289,7 +294,7 @@ export class MarkwellCurrentPageView extends LitElement {
       const summary = await requestPageSummaryViaBackground(pageText.text, pageTitle);
       if (!summary.ok) {
         if (summary.code === 'PREMIUM_REQUIRED') {
-          this.premiumModalOpen = true;
+          this.requestPremiumUnlock();
           return;
         }
         this.showToast(summary.error);
@@ -464,7 +469,6 @@ export class MarkwellCurrentPageView extends LitElement {
       </div>
       ${this.renderHighlightsBody()}
       ${this.renderSummaryModal()}
-      ${this.renderPremiumModal()}
     `;
   }
 }
