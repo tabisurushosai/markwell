@@ -32,9 +32,20 @@ type GenerateContentResponse = {
   };
 };
 
-type CallGeminiOptions = {
+export type CallGeminiOptions = {
   stream?: boolean;
+  signal?: AbortSignal;
 };
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) {
+    throw signal.reason ?? new DOMException('Aborted', 'AbortError');
+  }
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
 
 function buildRequestBody(prompt: string): string {
   return JSON.stringify({
@@ -65,9 +76,18 @@ function backoffMs(attempt: number): number {
   return INITIAL_BACKOFF_MS * 2 ** attempt;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  throwIfAborted(signal);
+  return new Promise((resolve, reject) => {
+    const timer = globalThis.setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    const onAbort = (): void => {
+      globalThis.clearTimeout(timer);
+      reject(signal?.reason ?? new DOMException('Aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }
 
@@ -133,9 +153,11 @@ async function fetchWithRetry(
   init: RequestInit,
   apiKey: string,
 ): Promise<Response> {
+  const signal = init.signal ?? undefined;
   let lastError: GeminiError | null = null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    throwIfAborted(signal);
     try {
       const response = await fetch(url, init);
 
@@ -151,14 +173,17 @@ async function fetchWithRetry(
       }
 
       lastError = error;
-      await sleep(backoffMs(attempt));
+      await sleep(backoffMs(attempt), signal);
     } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
       if (error instanceof GeminiError) {
         if (!isRetryableStatus(error.status ?? 0) || attempt === MAX_RETRIES) {
           throw error;
         }
         lastError = error;
-        await sleep(backoffMs(attempt));
+        await sleep(backoffMs(attempt), signal);
         continue;
       }
 
@@ -174,7 +199,7 @@ async function fetchWithRetry(
   throw lastError ?? new GeminiError('Request failed after retries', 'SERVER');
 }
 
-async function callGeminiNonStream(prompt: string): Promise<string> {
+async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'generateContent', apiKey);
   const response = await fetchWithRetry(
@@ -183,8 +208,10 @@ async function callGeminiNonStream(prompt: string): Promise<string> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: buildRequestBody(prompt),
+      signal,
     },
     apiKey,
+    signal,
   );
 
   const payload = (await response.json()) as GenerateContentResponse;
@@ -196,7 +223,10 @@ async function callGeminiNonStream(prompt: string): Promise<string> {
   return extractText(payload);
 }
 
-async function* streamGeminiChunks(prompt: string): AsyncGenerator<string, void, undefined> {
+async function* streamGeminiChunks(
+  prompt: string,
+  signal?: AbortSignal,
+): AsyncGenerator<string, void, undefined> {
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'streamGenerateContent', apiKey);
   const response = await fetchWithRetry(
@@ -205,8 +235,10 @@ async function* streamGeminiChunks(prompt: string): AsyncGenerator<string, void,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: buildRequestBody(prompt),
+      signal,
     },
     apiKey,
+    signal,
   );
 
   if (response.body === null) {
@@ -219,6 +251,7 @@ async function* streamGeminiChunks(prompt: string): AsyncGenerator<string, void,
 
   try {
     while (true) {
+      throwIfAborted(signal);
       const { done, value } = await reader.read();
       if (done) {
         break;
@@ -265,6 +298,10 @@ async function* streamGeminiChunks(prompt: string): AsyncGenerator<string, void,
       }
     }
   } catch (error) {
+    if (isAbortError(error)) {
+      await reader.cancel().catch(() => undefined);
+      throw error;
+    }
     if (error instanceof GeminiError) {
       throw error;
     }
@@ -277,19 +314,22 @@ async function* streamGeminiChunks(prompt: string): AsyncGenerator<string, void,
   }
 }
 
-export async function callGemini(prompt: string, opts?: { stream?: false }): Promise<string>;
+export async function callGemini(
+  prompt: string,
+  opts?: CallGeminiOptions & { stream?: false },
+): Promise<string>;
 export function callGemini(
   prompt: string,
-  opts: { stream: true },
+  opts: CallGeminiOptions & { stream: true },
 ): AsyncGenerator<string, void, undefined>;
 export function callGemini(
   prompt: string,
   opts?: CallGeminiOptions,
 ): Promise<string> | AsyncGenerator<string, void, undefined> {
   if (opts?.stream === true) {
-    return streamGeminiChunks(prompt);
+    return streamGeminiChunks(prompt, opts.signal);
   }
-  return callGeminiNonStream(prompt);
+  return callGeminiNonStream(prompt, opts?.signal);
 }
 
 /** @internal テスト用: URL から API キーをマスク */

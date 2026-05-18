@@ -394,10 +394,36 @@ export const sidePanelStyles = [
       margin: 0;
       padding: 0 var(--space-3) var(--space-3);
       overflow: auto;
+    }
+
+    .result-placeholder {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+    }
+
+    .result-error {
+      margin: 0;
+      color: #e57373;
       font-size: var(--font-size-base);
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .result-badge {
+      margin-left: var(--space-2);
+      padding: 2px var(--space-1);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--accent) 20%, transparent);
+      color: var(--accent);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+
+    .dialog-message {
+      margin: 0 0 var(--space-3);
+      font-size: var(--font-size-base);
+      line-height: 1.5;
+      color: var(--text-muted);
     }
 
     @media (max-width: 1023px) {

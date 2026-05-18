@@ -1,6 +1,11 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
+import { callGemini } from '../shared/ai/gemini.js';
+import {
+  buildSynthesisPrompt,
+  getSynthesisTokenWarning,
+} from '../shared/ai/synthesis-prompt.js';
 import { listHighlights, updateHighlight } from '../shared/storage/highlights.js';
 import { getCurrentTier } from '../shared/storage/license.js';
 import {
@@ -24,6 +29,11 @@ import {
 } from './utils/highlight-actions.js';
 import { computeInsertIndex, reorderByIndex } from './utils/drag-reorder.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
+import {
+  formatSynthesisError,
+  isSynthesisAbortError,
+} from './utils/synthesis-errors.js';
+import './components/markdown-it.js';
 import { sidePanelStyles } from './styles.js';
 
 const NEW_PROJECT_SENTINEL = '__markwell_new_project__';
@@ -67,11 +77,13 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private synthesisPrompt = '';
 
-  @state() private synthesisResult = '';
+  @state() private synthesisMarkdown = '';
 
   @state() private resultVisible = false;
 
   @state() private synthesizing = false;
+
+  @state() private premiumModalOpen = false;
 
   @state() private createDialogOpen = false;
 
@@ -91,6 +103,8 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private statusTimer: number | undefined;
 
+  private synthesisAbortController: AbortController | null = null;
+
   static styles = sidePanelStyles;
 
   connectedCallback(): void {
@@ -107,6 +121,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     if (this.statusTimer !== undefined) {
       window.clearTimeout(this.statusTimer);
     }
+    this.synthesisAbortController?.abort();
+    this.synthesisAbortController = null;
   }
 
   private readonly onSystemThemeChange = (): void => {
@@ -430,20 +446,67 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.synthesisPrompt = textarea.value;
   }
 
-  private handleSynthesize(): void {
-    if (this.synthesisPrompt.trim() === '') {
+  private async handleSynthesize(): Promise<void> {
+    const tier = await getCurrentTier();
+    if (tier === 'free') {
+      this.premiumModalOpen = true;
       return;
     }
+
+    if (this.highlights.length === 0) {
+      this.showStatus('ハイライトがありません');
+      return;
+    }
+
+    this.synthesisAbortController?.abort();
+    const abortController = new AbortController();
+    this.synthesisAbortController = abortController;
+
+    const prompt = buildSynthesisPrompt(this.highlights, this.synthesisPrompt);
+    const tokenWarning = getSynthesisTokenWarning(prompt);
+    if (tokenWarning !== null) {
+      this.showStatus(tokenWarning);
+    }
+
     this.synthesizing = true;
     this.resultVisible = true;
-    this.synthesisResult = '（合成機能は次のフェーズで実装します）';
-    this.synthesizing = false;
+    this.synthesisMarkdown = '';
+
+    try {
+      for await (const chunk of callGemini(prompt, {
+        stream: true,
+        signal: abortController.signal,
+      })) {
+        this.synthesisMarkdown += chunk;
+      }
+    } catch (error) {
+      if (isSynthesisAbortError(error)) {
+        if (this.synthesisMarkdown === '') {
+          this.resultVisible = false;
+        }
+        return;
+      }
+      this.synthesisMarkdown = formatSynthesisError(error);
+    } finally {
+      this.synthesizing = false;
+      if (this.synthesisAbortController === abortController) {
+        this.synthesisAbortController = null;
+      }
+    }
   }
 
   private handleCancelSynthesis(): void {
+    if (this.synthesizing) {
+      this.synthesisAbortController?.abort();
+      this.synthesizing = false;
+      return;
+    }
     this.resultVisible = false;
-    this.synthesisResult = '';
-    this.synthesizing = false;
+    this.synthesisMarkdown = '';
+  }
+
+  private closePremiumModal(): void {
+    this.premiumModalOpen = false;
   }
 
   private renderHighlightList() {
@@ -644,17 +707,17 @@ export class MarkwellSidePanelRoot extends LitElement {
                 <button
                   type="button"
                   class="btn btn--primary"
-                  ?disabled=${this.synthesizing || this.synthesisPrompt.trim() === ''}
+                  ?disabled=${this.synthesizing || this.highlights.length === 0}
                   @click=${() => {
-                    this.handleSynthesize();
+                    void this.handleSynthesize();
                   }}
                 >
-                  合成する
+                  ${this.synthesizing ? '生成中…' : '合成する'}
                 </button>
                 <button
                   type="button"
                   class="btn"
-                  ?disabled=${!this.resultVisible && this.synthesisResult === ''}
+                  ?disabled=${!this.synthesizing && !this.resultVisible}
                   @click=${() => {
                     this.handleCancelSynthesis();
                   }}
@@ -672,14 +735,63 @@ export class MarkwellSidePanelRoot extends LitElement {
           >
             ${this.resultVisible
               ? html`
-                  <h2 class="result-header">合成結果</h2>
-                  <pre class="result-body">${this.synthesisResult}</pre>
+                  <h2 class="result-header">
+                    合成結果
+                    ${this.synthesizing ? html`<span class="result-badge">生成中</span>` : nothing}
+                  </h2>
+                  <div class="result-body">
+                    ${this.synthesizing && this.synthesisMarkdown === ''
+                      ? html`<p class="result-placeholder">生成中…</p>`
+                      : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
+                  </div>
                 `
               : nothing}
           </aside>
         </div>
       </div>
 
+      ${this.premiumModalOpen
+        ? html`
+            <div
+              class="dialog-backdrop"
+              role="presentation"
+              @click=${(event: Event) => {
+                if (event.target === event.currentTarget) {
+                  this.closePremiumModal();
+                }
+              }}
+            >
+              <div
+                class="dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="premium-modal-title"
+                @keydown=${(event: KeyboardEvent) => {
+                  if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    this.closePremiumModal();
+                  }
+                }}
+              >
+                <h2 id="premium-modal-title" class="dialog-title">Premium で解放</h2>
+                <p class="dialog-message">
+                  ハイライトの AI 合成は Premium（またはトライアル）で利用できます。
+                </p>
+                <div class="dialog-actions">
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    @click=${() => {
+                      this.closePremiumModal();
+                    }}
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            </div>
+          `
+        : nothing}
       ${this.createDialogOpen
         ? html`
             <div
