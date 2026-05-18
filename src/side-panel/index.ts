@@ -2,16 +2,23 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { listHighlights } from '../shared/storage/highlights.js';
+import { getCurrentTier } from '../shared/storage/license.js';
 import {
+  assertProjectLimit,
+  createProject,
   listProjects,
+  ProjectLimitError,
   reorderHighlightsInProject,
 } from '../shared/storage/projects.js';
+import { getLastProjectId, setLastProjectId } from '../shared/storage/ui-state.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
 import type { Project } from '../shared/types/project.js';
 import { applyDocumentTheme, resolveEffectiveTheme } from '../popup/utils/theme.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import { sidePanelStyles } from './styles.js';
+
+const NEW_PROJECT_SENTINEL = '__markwell_new_project__';
 
 @customElement('markwell-side-panel-root')
 export class MarkwellSidePanelRoot extends LitElement {
@@ -30,6 +37,12 @@ export class MarkwellSidePanelRoot extends LitElement {
   @state() private resultVisible = false;
 
   @state() private synthesizing = false;
+
+  @state() private createDialogOpen = false;
+
+  @state() private newProjectName = '';
+
+  @state() private createError = '';
 
   private systemThemeQuery: MediaQueryList | null = null;
 
@@ -72,13 +85,17 @@ export class MarkwellSidePanelRoot extends LitElement {
       this.loading = false;
       return;
     }
-    if (
+    const lastId = await getLastProjectId();
+    if (lastId !== null && this.projects.some((project) => project.id === lastId)) {
+      this.selectedProjectId = lastId;
+    } else if (
       this.selectedProjectId === '' ||
       !this.projects.some((project) => project.id === this.selectedProjectId)
     ) {
       this.selectedProjectId = this.projects[0].id;
     }
     await this.loadHighlightsForProject();
+    await setLastProjectId(this.selectedProjectId);
     this.loading = false;
   }
 
@@ -92,13 +109,75 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.highlights = orderHighlightsForProject(items, project);
   }
 
+  private async selectProject(projectId: string): Promise<void> {
+    this.selectedProjectId = projectId;
+    await setLastProjectId(projectId);
+    await this.loadHighlightsForProject();
+  }
+
   private onProjectChange(event: Event): void {
     const select = event.target;
     if (!(select instanceof HTMLSelectElement)) {
       return;
     }
-    this.selectedProjectId = select.value;
-    void this.loadHighlightsForProject();
+    if (select.value === NEW_PROJECT_SENTINEL) {
+      select.value = this.selectedProjectId;
+      this.openCreateDialog();
+      return;
+    }
+    void this.selectProject(select.value);
+  }
+
+  private openCreateDialog(): void {
+    this.createError = '';
+    this.newProjectName = '';
+    this.createDialogOpen = true;
+  }
+
+  private closeCreateDialog(): void {
+    this.createDialogOpen = false;
+    this.newProjectName = '';
+    this.createError = '';
+  }
+
+  private onNewProjectNameInput(event: Event): void {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+    this.newProjectName = input.value;
+    this.createError = '';
+  }
+
+  private async handleCreateProject(): Promise<void> {
+    const name = this.newProjectName.trim();
+    if (name === '') {
+      this.createError = '名前を入力してください';
+      return;
+    }
+    try {
+      await assertProjectLimit(await getCurrentTier());
+      const project = await createProject(name);
+      this.closeCreateDialog();
+      const projects = await listProjects();
+      this.projects = projects.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      await this.selectProject(project.id);
+    } catch (error) {
+      if (error instanceof ProjectLimitError) {
+        this.createError = 'プロジェクト数の上限に達しています';
+        return;
+      }
+      this.createError = '作成に失敗しました';
+    }
+  }
+
+  protected updated(changed: Map<string, unknown>): void {
+    if (changed.has('createDialogOpen') && this.createDialogOpen) {
+      const input = this.renderRoot.querySelector('#new-project-name');
+      if (input instanceof HTMLInputElement) {
+        input.focus();
+      }
+    }
   }
 
   private async persistHighlightOrder(nextOrder: string[]): Promise<void> {
@@ -155,7 +234,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       return html`<p class="empty">読み込み中…</p>`;
     }
     if (this.projects.length === 0) {
-      return html`<p class="empty">プロジェクトがありません。ポップアップから作成してください。</p>`;
+      return html`<p class="empty">プロジェクトがありません。上のセレクタから「+ 新規プロジェクト」を選んで作成してください。</p>`;
     }
     if (this.highlights.length === 0) {
       return html`<p class="empty">このプロジェクトにハイライトがありません</p>`;
@@ -212,20 +291,21 @@ export class MarkwellSidePanelRoot extends LitElement {
                 id="project-select"
                 class="project-select"
                 .value=${this.selectedProjectId}
-                ?disabled=${this.projects.length === 0}
                 @change=${(event: Event) => {
                   this.onProjectChange(event);
                 }}
               >
                 ${this.projects.length === 0
                   ? html`<option value="">プロジェクトなし</option>`
-                  : this.projects.map(
-                      (project) => html`
-                        <option value=${project.id}>
-                          ${project.cover_emoji} ${project.name}
-                        </option>
-                      `,
-                    )}
+                  : nothing}
+                ${this.projects.map(
+                  (project) => html`
+                    <option value=${project.id}>
+                      ${project.cover_emoji} ${project.name}
+                    </option>
+                  `,
+                )}
+                <option value=${NEW_PROJECT_SENTINEL}>+ 新規プロジェクト</option>
               </select>
             </header>
 
@@ -283,6 +363,74 @@ export class MarkwellSidePanelRoot extends LitElement {
           </aside>
         </div>
       </div>
+
+      ${this.createDialogOpen
+        ? html`
+            <div
+              class="dialog-backdrop"
+              role="presentation"
+              @click=${(event: Event) => {
+                if (event.target === event.currentTarget) {
+                  this.closeCreateDialog();
+                }
+              }}
+            >
+              <div
+                class="dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="new-project-title"
+                @keydown=${(event: KeyboardEvent) => {
+                  if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    this.closeCreateDialog();
+                  }
+                }}
+              >
+                <h2 id="new-project-title" class="dialog-title">新規プロジェクト</h2>
+                <input
+                  id="new-project-name"
+                  class="dialog-input"
+                  type="text"
+                  placeholder="プロジェクト名"
+                  .value=${this.newProjectName}
+                  @input=${(event: Event) => {
+                    this.onNewProjectNameInput(event);
+                  }}
+                  @keydown=${(event: KeyboardEvent) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void this.handleCreateProject();
+                    }
+                  }}
+                />
+                ${this.createError !== ''
+                  ? html`<p class="dialog-error">${this.createError}</p>`
+                  : nothing}
+                <div class="dialog-actions">
+                  <button
+                    type="button"
+                    class="btn"
+                    @click=${() => {
+                      this.closeCreateDialog();
+                    }}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    @click=${() => {
+                      void this.handleCreateProject();
+                    }}
+                  >
+                    作成
+                  </button>
+                </div>
+              </div>
+            </div>
+          `
+        : nothing}
     `;
   }
 }

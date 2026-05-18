@@ -281,5 +281,57 @@ export const sidePanelStyles = [
         max-height: 40vh;
       }
     }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      background: rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+    }
+
+    .dialog {
+      width: min(360px, 100%);
+      padding: var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface-raised);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .dialog-title {
+      margin: 0 0 var(--space-3);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+    }
+
+    .dialog-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-base);
+    }
+
+    .dialog-error {
+      margin: var(--space-2) 0 0;
+      font-size: var(--font-size-sm);
+      color: #e57373;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
   `,
 ];
