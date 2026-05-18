@@ -15,6 +15,8 @@ import {
   isTrialUrgent,
 } from '../shared/license/trial-countdown.js';
 import '../shared/ui/tier-badge.js';
+import '../shared/components/toast.js';
+import { toastFrom, type ToastKind } from '../shared/components/toast.js';
 import '../shared/components/upgrade-modal.js';
 import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
 import {
@@ -173,8 +175,6 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private createError = '';
 
-  @state() private statusMessage = '';
-
   @state() private dragSourceId: string | null = null;
 
   @state() private dropInsertIndex = -1;
@@ -182,8 +182,6 @@ export class MarkwellSidePanelRoot extends LitElement {
   @state() private focusedHighlightId: string | null = null;
 
   private systemThemeQuery: MediaQueryList | null = null;
-
-  private statusTimer: number | undefined;
 
   private synthesisAbortController: AbortController | null = null;
 
@@ -289,15 +287,8 @@ export class MarkwellSidePanelRoot extends LitElement {
     this.highlights = orderHighlightsForProject(items, project);
   }
 
-  private showStatus(message: string): void {
-    this.statusMessage = message;
-    if (this.statusTimer !== undefined) {
-      window.clearTimeout(this.statusTimer);
-    }
-    this.statusTimer = window.setTimeout(() => {
-      this.statusMessage = '';
-      this.statusTimer = undefined;
-    }, 3000);
+  private showStatus(message: string, kind: ToastKind = 'success'): void {
+    toastFrom(this, message, kind);
   }
 
   private resetQaSession(): void {
@@ -407,7 +398,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     await removeHighlightFromProject(this.selectedProjectId, highlight.id);
     await this.loadHighlightsForProject();
-    this.showStatus('プロジェクトから除外しました（ハイライト自体は削除されません）');
+    this.showStatus('プロジェクトから除外しました（ハイライト自体は削除されません）', 'info');
   }
 
   private async handleJump(highlight: Highlight): Promise<void> {
@@ -575,7 +566,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません');
+      this.showStatus('ハイライトがありません', 'warning');
       return;
     }
 
@@ -586,7 +577,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     const prompt = buildSynthesisPrompt(this.highlights, this.synthesisPrompt);
     const tokenWarning = getSynthesisTokenWarning(prompt);
     if (tokenWarning !== null) {
-      this.showStatus(tokenWarning);
+      this.showStatus(tokenWarning, 'warning');
     }
 
     this.synthesizing = true;
@@ -686,7 +677,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       await copySynthesisMarkdown(synthesis.result_markdown);
       this.showStatus('Markdown をコピーしました');
     } catch {
-      this.showStatus('コピーに失敗しました');
+      this.showStatus('コピーに失敗しました', 'error');
     }
   }
 
@@ -807,7 +798,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         void this.openPremiumUnlockModal('export');
         return;
       }
-      this.showStatus('エクスポートに失敗しました');
+      this.showStatus('エクスポートに失敗しました', 'error');
     }
     this.closeExportMenus();
   }
@@ -945,7 +936,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません');
+      this.showStatus('ハイライトがありません', 'warning');
       return;
     }
 
@@ -989,7 +980,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       await copySynthesisMarkdown(this.quotesMarkdown);
       this.showStatus('Markdown をコピーしました');
     } catch {
-      this.showStatus('コピーに失敗しました');
+      this.showStatus('コピーに失敗しました', 'error');
     }
   }
 
@@ -1116,7 +1107,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません');
+      this.showStatus('ハイライトがありません', 'warning');
       return;
     }
 
@@ -1584,9 +1575,6 @@ export class MarkwellSidePanelRoot extends LitElement {
 
             <section class="highlights" aria-label="ハイライト一覧">
               <h2 class="panel-title">ハイライト</h2>
-              ${this.statusMessage
-                ? html`<p class="status-toast" role="status">${this.statusMessage}</p>`
-                : nothing}
               ${this.renderHighlightList()}
             </section>
 
@@ -1621,6 +1609,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           void this.onTrialStarted();
         }}
       ></mw-upgrade-modal>
+      <mw-toast-stack data-placement="side-panel"></mw-toast-stack>
       ${this.historyModalOpen
         ? html`
             <div

@@ -32,7 +32,9 @@ import {
   shouldCycleViewTabs,
 } from './utils/keyboard-navigation.js';
 import '../shared/ui/tier-badge.js';
+import '../shared/components/toast.js';
 import '../shared/components/upgrade-modal.js';
+import { dispatchToast } from '../shared/components/toast.js';
 import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
 import {
   buildUpgradeModalHostState,
@@ -62,8 +64,6 @@ export class MarkwellPopupRoot extends LitElement {
   @state() private trialUrgent = false;
 
   @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
-
-  @state() private toastMessage = '';
 
   @state() private tags: Tag[] = [];
 
@@ -97,7 +97,6 @@ export class MarkwellPopupRoot extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.addEventListener('mw-toast', this.onToast);
     this.addEventListener('mw-refresh', this.onDataRefresh);
     this.addEventListener('mw-tag-toggle', this.onTagToggle);
     this.addEventListener('mw-project-filter', this.onProjectFilter);
@@ -116,7 +115,6 @@ export class MarkwellPopupRoot extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener('keydown', this.onKeyDown, true);
-    this.removeEventListener('mw-toast', this.onToast);
     this.removeEventListener('mw-refresh', this.onDataRefresh);
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
     this.removeEventListener('mw-project-filter', this.onProjectFilter);
@@ -354,24 +352,6 @@ export class MarkwellPopupRoot extends LitElement {
     this.selectedTagIds = [...this.selectedTagIds, tagId];
   };
 
-  private showToast(message: string): void {
-    if (message === '') {
-      return;
-    }
-    this.toastMessage = message;
-    window.setTimeout(() => {
-      this.toastMessage = '';
-    }, 3000);
-  }
-
-  private readonly onToast = (event: Event): void => {
-    if (!(event instanceof CustomEvent)) {
-      return;
-    }
-    const detail = event.detail as { message?: string };
-    this.showToast(detail.message ?? '');
-  };
-
   private onSearchInput(event: Event): void {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) {
@@ -513,14 +493,14 @@ export class MarkwellPopupRoot extends LitElement {
       this.relatedHighlights = related;
       this.relatedTagsById = new Map(tags.map((tag) => [tag.id, tag]));
       if (related.length === 0) {
-        this.showToast('関連ハイライトが見つかりませんでした');
+        dispatchToast(this, '関連ハイライトが見つかりませんでした', 'info');
       }
     } catch (error) {
       this.relatedHighlights = [];
       if (error instanceof AiAccessError) {
-        this.showToast('関連ハイライトはトライアルまたは Premium で利用できます');
+        dispatchToast(this, '関連ハイライトはトライアルまたは Premium で利用できます', 'warning');
       } else {
-        this.showToast('関連ハイライトの取得に失敗しました');
+        dispatchToast(this, '関連ハイライトの取得に失敗しました', 'error');
       }
     } finally {
       this.relatedLoading = false;
@@ -639,9 +619,7 @@ export class MarkwellPopupRoot extends LitElement {
 
       ${this.renderRelatedSection()}
 
-      ${this.toastMessage
-        ? html`<div class="toast" role="status">${this.toastMessage}</div>`
-        : ''}
+      <mw-toast-stack data-placement="popup"></mw-toast-stack>
 
       <mw-upgrade-modal
         .open=${this.upgradeModal.open}

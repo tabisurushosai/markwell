@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { isValidRegExp } from '../shared/utils/regexp.js';
+import { toastFrom } from '../shared/components/toast.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 @customElement('mw-blocked-sites')
@@ -19,11 +20,7 @@ export class MwBlockedSites extends LitElement {
 
   @state() private patternInputInvalid = false;
 
-  @state() private toastMessage = '';
 
-  @state() private toastIsError = false;
-
-  private toastTimer: number | undefined;
 
   static styles = [...optionsAccessibilityStyles, css`
     :host {
@@ -144,25 +141,6 @@ export class MwBlockedSites extends LitElement {
       color: #666;
     }
 
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 100;
-      margin: 0;
-      padding: 10px 16px;
-      border-radius: 8px;
-      background: #2e2e2e;
-      border: 1px solid #555;
-      color: #ffd34e;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .toast--error {
-      color: #f0a0a0;
-      border-color: #8b3a3a;
-    }
   `];
 
   connectedCallback(): void {
@@ -170,12 +148,6 @@ export class MwBlockedSites extends LitElement {
     void this.load();
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-  }
 
   private async load(): Promise<void> {
     this.loading = true;
@@ -183,18 +155,6 @@ export class MwBlockedSites extends LitElement {
     this.blockedDomains = [...settings.blocked_domains];
     this.blockedUrlPatterns = [...settings.blocked_url_patterns];
     this.loading = false;
-  }
-
-  private showToast(message: string, isError = false): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = window.setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 2200);
   }
 
   private normalizeDomain(value: string): string {
@@ -209,10 +169,10 @@ export class MwBlockedSites extends LitElement {
       const next = await setSettings(patch);
       this.blockedDomains = [...next.blocked_domains];
       this.blockedUrlPatterns = [...next.blocked_url_patterns];
-      this.showToast(message);
+      toastFrom(this, message, 'success');
       return true;
     } catch {
-      this.showToast('保存に失敗しました', true);
+      toastFrom(this, '保存に失敗しました', 'error');
       return false;
     }
   }
@@ -220,11 +180,11 @@ export class MwBlockedSites extends LitElement {
   private async handleAddDomain(): Promise<void> {
     const domain = this.normalizeDomain(this.domainInput);
     if (domain === '') {
-      this.showToast('ドメインを入力してください', true);
+      toastFrom(this, 'ドメインを入力してください', 'warning');
       return;
     }
     if (this.blockedDomains.some((entry) => entry.toLowerCase() === domain)) {
-      this.showToast('同じドメインが既に登録されています', true);
+      toastFrom(this, '同じドメインが既に登録されています', 'warning');
       return;
     }
 
@@ -258,16 +218,16 @@ export class MwBlockedSites extends LitElement {
   private async handleAddPattern(): Promise<void> {
     const pattern = this.patternInput.trim();
     if (pattern === '') {
-      this.showToast('URL パターンを入力してください', true);
+      toastFrom(this, 'URL パターンを入力してください', 'warning');
       return;
     }
     if (!isValidRegExp(pattern)) {
       this.patternInputInvalid = true;
-      this.showToast('正規表現の構文が不正です', true);
+      toastFrom(this, '正規表現の構文が不正です', 'error');
       return;
     }
     if (this.blockedUrlPatterns.includes(pattern)) {
-      this.showToast('同じパターンが既に登録されています', true);
+      toastFrom(this, '同じパターンが既に登録されています', 'warning');
       return;
     }
 
@@ -396,9 +356,6 @@ export class MwBlockedSites extends LitElement {
         <p class="hint">正規表現 (new RegExp) で URL 全体にマッチした場合にブロックします。</p>
       </section>
 
-      ${this.toastMessage !== ''
-        ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
-        : nothing}
     `;
   }
 }

@@ -10,6 +10,7 @@ import {
   setApiKey,
   setSettings,
 } from '../shared/storage/settings.js';
+import { toastFrom } from '../shared/components/toast.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type TestStatus =
@@ -34,11 +35,7 @@ export class MwAiSettings extends LitElement {
 
   @state() private testStatus: TestStatus = { kind: 'idle' };
 
-  @state() private toastMessage = '';
 
-  @state() private toastIsError = false;
-
-  private toastTimer: number | undefined;
 
   static styles = [...optionsAccessibilityStyles, css`
     :host {
@@ -220,25 +217,6 @@ export class MwAiSettings extends LitElement {
       font-size: 13px;
     }
 
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 100;
-      margin: 0;
-      padding: 10px 16px;
-      border-radius: 8px;
-      background: #2e2e2e;
-      border: 1px solid #555;
-      color: #ffd34e;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .toast--error {
-      color: #f0a0a0;
-      border-color: #8b3a3a;
-    }
   `];
 
   connectedCallback(): void {
@@ -246,12 +224,6 @@ export class MwAiSettings extends LitElement {
     void this.load();
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-  }
 
   private async load(): Promise<void> {
     this.loading = true;
@@ -263,18 +235,6 @@ export class MwAiSettings extends LitElement {
     this.apiKeyDraft = '';
     this.testStatus = { kind: 'idle' };
     this.loading = false;
-  }
-
-  private showToast(message: string, isError = false): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = window.setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 2200);
   }
 
   private async handleModelChange(event: Event): Promise<void> {
@@ -296,9 +256,9 @@ export class MwAiSettings extends LitElement {
       });
       this.selectedModel = model;
       this.testStatus = { kind: 'idle' };
-      this.showToast('モデルを保存しました');
+      toastFrom(this, 'モデルを保存しました', 'success');
     } catch {
-      this.showToast('モデルの保存に失敗しました', true);
+      toastFrom(this, 'モデルの保存に失敗しました', 'error');
     }
   }
 
@@ -317,9 +277,9 @@ export class MwAiSettings extends LitElement {
         },
       });
       this.autoTagOnSave = auto_tag_on_save;
-      this.showToast(auto_tag_on_save ? 'AI 自動タグを有効化しました' : 'AI 自動タグを無効化しました');
+      toastFrom(this, auto_tag_on_save ? 'AI 自動タグを有効化しました' : 'AI 自動タグを無効化しました', 'success');
     } catch {
-      this.showToast('設定の保存に失敗しました', true);
+      toastFrom(this, '設定の保存に失敗しました', 'error');
     }
   }
 
@@ -349,7 +309,7 @@ export class MwAiSettings extends LitElement {
         await setApiKey(draft);
         this.hasStoredKey = true;
         this.apiKeyDraft = '';
-        this.showToast('API キーを保存しました');
+        toastFrom(this, 'API キーを保存しました', 'success');
       }
       this.testStatus = { kind: 'valid' };
     } catch (error) {
@@ -373,9 +333,9 @@ export class MwAiSettings extends LitElement {
       this.hasStoredKey = false;
       this.apiKeyDraft = '';
       this.testStatus = { kind: 'idle' };
-      this.showToast('API キーを削除しました');
+      toastFrom(this, 'API キーを削除しました', 'success');
     } catch {
-      this.showToast('API キーの削除に失敗しました', true);
+      toastFrom(this, 'API キーの削除に失敗しました', 'error');
     }
   }
 
@@ -497,9 +457,6 @@ export class MwAiSettings extends LitElement {
         <p class="hint">ハイライト保存時に AI がタグ候補を付与します（trial / premium）。</p>
       </div>
 
-      ${this.toastMessage !== ''
-        ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}">${this.toastMessage}</p>`
-        : nothing}
     `;
   }
 }

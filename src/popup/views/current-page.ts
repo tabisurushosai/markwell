@@ -19,6 +19,7 @@ import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
 import { accessibilityStyles } from '../../shared/styles/accessibility.js';
+import { dispatchToast, type ToastKind } from '../../shared/components/toast.js';
 import { popupDesignTokens } from '../styles.js';
 import {
   fetchPageTextFromActiveTab,
@@ -226,14 +227,8 @@ export class MarkwellCurrentPageView extends LitElement {
     void this.loadHighlights();
   }
 
-  private showToast(message: string): void {
-    this.dispatchEvent(
-      new CustomEvent('mw-toast', {
-        bubbles: true,
-        composed: true,
-        detail: { message },
-      }),
-    );
+  private showToast(message: string, kind: ToastKind = 'info'): void {
+    dispatchToast(this, message, kind);
   }
 
   private closeSummaryModal(): void {
@@ -254,9 +249,9 @@ export class MarkwellCurrentPageView extends LitElement {
   private async copySummary(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.summaryText);
-      this.showToast('要約をコピーしました');
+      this.showToast('要約をコピーしました', 'success');
     } catch {
-      this.showToast('コピーに失敗しました');
+      this.showToast('コピーに失敗しました', 'error');
     }
   }
 
@@ -286,7 +281,7 @@ export class MarkwellCurrentPageView extends LitElement {
     try {
       const pageText = await fetchPageTextFromActiveTab();
       if (!pageText.ok) {
-        this.showToast(this.pageTextErrorMessage(pageText.reason));
+        this.showToast(this.pageTextErrorMessage(pageText.reason), 'warning');
         return;
       }
 
@@ -299,14 +294,14 @@ export class MarkwellCurrentPageView extends LitElement {
           this.requestPremiumUnlock();
           return;
         }
-        this.showToast(summary.error);
+        this.showToast(summary.error, 'error');
         return;
       }
 
       this.summaryText = summary.summary;
       this.summaryModalOpen = true;
       if (pageText.truncated) {
-        this.showToast('本文の先頭 8000 文字で要約しました');
+        this.showToast('本文の先頭 8000 文字で要約しました', 'info');
       }
     } finally {
       this.summarizing = false;

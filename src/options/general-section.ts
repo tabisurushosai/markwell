@@ -12,6 +12,7 @@ import {
   FONT_SCALE_MIN,
 } from './utils/settings-form.js';
 import './blocked-sites-section.js';
+import { toastFrom } from '../shared/components/toast.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; label: string }> = [
@@ -48,11 +49,7 @@ export class MwGeneralSettings extends LitElement {
 
   @state() private translateTargetLang = 'ja';
 
-  @state() private toastMessage = '';
 
-  @state() private toastIsError = false;
-
-  private toastTimer: number | undefined;
 
   static styles = [...optionsAccessibilityStyles, css`
     :host {
@@ -194,25 +191,6 @@ export class MwGeneralSettings extends LitElement {
       font-size: 13px;
     }
 
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 100;
-      margin: 0;
-      padding: 10px 16px;
-      border-radius: 8px;
-      background: #2e2e2e;
-      border: 1px solid #555;
-      color: #ffd34e;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .toast--error {
-      color: #f0a0a0;
-      border-color: #8b3a3a;
-    }
   `];
 
   connectedCallback(): void {
@@ -220,12 +198,6 @@ export class MwGeneralSettings extends LitElement {
     void this.load();
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-  }
 
   private async load(): Promise<void> {
     this.loading = true;
@@ -243,18 +215,6 @@ export class MwGeneralSettings extends LitElement {
     this.translateTargetLang = settings.translate_target_lang;
   }
 
-  private showToast(message: string, isError = false): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = window.setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 2200);
-  }
-
   private async persist(
     patch: Partial<Settings>,
     options: { message?: string; onError?: () => void } = {},
@@ -263,11 +223,15 @@ export class MwGeneralSettings extends LitElement {
       const next = await setSettings(patch);
       this.applyLocalState(next);
       applyUiPreferences(next);
-      this.showToast(options.message ?? '保存しました');
+      toastFrom(this, options.message ?? '保存しました', 'success');
       return true;
     } catch (error) {
       options.onError?.();
-      this.showToast(error instanceof Error ? error.message : '保存に失敗しました', true);
+      toastFrom(
+        this,
+        error instanceof Error ? error.message : '保存に失敗しました',
+        'error',
+      );
       return false;
     }
   }
@@ -429,9 +393,6 @@ export class MwGeneralSettings extends LitElement {
 
       <mw-blocked-sites></mw-blocked-sites>
 
-      ${this.toastMessage !== ''
-        ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
-        : nothing}
     `;
   }
 }

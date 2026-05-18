@@ -41,6 +41,7 @@ import {
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
+import { dispatchToast, type ToastKind } from '../../shared/components/toast.js';
 import { accessibilityStyles } from '../../shared/styles/accessibility.js';
 import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
@@ -723,7 +724,7 @@ export class MarkwellHighlightCard extends LitElement {
       const tag = existingByName ?? (await createTag(trimmed, DEFAULT_NEW_TAG_COLOR));
 
       if (this.highlight.tag_ids.includes(tag.id)) {
-        this.showToast('このタグは既に付いています');
+        this.showToast('このタグは既に付いています', 'warning');
         return;
       }
 
@@ -734,9 +735,12 @@ export class MarkwellHighlightCard extends LitElement {
       this.tagInput = '';
       this.tagSuggestionIndex = 0;
       this.dispatchRefresh();
-      this.showToast(`タグ「${tag.name}」を追加しました`);
+      this.showToast(`タグ「${tag.name}」を追加しました`, 'success');
     } catch (error) {
-      this.showToast(error instanceof Error ? error.message : 'タグの追加に失敗しました');
+      this.showToast(
+        error instanceof Error ? error.message : 'タグの追加に失敗しました',
+        'error',
+      );
     } finally {
       this.tagAdding = false;
     }
@@ -832,14 +836,8 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
-  private showToast(message: string): void {
-    this.dispatchEvent(
-      new CustomEvent('mw-toast', {
-        bubbles: true,
-        composed: true,
-        detail: { message },
-      }),
-    );
+  private showToast(message: string, kind: ToastKind = 'info'): void {
+    dispatchToast(this, message, kind);
   }
 
   private clearCopyLongPressTimer(): void {
@@ -908,14 +906,14 @@ export class MarkwellHighlightCard extends LitElement {
 
   private async handleCopyPlain(): Promise<void> {
     await navigator.clipboard.writeText(this.highlight.selected_text);
-    this.showToast('コピーしました');
+    this.showToast('コピーしました', 'success');
   }
 
   private async handleCopyMarkdown(): Promise<void> {
     this.copyMenuOpen = false;
     const markdown = formatHighlightAsMarkdown(this.highlight);
     await navigator.clipboard.writeText(markdown);
-    this.showToast('Markdown をコピーしました');
+    this.showToast('Markdown をコピーしました', 'success');
   }
 
   private handleDelete(): void {
@@ -930,7 +928,7 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   private showJumpNotFoundToast(): void {
-    this.showToast('ハイライトが見つかりません');
+    this.showToast('ハイライトが見つかりません', 'warning');
   }
 
   private handleCardClick(event: Event): void {
@@ -1031,7 +1029,7 @@ export class MarkwellHighlightCard extends LitElement {
         this.requestPremiumUnlock('fact_check');
         return;
       }
-      this.showToast(this.formatFactCheckError(error));
+      this.showToast(this.formatFactCheckError(error), 'error');
     } finally {
       this.factChecking = false;
     }
@@ -1043,9 +1041,9 @@ export class MarkwellHighlightCard extends LitElement {
     }
     try {
       await navigator.clipboard.writeText(formatFactCheckForCopy(this.factCheckResult));
-      this.showToast('ファクトチェック結果をコピーしました');
+      this.showToast('ファクトチェック結果をコピーしました', 'success');
     } catch {
-      this.showToast('コピーに失敗しました');
+      this.showToast('コピーに失敗しました', 'error');
     }
   }
 
@@ -1080,7 +1078,7 @@ export class MarkwellHighlightCard extends LitElement {
         this.requestPremiumUnlock('rephrase');
         return;
       }
-      this.showToast(this.formatRephraseError(error));
+      this.showToast(this.formatRephraseError(error), 'error');
     } finally {
       this.rephrasing = false;
     }
@@ -1089,9 +1087,9 @@ export class MarkwellHighlightCard extends LitElement {
   private async copyRephraseResult(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.rephraseResultText);
-      this.showToast('言い換えをコピーしました');
+      this.showToast('言い換えをコピーしました', 'success');
     } catch {
-      this.showToast('コピーに失敗しました');
+      this.showToast('コピーに失敗しました', 'error');
     }
   }
 
@@ -1149,7 +1147,7 @@ export class MarkwellHighlightCard extends LitElement {
       this.translationBody = translated;
     } catch (error) {
       this.translationExpanded = false;
-      this.showToast(this.formatTranslationError(error));
+      this.showToast(this.formatTranslationError(error), 'error');
     } finally {
       this.translating = false;
     }

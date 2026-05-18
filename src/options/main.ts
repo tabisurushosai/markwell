@@ -12,6 +12,7 @@ import type { LicenseTier } from '../shared/storage/highlights.js';
 import { resolveLicenseRevokedBanner } from '../shared/license/license-revoked-banner.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import '../shared/ui/tier-badge.js';
+import '../shared/components/toast.js';
 import '../shared/components/upgrade-modal.js';
 import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
 import {
@@ -604,6 +605,7 @@ export class MwOptions extends LitElement {
           void this.onTrialStarted();
         }}
       ></mw-upgrade-modal>
+      <mw-toast-stack data-placement="options"></mw-toast-stack>
     `;
   }
 }

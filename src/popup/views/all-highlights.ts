@@ -17,6 +17,7 @@ import { buildHighlightOpenUrl } from '../utils/highlight-url.js';
 import { type DateFilterValue, DEFAULT_DATE_FILTER, isDateFilterActive } from '../utils/date-filter.js';
 import { applyHighlightFilters, isProjectFilterActive, type ProjectFilterValue } from '../utils/tag-filter.js';
 import { accessibilityStyles } from '../../shared/styles/accessibility.js';
+import { dispatchToast, type ToastKind } from '../../shared/components/toast.js';
 import { popupDesignTokens } from '../styles.js';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -373,14 +374,8 @@ export class MarkwellAllHighlightsView extends LitElement {
     this.bulkTagIds = [...this.bulkTagIds, tagId];
   }
 
-  private dispatchToast(message: string): void {
-    this.dispatchEvent(
-      new CustomEvent('mw-toast', {
-        bubbles: true,
-        composed: true,
-        detail: { message },
-      }),
-    );
+  private dispatchToast(message: string, kind: ToastKind = 'success'): void {
+    dispatchToast(this, message, kind);
   }
 
   private dispatchRefresh(): void {
@@ -407,7 +402,7 @@ export class MarkwellAllHighlightsView extends LitElement {
       this.dispatchRefresh();
       this.dispatchToast(`${String(count)} 件をプロジェクトに追加しました`);
     } catch {
-      this.dispatchToast('プロジェクトへの追加に失敗しました');
+      this.dispatchToast('プロジェクトへの追加に失敗しました', 'error');
     } finally {
       this.bulkWorking = false;
     }
@@ -427,7 +422,7 @@ export class MarkwellAllHighlightsView extends LitElement {
       this.dispatchRefresh();
       this.dispatchToast(`${String(count)} 件にタグを追加しました`);
     } catch {
-      this.dispatchToast('タグの追加に失敗しました');
+      this.dispatchToast('タグの追加に失敗しました', 'error');
     } finally {
       this.bulkWorking = false;
     }
@@ -454,7 +449,7 @@ export class MarkwellAllHighlightsView extends LitElement {
           this.dispatchRefresh();
           this.dispatchToast(`${String(deleted)} 件を削除しました`);
         } catch {
-          this.dispatchToast('削除に失敗しました');
+          this.dispatchToast('削除に失敗しました', 'error');
         } finally {
           this.bulkWorking = false;
         }

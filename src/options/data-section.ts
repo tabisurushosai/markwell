@@ -8,6 +8,7 @@ import {
   downloadJsonFile,
   formatImportResultMessage,
 } from './utils/export-download.js';
+import { toastFrom } from '../shared/components/toast.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 type ImportMode = 'merge' | 'replace';
@@ -24,9 +25,6 @@ export class MwDataSection extends LitElement {
 
   @state() private importMode: ImportMode = 'merge';
 
-  @state() private toastMessage = '';
-
-  @state() private toastIsError = false;
 
   @state() private showDeleteDialog = false;
 
@@ -34,7 +32,6 @@ export class MwDataSection extends LitElement {
 
   @state() private deleting = false;
 
-  private toastTimer: number | undefined;
 
   static styles = [...optionsAccessibilityStyles, css`
     :host {
@@ -138,25 +135,6 @@ export class MwDataSection extends LitElement {
       display: none;
     }
 
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 100;
-      margin: 0;
-      padding: 10px 16px;
-      border-radius: 8px;
-      background: #2e2e2e;
-      border: 1px solid #555;
-      color: #ffd34e;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .toast--error {
-      color: #f0a0a0;
-      border-color: #8b3a3a;
-    }
 
     .danger-section {
       margin-top: 40px;
@@ -235,24 +213,7 @@ export class MwDataSection extends LitElement {
     }
   `];
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-  }
 
-  private showToast(message: string, isError = false): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = window.setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 3200);
-  }
 
   private resetFileSelection(): void {
     const input = this.renderRoot.querySelector<HTMLInputElement>('#import-file');
@@ -272,9 +233,9 @@ export class MwDataSection extends LitElement {
     try {
       const payload = await exportAll();
       downloadJsonFile(payload, buildMarkwellExportFilename());
-      this.showToast('エクスポートをダウンロードしました');
+      toastFrom(this, 'エクスポートをダウンロードしました', 'success');
     } catch {
-      this.showToast('エクスポートに失敗しました', true);
+      toastFrom(this, 'エクスポートに失敗しました', 'error');
     } finally {
       this.exporting = false;
     }
@@ -301,7 +262,7 @@ export class MwDataSection extends LitElement {
       this.selectedFileName = file.name;
     } catch {
       this.resetFileSelection();
-      this.showToast('JSON ファイルの読み込みに失敗しました', true);
+      toastFrom(this, 'JSON ファイルの読み込みに失敗しました', 'error');
     }
   }
 
@@ -326,10 +287,10 @@ export class MwDataSection extends LitElement {
     this.importing = true;
     try {
       const result = await importAll(this.importPayload, this.importMode);
-      this.showToast(formatImportResultMessage(result));
+      toastFrom(this, formatImportResultMessage(result), 'success');
       this.resetFileSelection();
     } catch {
-      this.showToast('インポートに失敗しました。データは変更されていません。', true);
+      toastFrom(this, 'インポートに失敗しました。データは変更されていません。', 'error');
     } finally {
       this.importing = false;
     }
@@ -359,9 +320,9 @@ export class MwDataSection extends LitElement {
       this.resetFileSelection();
       this.showDeleteDialog = false;
       this.deleteConfirmText = '';
-      this.showToast('すべてのデータを削除しました。ライセンス情報は保持されています');
+      toastFrom(this, 'すべてのデータを削除しました。ライセンス情報は保持されています', 'success');
     } catch {
-      this.showToast('データの削除に失敗しました', true);
+      toastFrom(this, 'データの削除に失敗しました', 'error');
     } finally {
       this.deleting = false;
     }
@@ -561,9 +522,6 @@ export class MwDataSection extends LitElement {
 
       ${this.showDeleteDialog ? this.renderDeleteDialog() : nothing}
 
-      ${this.toastMessage !== ''
-        ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
-        : nothing}
     `;
   }
 }

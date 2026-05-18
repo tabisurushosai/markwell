@@ -11,6 +11,7 @@ import {
   isTrialUrgent,
 } from '../shared/license/trial-countdown.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
+import { toastFrom } from '../shared/components/toast.js';
 import { getSettings } from '../shared/storage/settings.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
@@ -42,13 +43,7 @@ export class MwPremiumSection extends LitElement {
 
   @state() private trialUrgent = false;
 
-  @state() private toastMessage = '';
-
-  @state() private toastIsError = false;
-
   private paymentLinkUrl = resolveStripePaymentLink('');
-
-  private toastTimer: number | undefined;
 
   static styles = [...optionsAccessibilityStyles, css`
     :host {
@@ -179,37 +174,11 @@ export class MwPremiumSection extends LitElement {
       border-color: #ffd34e;
     }
 
-    .toast {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 100;
-      margin: 0;
-      padding: 10px 16px;
-      border-radius: 8px;
-      background: #2e2e2e;
-      border: 1px solid #555;
-      color: #ffd34e;
-      font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .toast--error {
-      color: #f0a0a0;
-      border-color: #8b3a3a;
-    }
   `];
 
   connectedCallback(): void {
     super.connectedCallback();
     void this.load();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
   }
 
   private async load(): Promise<void> {
@@ -239,18 +208,6 @@ export class MwPremiumSection extends LitElement {
     this.trialUrgent = false;
   }
 
-  private showToast(message: string, isError = false): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
-    if (this.toastTimer !== undefined) {
-      window.clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = window.setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 3200);
-  }
-
   private handlePurchase(): void {
     void chrome.tabs.create({ url: this.paymentLinkUrl });
   }
@@ -266,13 +223,13 @@ export class MwPremiumSection extends LitElement {
       this.trialUsed = true;
       this.currentTier = await getCurrentTier();
       this.applyTrialCountdown('trial', next.trial_end);
-      this.showToast('7 日間の Premium トライアルを開始しました');
+      toastFrom(this, '7 日間の Premium トライアルを開始しました', 'success');
     } catch (error) {
       if (error instanceof TrialAlreadyUsedError) {
         this.trialUsed = true;
-        this.showToast('トライアルは 1 回のみ', true);
+        toastFrom(this, 'トライアルは 1 回のみ', 'warning');
       } else {
-        this.showToast('トライアルの開始に失敗しました', true);
+        toastFrom(this, 'トライアルの開始に失敗しました', 'error');
       }
     } finally {
       this.startingTrial = false;
@@ -290,15 +247,15 @@ export class MwPremiumSection extends LitElement {
       this.storedLicenseKey = next.license_key ?? '';
       this.licenseKeyDraft = this.storedLicenseKey;
       this.currentTier = await getCurrentTier();
-      this.showToast('ライセンスキーを適用しました。Premium が有効になりました');
+      toastFrom(this, 'ライセンスキーを適用しました。Premium が有効になりました', 'success');
     } catch (error) {
       if (error instanceof LicenseRefundedError) {
         this.currentTier = await getCurrentTier();
-        this.showToast(error.message, true);
+        toastFrom(this, error.message, 'error');
         return;
       }
       const message = error instanceof Error ? error.message : 'ライセンスキーの適用に失敗しました';
-      this.showToast(message, true);
+      toastFrom(this, message, 'error');
     } finally {
       this.applying = false;
     }
@@ -397,9 +354,6 @@ export class MwPremiumSection extends LitElement {
           : nothing}
       </section>
 
-      ${this.toastMessage !== ''
-        ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
-        : nothing}
     `;
   }
 }
