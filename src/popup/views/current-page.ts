@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import {
   DEFAULT_DATE_FILTER,
@@ -11,12 +11,17 @@ import {
   type ProjectFilterValue,
 } from '../utils/tag-filter.js';
 
+import { canUsePageSummary } from '../../shared/ai/page-summary.js';
 import { listHighlights } from '../../shared/storage/highlights.js';
 import { listTags } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import '../components/highlight-card.js';
 import { popupDesignTokens } from '../styles.js';
+import {
+  fetchPageTextFromActiveTab,
+  requestPageSummaryViaBackground,
+} from '../utils/page-summary-client.js';
 import { getCanonicalUrlForActiveTab } from '../utils/tab-url.js';
 
 @customElement('markwell-current-page-view')
@@ -37,6 +42,14 @@ export class MarkwellCurrentPageView extends LitElement {
 
   @state() private loading = true;
 
+  @state() private summarizing = false;
+
+  @state() private summaryModalOpen = false;
+
+  @state() private summaryText = '';
+
+  @state() private premiumModalOpen = false;
+
   static styles = [
     popupDesignTokens,
     css`
@@ -44,11 +57,41 @@ export class MarkwellCurrentPageView extends LitElement {
       display: block;
     }
 
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+
     .panel-title {
-      margin: 0 0 var(--space-2);
+      margin: 0;
       font-size: var(--font-size-tab);
       font-weight: 600;
       color: var(--text-muted);
+    }
+
+    .summary-btn {
+      flex-shrink: 0;
+      padding: var(--space-1) var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .summary-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .summary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .empty {
@@ -66,6 +109,85 @@ export class MarkwellCurrentPageView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: var(--space-2);
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3);
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .dialog {
+      width: min(360px, 100%);
+      max-height: min(80vh, 480px);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface-raised);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .dialog-title {
+      margin: 0 0 var(--space-2);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+    }
+
+    .dialog-message {
+      margin: 0 0 var(--space-3);
+      font-size: var(--font-size-sm);
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .dialog-body {
+      flex: 1;
+      min-height: 0;
+      margin: 0 0 var(--space-3);
+      padding: var(--space-2);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      font-size: var(--font-size-base);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
+    .dialog-btn {
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+    }
+
+    .dialog-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .dialog-btn--primary {
+      background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+      font-weight: 600;
     }
   `,
   ];
@@ -100,23 +222,193 @@ export class MarkwellCurrentPageView extends LitElement {
     void this.loadHighlights();
   }
 
+  private showToast(message: string): void {
+    this.dispatchEvent(
+      new CustomEvent('mw-toast', {
+        bubbles: true,
+        composed: true,
+        detail: { message },
+      }),
+    );
+  }
+
+  private closeSummaryModal(): void {
+    this.summaryModalOpen = false;
+    this.summaryText = '';
+  }
+
+  private closePremiumModal(): void {
+    this.premiumModalOpen = false;
+  }
+
+  private async copySummary(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.summaryText);
+      this.showToast('要約をコピーしました');
+    } catch {
+      this.showToast('コピーに失敗しました');
+    }
+  }
+
+  private pageTextErrorMessage(reason: string): string {
+    switch (reason) {
+      case 'empty':
+        return 'ページ本文が空です';
+      case 'content_unavailable':
+        return 'このページでは本文を取得できません';
+      case 'no_tab':
+        return 'アクティブなタブがありません';
+      default:
+        return 'ページ本文の取得に失敗しました';
+    }
+  }
+
+  private async handlePageSummary(): Promise<void> {
+    if (!canUsePageSummary(this.licenseTier)) {
+      this.premiumModalOpen = true;
+      return;
+    }
+
+    this.summarizing = true;
+    this.summaryModalOpen = false;
+    this.summaryText = '';
+
+    try {
+      const pageText = await fetchPageTextFromActiveTab();
+      if (!pageText.ok) {
+        this.showToast(this.pageTextErrorMessage(pageText.reason));
+        return;
+      }
+
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const pageTitle = tabs[0]?.title;
+
+      const summary = await requestPageSummaryViaBackground(pageText.text, pageTitle);
+      if (!summary.ok) {
+        if (summary.code === 'PREMIUM_REQUIRED') {
+          this.premiumModalOpen = true;
+          return;
+        }
+        this.showToast(summary.error);
+        return;
+      }
+
+      this.summaryText = summary.summary;
+      this.summaryModalOpen = true;
+      if (pageText.truncated) {
+        this.showToast('本文の先頭 8000 文字で要約しました');
+      }
+    } finally {
+      this.summarizing = false;
+    }
+  }
+
   private get filteredHighlights(): Highlight[] {
     const byDate = filterHighlightsByDate(this.highlights, this.dateFilter);
     const byProject = filterHighlightsByProject(byDate, this.selectedProjectFilter);
     return filterHighlightsByTagIds(byProject, this.selectedTagIds);
   }
 
-  render() {
+  private renderSummaryModal() {
+    if (!this.summaryModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeSummaryModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="page-summary-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="page-summary-title" class="dialog-title">ページ要約</h3>
+          <div class="dialog-body">${this.summaryText}</div>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn"
+              @click=${() => {
+                this.closeSummaryModal();
+              }}
+            >
+              閉じる
+            </button>
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              @click=${() => {
+                void this.copySummary();
+              }}
+            >
+              コピー
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPremiumModal() {
+    if (!this.premiumModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closePremiumModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="page-summary-premium-title"
+          @click=${(event: Event) => {
+            event.stopPropagation();
+          }}
+        >
+          <h3 id="page-summary-premium-title" class="dialog-title">Premium で解放</h3>
+          <p class="dialog-message">
+            ページ要約は Premium（またはトライアル）で利用できます。
+          </p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              @click=${() => {
+                this.closePremiumModal();
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderHighlightsBody() {
     if (this.loading) {
-      return html`
-        <h2 class="panel-title">このページのハイライト</h2>
-        <p class="empty">読み込み中…</p>
-      `;
+      return html`<p class="empty">読み込み中…</p>`;
     }
 
     if (this.highlights.length === 0) {
       return html`
-        <h2 class="panel-title">このページのハイライト</h2>
         <p class="empty">
           このページにはまだハイライトがありません。テキストを選択してハイライトしてみましょう。
         </p>
@@ -125,14 +417,11 @@ export class MarkwellCurrentPageView extends LitElement {
 
     const visible = this.filteredHighlights;
     if (visible.length === 0) {
-      return html`
-        <h2 class="panel-title">このページのハイライト</h2>
-        <p class="empty">選択した条件に一致するハイライトはありません</p>
-      `;
+      return html`<p class="empty">選択した条件に一致するハイライトはありません</p>`;
     }
 
     return html`
-      <h2 class="panel-title">このページのハイライト (${visible.length})</h2>
+      <p class="panel-title">ハイライト (${visible.length})</p>
       <div class="list">
         ${visible.map(
           (highlight, index) => html`
@@ -148,6 +437,27 @@ export class MarkwellCurrentPageView extends LitElement {
           `,
         )}
       </div>
+    `;
+  }
+
+  render() {
+    return html`
+      <div class="panel-header">
+        <h2 class="panel-title">このページ</h2>
+        <button
+          type="button"
+          class="summary-btn"
+          ?disabled=${this.summarizing}
+          @click=${() => {
+            void this.handlePageSummary();
+          }}
+        >
+          ${this.summarizing ? '要約中…' : '📝 ページを要約'}
+        </button>
+      </div>
+      ${this.renderHighlightsBody()}
+      ${this.renderSummaryModal()}
+      ${this.renderPremiumModal()}
     `;
   }
 }

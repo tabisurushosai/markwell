@@ -5,7 +5,9 @@ import {
 } from './highlighter.js';
 import type { HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
+import { getPageTextForSummary } from './page-text.js';
 import { handleHighlightWithNoteCommand, handleQuickHighlightCommand } from './shortcuts.js';
+import type { GetPageTextResponse } from '../shared/messages/page-summary.js';
 
 export type ContentRunCommand =
   | 'quick_highlight'
@@ -13,6 +15,7 @@ export type ContentRunCommand =
 
 export type ContentMessage =
   | { type: 'GET_CANONICAL_URL' }
+  | { type: 'GET_PAGE_TEXT' }
   | { type: 'JUMP_TO_HIGHLIGHT'; id: string }
   | { type: 'REMOVE_HIGHLIGHT_FROM_DOM'; id: string }
   | { type: 'UPDATE_HIGHLIGHT_COLOR'; id: string; color: HighlightColor }
@@ -32,6 +35,15 @@ export function initContentMessaging(): void {
       case 'GET_CANONICAL_URL':
         sendResponse({ url_canonical: getCanonicalUrl() });
         return true;
+      case 'GET_PAGE_TEXT': {
+        const { text, truncated } = getPageTextForSummary();
+        if (text.trim() === '') {
+          sendResponse({ ok: false, reason: 'empty' } satisfies GetPageTextResponse);
+        } else {
+          sendResponse({ ok: true, text, truncated } satisfies GetPageTextResponse);
+        }
+        return true;
+      }
       case 'JUMP_TO_HIGHLIGHT': {
         const ok = jumpToHighlight(msg.id);
         sendResponse({ ok } satisfies JumpToHighlightResponse);

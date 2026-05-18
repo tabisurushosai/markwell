@@ -1,4 +1,5 @@
 import { initContextMenu, registerContextMenus } from './context-menu.js';
+import { initPageSummaryMessaging } from './page-summary.js';
 import { runMigrations } from '../shared/storage/migrations.js';
 
 type MarkwellCommand = 'quick_highlight' | 'open_synthesis';
@@ -9,6 +10,7 @@ type ContentRunCommandMessage = {
 };
 
 initContextMenu();
+initPageSummaryMessaging();
 
 async function configureSidePanelBehavior(): Promise<void> {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
