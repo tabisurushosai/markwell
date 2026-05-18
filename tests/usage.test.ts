@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  clearMonthlyUsage,
   createEmptyMonthlyUsage,
   currentUsageMonth,
   getMonthlyUsage,
@@ -14,6 +15,9 @@ vi.mock('../src/shared/storage/kv.js', () => ({
   kvGet: vi.fn(async (key: string) => storage.get(key) ?? null),
   kvSet: vi.fn(async (key: string, value: unknown) => {
     storage.set(key, structuredClone(value));
+  }),
+  kvDelete: vi.fn(async (key: string) => {
+    storage.delete(key);
   }),
 }));
 
@@ -68,5 +72,24 @@ describe('usage', () => {
   it('getMonthlyUsage returns empty totals when no data exists', async () => {
     const month = '2099-01';
     await expect(getMonthlyUsage(month)).resolves.toEqual(createEmptyMonthlyUsage(month));
+  });
+
+  it('clearMonthlyUsage removes stored month data', async () => {
+    const month = currentUsageMonth(new Date('2026-05-18T12:00:00'));
+    vi.setSystemTime(new Date('2026-05-18T12:00:00'));
+
+    await recordUsage({
+      model: 'gemini-2.0-flash',
+      token_input: 10,
+      token_output: 5,
+      feature: 'translation',
+    });
+    expect(storage.has(usageStorageKey(month))).toBe(true);
+
+    await clearMonthlyUsage(month);
+    expect(storage.has(usageStorageKey(month))).toBe(false);
+    await expect(getMonthlyUsage(month)).resolves.toEqual(createEmptyMonthlyUsage(month));
+
+    vi.useRealTimers();
   });
 });

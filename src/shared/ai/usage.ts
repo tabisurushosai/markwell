@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { kvGet, kvSet } from '../storage/kv.js';
+import { kvDelete, kvGet, kvSet } from '../storage/kv.js';
 
 export const AI_USAGE_FEATURES = [
   'synthesis',
@@ -15,6 +15,18 @@ export const AI_USAGE_FEATURES = [
 ] as const;
 
 export type AiUsageFeature = (typeof AI_USAGE_FEATURES)[number];
+
+export const AI_USAGE_FEATURE_LABELS: Record<AiUsageFeature, string> = {
+  synthesis: '合成',
+  auto_tag: '自動タグ',
+  translation: '翻訳',
+  rephrase: '言い換え',
+  fact_check: 'ファクトチェック',
+  page_summary: 'ページ要約',
+  related_highlights: '関連ハイライト',
+  quote_extractor: '引用抽出',
+  qa: 'Q&A',
+};
 
 const FeatureUsageSchema = z.object({
   request_count: z.number().int().nonnegative(),
@@ -129,4 +141,8 @@ export async function recordUsage(params: RecordUsageParams): Promise<void> {
   };
 
   await kvSet(key, next, MonthlyUsageSchema);
+}
+
+export async function clearMonthlyUsage(month = currentUsageMonth()): Promise<void> {
+  await kvDelete(usageStorageKey(month));
 }
