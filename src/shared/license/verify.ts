@@ -67,6 +67,7 @@ export async function verifyLicense(
     license_key,
     last_verified_at: Date.now(),
     verify_failure_count: 0,
+    license_revoked_at: null,
   });
 
   return { valid: true, tier: 'premium' };

@@ -68,6 +68,8 @@ export class MwOptions extends LitElement {
 
   @state() private trialUrgent = false;
 
+  @state() private licenseRevoked = false;
+
   @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
   static styles = css`
@@ -300,6 +302,23 @@ export class MwOptions extends LitElement {
       font-size: 16px;
       font-weight: 600;
     }
+
+    .license-revoked-banner {
+      margin: 0 0 20px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #8b3a3a;
+      background: #3a1f1f;
+      color: #f0c0c0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    :host-context(html[data-theme='light']) .license-revoked-banner {
+      border-color: #c62828;
+      background: #ffebee;
+      color: #7f1d1d;
+    }
   `;
 
   connectedCallback(): void {
@@ -319,6 +338,7 @@ export class MwOptions extends LitElement {
   private async refreshLicenseTier(): Promise<void> {
     const [tier, license] = await Promise.all([getCurrentTier(), getLicenseStatus()]);
     this.licenseTier = tier;
+    this.licenseRevoked = license.license_revoked_at !== null;
     if (tier === 'trial' && license.trial_end !== null) {
       const days = getTrialDaysRemaining(license.trial_end);
       this.trialRemainingLabel = formatTrialRemainingLabel(days);
@@ -555,7 +575,16 @@ export class MwOptions extends LitElement {
             )}
           </div>
         </nav>
-        <main class="main">${this.renderMainContent()}</main>
+        <main class="main">
+          ${this.licenseRevoked
+            ? html`
+                <div class="license-revoked-banner" role="status">
+                  ライセンスが失効しました。Premium セクションでライセンスキーを再入力するか、新しいキーを購入してください。
+                </div>
+              `
+            : nothing}
+          ${this.renderMainContent()}
+        </main>
       </div>
       <mw-upgrade-modal
         .open=${this.upgradeModal.open}

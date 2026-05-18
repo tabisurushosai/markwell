@@ -7,6 +7,7 @@ export type LicenseStatus = {
   trial_end: number | null;
   last_verified_at: number | null;
   verify_failure_count: number;
+  license_revoked_at: number | null;
 };
 
 export const LicenseStatusSchema = z.object({
@@ -16,4 +17,5 @@ export const LicenseStatusSchema = z.object({
   trial_end: z.number().nullable(),
   last_verified_at: z.number().nullable(),
   verify_failure_count: z.number(),
+  license_revoked_at: z.number().nullable(),
 });
