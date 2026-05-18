@@ -2,6 +2,7 @@ import { listHighlights } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
 import { restoreHighlights } from './highlighter.js';
+import { initHashJump } from './hash-jump.js';
 import { initContentMessaging } from './messages.js';
 import { initEditToolbar } from './edit-toolbar.js';
 import { initMiniToolbar } from './mini-toolbar.js';
@@ -39,6 +40,7 @@ async function bootstrap(): Promise<void> {
 
   const highlights = await listHighlights({ url_canonical: getCanonicalUrl() });
   renderHighlights(highlights);
+  initHashJump();
 }
 
 void bootstrap();

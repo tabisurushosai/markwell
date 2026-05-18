@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { popupStyles } from './styles.js';
+import './views/all-highlights.js';
 import './views/current-page.js';
 
 type TabId = 'page' | 'all' | 'projects';
@@ -65,12 +66,7 @@ export class MarkwellPopupRoot extends LitElement {
         return html`<markwell-current-page-view></markwell-current-page-view>`;
       case 'all':
         return html`
-          <h2 class="panel-title">全ページ横断検索</h2>
-          <p class="placeholder">
-            ${this.searchQuery
-              ? `「${this.searchQuery}」で検索（実装予定）`
-              : '検索ボックスにキーワードを入力してください'}
-          </p>
+          <markwell-all-highlights-view .searchQuery=${this.searchQuery}></markwell-all-highlights-view>
         `;
       case 'projects':
         return html`

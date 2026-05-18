@@ -22,6 +22,8 @@ export class MarkwellHighlightCard extends LitElement {
 
   @property({ attribute: false }) tagsById: ReadonlyMap<string, Tag> = new Map();
 
+  @property({ reflect: true }) mode: 'page' | 'search' = 'page';
+
   static styles = css`
     :host {
       display: block;
@@ -46,6 +48,32 @@ export class MarkwellHighlightCard extends LitElement {
     .body {
       flex: 1;
       min-width: 0;
+    }
+
+    .card--search {
+      cursor: pointer;
+    }
+
+    .card--search:hover {
+      border-color: var(--accent);
+    }
+
+    .source {
+      margin: 0 0 var(--space-2);
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .source .page-title {
+      display: block;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .source .domain {
+      display: block;
+      margin-top: 2px;
     }
 
     .text {
@@ -142,6 +170,22 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
+  private handleCardClick(event: Event): void {
+    if (this.mode !== 'search') {
+      return;
+    }
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    this.dispatchEvent(
+      new CustomEvent('mw-open-highlight', {
+        bubbles: true,
+        composed: true,
+        detail: { highlight: this.highlight },
+      }),
+    );
+  }
+
   private async handleJump(): Promise<void> {
     const tabId = await getActiveTabId();
     if (tabId === null) {
@@ -165,11 +209,25 @@ export class MarkwellHighlightCard extends LitElement {
   render() {
     const markerColor = COLOR_VAR[this.highlight.color];
     const hasNote = this.highlight.note.trim() !== '';
+    const isSearch = this.mode === 'search';
 
     return html`
-      <article class="card">
+      <article
+        class="card ${isSearch ? 'card--search' : ''}"
+        @click=${(event: Event) => {
+          this.handleCardClick(event);
+        }}
+      >
         <div class="marker" style="background: ${markerColor}"></div>
         <div class="body">
+          ${isSearch
+            ? html`
+                <p class="source">
+                  <span class="page-title">${this.highlight.page_title}</span>
+                  <span class="domain">${this.highlight.domain}</span>
+                </p>
+              `
+            : ''}
           <p class="text" title=${this.highlight.selected_text}>${this.highlight.selected_text}</p>
           <div class="meta">
             ${this.highlight.tag_ids.map((tagId) => {
@@ -202,15 +260,19 @@ export class MarkwellHighlightCard extends LitElement {
             >
               削除
             </button>
-            <button
-              type="button"
-              class="action-btn"
-              @click=${() => {
-                void this.handleJump();
-              }}
-            >
-              ジャンプ
-            </button>
+            ${isSearch
+              ? ''
+              : html`
+                  <button
+                    type="button"
+                    class="action-btn"
+                    @click=${() => {
+                      void this.handleJump();
+                    }}
+                  >
+                    ジャンプ
+                  </button>
+                `}
           </div>
         </div>
       </article>
