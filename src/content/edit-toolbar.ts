@@ -8,8 +8,10 @@ import {
   findHighlightMarks,
   getHighlightMarksRect,
   removeHighlightFromDom,
+  syncHighlightNoteInDom,
   updateHighlightColorInDom,
 } from './highlighter.js';
+import { closeNoteDialog, openNoteDialog } from './note-dialog.js';
 
 const TOOLBAR_OFFSET_PX = 8;
 const HIDE_TOOLBARS_EVENT = 'markwell:hide-toolbars';
@@ -72,6 +74,7 @@ export class MarkwellEditToolbar extends LitElement {
       box-shadow: 0 0 0 2px #7eb6ff;
     }
 
+    .note-btn,
     .delete-btn,
     .close-btn {
       border: none;
@@ -84,6 +87,7 @@ export class MarkwellEditToolbar extends LitElement {
       border-radius: 6px;
     }
 
+    .note-btn:hover,
     .delete-btn:hover,
     .close-btn:hover {
       background: #2a2a2a;
@@ -105,6 +109,9 @@ export class MarkwellEditToolbar extends LitElement {
 
   @property({ attribute: false })
   onColorSelect: ((color: HighlightColor) => void) | null = null;
+
+  @property({ attribute: false })
+  onNoteRequest: (() => void) | null = null;
 
   @property({ attribute: false })
   onDeleteRequest: (() => void) | null = null;
@@ -132,6 +139,15 @@ export class MarkwellEditToolbar extends LitElement {
             `,
           )}
         </div>
+        <button
+          type="button"
+          class="note-btn"
+          @click=${() => {
+            this.onNoteRequest?.();
+          }}
+        >
+          メモ
+        </button>
         <button
           type="button"
           class="delete-btn"
@@ -166,6 +182,7 @@ let activeToolbar: MarkwellEditToolbar | null = null;
 let activeHighlightId: string | null = null;
 
 function hideEditToolbar(): void {
+  closeNoteDialog();
   activeToolbar?.remove();
   activeToolbar = null;
   activeHighlightId = null;
@@ -210,6 +227,19 @@ async function showEditToolbar(highlightId: string): Promise<void> {
       updateHighlightColorInDom(activeHighlightId, color);
       toolbar.currentColor = color;
     })();
+  };
+
+  toolbar.onNoteRequest = () => {
+    openNoteDialog({
+      initialNote: highlight.note,
+      onSave: async (note) => {
+        if (activeHighlightId === null) {
+          return;
+        }
+        await updateHighlight(activeHighlightId, { note });
+        syncHighlightNoteInDom(activeHighlightId, note);
+      },
+    });
   };
 
   toolbar.onDeleteRequest = () => {
@@ -264,13 +294,19 @@ function handleHighlightClick(event: MouseEvent): void {
   void showEditToolbar(highlightId);
 }
 
+function isNoteDialogInPath(path: EventTarget[]): boolean {
+  return path.some(
+    (node) => node instanceof HTMLElement && node.localName === 'markwell-note-dialog',
+  );
+}
+
 function handleOutsidePointerDown(event: MouseEvent): void {
   if (activeToolbar === null) {
     return;
   }
 
   const path = event.composedPath();
-  if (path.includes(activeToolbar)) {
+  if (path.includes(activeToolbar) || isNoteDialogInPath(path)) {
     return;
   }
 

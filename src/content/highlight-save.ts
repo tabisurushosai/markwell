@@ -6,6 +6,7 @@ import {
   computeTextOccurrence,
   getSelectionContext,
   serializeRange,
+  syncHighlightNoteInDom,
 } from './highlighter.js';
 
 export async function saveHighlightFromRange(
@@ -43,4 +44,5 @@ export async function saveHighlightFromRange(
   });
 
   applyHighlight(range, highlight.color, highlight.id);
+  syncHighlightNoteInDom(highlight.id, highlight.note);
 }

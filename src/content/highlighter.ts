@@ -72,6 +72,22 @@ function buildHighlightStylesCss(): string {
           `mark.markwell-mark.markwell-mark-${color} { ${HIGHLIGHT_STYLE_RULES[color]} border-radius: 2px; padding: 0 1px; }`,
       )
       .join('\n')}
+    mark.markwell-mark[data-markwell-has-note="true"] {
+      position: relative;
+    }
+    mark.markwell-mark[data-markwell-has-note="true"]::after {
+      content: '📝';
+      position: absolute;
+      top: -0.55em;
+      right: -0.25em;
+      font-size: 10px;
+      line-height: 1;
+      pointer-events: none;
+    }
+    mark.markwell-mark[data-markwell-has-note="true"]
+      + mark.markwell-mark[data-markwell-has-note="true"]::after {
+      content: none;
+    }
   `;
 }
 
@@ -240,6 +256,7 @@ export function restoreHighlight(highlight: Highlight): boolean {
   ensureHighlightStyles();
 
   if (document.querySelector(`[data-markwell-id="${highlight.id}"]`) !== null) {
+    syncHighlightNoteInDom(highlight.id, highlight.note);
     return true;
   }
 
@@ -258,6 +275,7 @@ export function restoreHighlight(highlight: Highlight): boolean {
   }
 
   applyHighlight(range, highlight.color, highlight.id);
+  syncHighlightNoteInDom(highlight.id, highlight.note);
   return true;
 }
 
@@ -326,6 +344,17 @@ export function updateHighlightColorInDom(id: string, color: HighlightColor): vo
       mark.classList.remove(`markwell-mark-${c}`);
     }
     mark.classList.add('markwell-mark', `markwell-mark-${color}`);
+  }
+}
+
+export function syncHighlightNoteInDom(id: string, note: string): void {
+  const hasNote = note.trim() !== '';
+  for (const mark of findHighlightMarks(id)) {
+    if (hasNote) {
+      mark.setAttribute('data-markwell-has-note', 'true');
+    } else {
+      mark.removeAttribute('data-markwell-has-note');
+    }
   }
 }
 
