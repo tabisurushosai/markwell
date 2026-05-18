@@ -6,12 +6,20 @@ type VerifyResponse = {
   valid: boolean;
   tier?: 'premium';
   expires_at?: number | null;
+  reason?: string;
 };
 
 export class InvalidLicenseKeyError extends Error {
   constructor() {
     super('無効なキー');
     this.name = 'InvalidLicenseKeyError';
+  }
+}
+
+export class LicenseRefundedError extends Error {
+  constructor() {
+    super('このライセンスは返金処理のため無効化されました');
+    this.name = 'LicenseRefundedError';
   }
 }
 
@@ -56,6 +64,16 @@ export async function verifyLicense(
 
   const payload = (await response.json()) as VerifyResponse;
   if (payload.valid !== true || payload.tier !== 'premium') {
+    if (payload.reason === 'refunded') {
+      await setLicenseStatus({
+        tier: 'free',
+        verify_failure_count: current.verify_failure_count + 1,
+        license_revoked_at: Date.now(),
+        license_revoked_reason: 'refunded',
+      });
+      throw new LicenseRefundedError();
+    }
+
     await setLicenseStatus({
       verify_failure_count: current.verify_failure_count + 1,
     });
@@ -68,6 +86,7 @@ export async function verifyLicense(
     last_verified_at: Date.now(),
     verify_failure_count: 0,
     license_revoked_at: null,
+    license_revoked_reason: null,
   });
 
   return { valid: true, tier: 'premium' };

@@ -82,6 +82,7 @@ describe('verifyLicense', () => {
     expect(status.license_key).toBe('MW-TEST-KEY');
     expect(status.last_verified_at).not.toBeNull();
     expect(status.verify_failure_count).toBe(0);
+    expect(status.license_revoked_reason).toBeNull();
   });
 
   it('throws InvalidLicenseKeyError on 4xx', async () => {

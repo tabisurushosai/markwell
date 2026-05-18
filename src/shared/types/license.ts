@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export type LicenseRevokedReason = 'invalid' | 'refunded';
+
 export type LicenseStatus = {
   tier: 'free' | 'trial' | 'premium';
   license_key: string | null;
@@ -8,6 +10,7 @@ export type LicenseStatus = {
   last_verified_at: number | null;
   verify_failure_count: number;
   license_revoked_at: number | null;
+  license_revoked_reason: LicenseRevokedReason | null;
 };
 
 export const LicenseStatusSchema = z.object({
@@ -18,4 +21,5 @@ export const LicenseStatusSchema = z.object({
   last_verified_at: z.number().nullable(),
   verify_failure_count: z.number(),
   license_revoked_at: z.number().nullable(),
+  license_revoked_reason: z.enum(['invalid', 'refunded']).nullable(),
 });

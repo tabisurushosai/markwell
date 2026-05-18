@@ -1,9 +1,18 @@
-import { InvalidLicenseKeyError, verifyLicense } from './verify.js';
+import {
+  InvalidLicenseKeyError,
+  LicenseRefundedError,
+  verifyLicense,
+} from './verify.js';
 import { getLicenseStatus, setLicenseStatus } from '../storage/license.js';
 
 export const LICENSE_RECHECK_GRACE_MS = 24 * 60 * 60 * 1000;
 
-export type LicenseRecheckResult = 'skipped' | 'verified' | 'network_failure' | 'revoked';
+export type LicenseRecheckResult =
+  | 'skipped'
+  | 'verified'
+  | 'network_failure'
+  | 'revoked'
+  | 'refunded';
 
 export function shouldRunLicenseRecheck(
   status: Awaited<ReturnType<typeof getLicenseStatus>>,
@@ -19,6 +28,7 @@ export async function revokePremiumForInvalidLicense(now = Date.now()): Promise<
   await setLicenseStatus({
     tier: 'free',
     license_revoked_at: now,
+    license_revoked_reason: 'invalid',
   });
 }
 
@@ -32,6 +42,9 @@ export async function runPeriodicLicenseRecheck(): Promise<LicenseRecheckResult>
     await verifyLicense(status.license_key!);
     return 'verified';
   } catch (error) {
+    if (error instanceof LicenseRefundedError) {
+      return 'refunded';
+    }
     if (error instanceof InvalidLicenseKeyError) {
       await revokePremiumForInvalidLicense();
       return 'revoked';

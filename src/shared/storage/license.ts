@@ -11,6 +11,7 @@ const DEFAULT_LICENSE_STATUS: LicenseStatus = {
   last_verified_at: null,
   verify_failure_count: 0,
   license_revoked_at: null,
+  license_revoked_reason: null,
 };
 
 function mergeLicenseStatus(base: LicenseStatus, patch: Partial<LicenseStatus>): LicenseStatus {

@@ -9,6 +9,7 @@ import {
   isTrialUrgent,
 } from '../shared/license/trial-countdown.js';
 import type { LicenseTier } from '../shared/storage/highlights.js';
+import { resolveLicenseRevokedBanner } from '../shared/license/license-revoked-banner.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import '../shared/ui/tier-badge.js';
 import '../shared/components/upgrade-modal.js';
@@ -68,7 +69,7 @@ export class MwOptions extends LitElement {
 
   @state() private trialUrgent = false;
 
-  @state() private licenseRevoked = false;
+  @state() private licenseRevokedBanner: string | null = null;
 
   @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
@@ -338,7 +339,7 @@ export class MwOptions extends LitElement {
   private async refreshLicenseTier(): Promise<void> {
     const [tier, license] = await Promise.all([getCurrentTier(), getLicenseStatus()]);
     this.licenseTier = tier;
-    this.licenseRevoked = license.license_revoked_at !== null;
+    this.licenseRevokedBanner = resolveLicenseRevokedBanner(license);
     if (tier === 'trial' && license.trial_end !== null) {
       const days = getTrialDaysRemaining(license.trial_end);
       this.trialRemainingLabel = formatTrialRemainingLabel(days);
@@ -576,10 +577,10 @@ export class MwOptions extends LitElement {
           </div>
         </nav>
         <main class="main">
-          ${this.licenseRevoked
+          ${this.licenseRevokedBanner !== null
             ? html`
                 <div class="license-revoked-banner" role="status">
-                  ライセンスが失効しました。Premium セクションでライセンスキーを再入力するか、新しいキーを購入してください。
+                  ${this.licenseRevokedBanner}
                 </div>
               `
             : nothing}

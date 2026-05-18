@@ -111,6 +111,7 @@ describe('periodic license recheck', () => {
     const status = await getLicenseStatus();
     expect(status.tier).toBe('free');
     expect(status.license_revoked_at).not.toBeNull();
+    expect(status.license_revoked_reason).toBe('invalid');
     expect(status.license_key).toBe('MW-BAD');
   });
 });

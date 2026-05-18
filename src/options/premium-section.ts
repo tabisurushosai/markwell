@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { applyLicenseKey } from '../shared/license/apply-license-key.js';
+import { LicenseRefundedError } from '../shared/license/verify.js';
 import { resolveStripePaymentLink } from '../shared/license/config.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../shared/license/start-trial.js';
 import {
@@ -290,6 +291,11 @@ export class MwPremiumSection extends LitElement {
       this.currentTier = await getCurrentTier();
       this.showToast('ライセンスキーを適用しました。Premium が有効になりました');
     } catch (error) {
+      if (error instanceof LicenseRefundedError) {
+        this.currentTier = await getCurrentTier();
+        this.showToast(error.message, true);
+        return;
+      }
       const message = error instanceof Error ? error.message : 'ライセンスキーの適用に失敗しました';
       this.showToast(message, true);
     } finally {
