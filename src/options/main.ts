@@ -13,8 +13,9 @@ import {
 
 import './general-section.js';
 import './ai-section.js';
+import './data-section.js';
 import './tag-manager.js';
-import './project-manager.js';
+import './data-section.js';
 
 type OptionsSection = 'general' | 'ai' | 'tags' | 'projects' | 'premium' | 'data' | 'about';
 
@@ -421,7 +422,7 @@ export class MwOptions extends LitElement {
     return html`
       <h1>データ</h1>
       <p class="section-lead">ハイライトのエクスポート・インポートとバックアップです。</p>
-      <p class="placeholder">データ管理は今後このセクションに追加されます。</p>
+      <mw-data-section></mw-data-section>
     `;
   }
 
