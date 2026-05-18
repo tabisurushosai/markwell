@@ -2,13 +2,17 @@ import { ulid } from 'ulid';
 import { z } from 'zod';
 
 import { ProjectSchema, type Project } from '../types/project.js';
+import {
+  FALLBACK_PROJECT_EMOJI,
+  isSingleGraphemeEmoji,
+} from '../utils/project-emoji.js';
 import type { LicenseTier } from './highlights.js';
 import { getHighlight, listHighlights, updateHighlight } from './highlights.js';
 import { kvDelete, kvGet, kvListByPrefix, kvSet } from './kv.js';
 
 const PROJECT_KEY_PREFIX = 'markwell:project:';
 const INDEX_BY_PROJECT_PREFIX = 'markwell:index:by-project:';
-const DEFAULT_COVER_EMOJI = '📌';
+const DEFAULT_COVER_EMOJI = FALLBACK_PROJECT_EMOJI;
 
 const TIER_PROJECT_LIMITS: Record<LicenseTier, number | null> = {
   free: 2,
@@ -16,21 +20,8 @@ const TIER_PROJECT_LIMITS: Record<LicenseTier, number | null> = {
   premium: null,
 };
 
-function isSingleGrapheme(value: string): boolean {
-  const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-  let count = 0;
-  for (const _unused of segmenter.segment(value)) {
-    void _unused;
-    count += 1;
-    if (count > 1) {
-      return false;
-    }
-  }
-  return count === 1;
-}
-
-const CoverEmojiSchema = z.string().refine(isSingleGrapheme, {
-  message: 'cover_emoji must be a single character',
+const CoverEmojiSchema = z.string().refine(isSingleGraphemeEmoji, {
+  message: 'cover_emoji must be a single grapheme',
 });
 
 const StoredProjectSchema = ProjectSchema.extend({

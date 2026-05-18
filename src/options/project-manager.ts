@@ -11,8 +11,12 @@ import {
   updateProject,
 } from '../shared/storage/projects.js';
 import type { Project } from '../shared/types/project.js';
+import {
+  FALLBACK_PROJECT_EMOJI,
+  formatProjectCoverEmoji,
+} from '../shared/utils/project-emoji.js';
 
-const DEFAULT_COVER_EMOJI = '📌';
+const DEFAULT_COVER_EMOJI = FALLBACK_PROJECT_EMOJI;
 const FREE_PROJECT_LIMIT = 2;
 
 type ProjectRow = {
@@ -464,8 +468,12 @@ export class MwProjectManager extends LitElement {
     }
 
     return html`
-      <span class="emoji-display" title=${project.cover_emoji} aria-hidden="true">
-        ${project.cover_emoji}
+      <span
+        class="emoji-display"
+        title=${formatProjectCoverEmoji(project.cover_emoji)}
+        aria-hidden="true"
+      >
+        ${formatProjectCoverEmoji(project.cover_emoji)}
       </span>
     `;
   }

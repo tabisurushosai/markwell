@@ -40,6 +40,7 @@ import {
 import type { Highlight } from '../shared/types/highlight.js';
 import type { HighlightColor } from '../shared/types/highlight.js';
 import type { Project } from '../shared/types/project.js';
+import { formatProjectCoverEmoji } from '../shared/utils/project-emoji.js';
 import type { Synthesis } from '../shared/types/synthesis.js';
 import { applyDocumentTheme, resolveEffectiveTheme } from '../popup/utils/theme.js';
 import {
@@ -1480,7 +1481,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 ${this.projects.map(
                   (project) => html`
                     <option value=${project.id}>
-                      ${project.cover_emoji} ${project.name}
+                      ${formatProjectCoverEmoji(project.cover_emoji)} ${project.name}
                     </option>
                   `,
                 )}
