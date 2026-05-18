@@ -14,6 +14,7 @@ import {
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 
 import './tag-manager.js';
+import './project-manager.js';
 
 function formatTokenCount(value: number): string {
   return value.toLocaleString('ja-JP');
@@ -321,6 +322,15 @@ export class MwOptions extends LitElement {
         <h2 id="tags-title">タグ</h2>
         <p class="hint">タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。</p>
         <mw-tag-manager></mw-tag-manager>
+      </section>
+
+      <section aria-labelledby="projects-title">
+        <h2 id="projects-title">プロジェクト</h2>
+        <p class="hint">
+          プロジェクトの作成・編集・削除ができます。削除してもハイライト自体は残り、プロジェクト未所属になります。Free
+          プランでは最大 2 個まで作成できます。
+        </p>
+        <mw-project-manager></mw-project-manager>
       </section>
 
       <section aria-labelledby="ai-usage-title">
