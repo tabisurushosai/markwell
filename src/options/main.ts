@@ -16,12 +16,26 @@ import { getSettings, setSettings } from '../shared/storage/settings.js';
 import './tag-manager.js';
 import './project-manager.js';
 
+type OptionsSection = 'general' | 'ai' | 'tags' | 'projects' | 'premium' | 'data' | 'about';
+
+const SECTIONS: ReadonlyArray<{ id: OptionsSection; label: string }> = [
+  { id: 'general', label: '一般' },
+  { id: 'ai', label: 'AI' },
+  { id: 'tags', label: 'タグ' },
+  { id: 'projects', label: 'プロジェクト' },
+  { id: 'premium', label: 'Premium' },
+  { id: 'data', label: 'データ' },
+  { id: 'about', label: 'About' },
+];
+
 function formatTokenCount(value: number): string {
   return value.toLocaleString('ja-JP');
 }
 
 @customElement('mw-options')
 export class MwOptions extends LitElement {
+  @state() private activeSection: OptionsSection = 'general';
+
   @state() private translateTargetLang = 'ja';
 
   @state() private saved = false;
@@ -37,15 +51,73 @@ export class MwOptions extends LitElement {
   static styles = css`
     :host {
       display: block;
-      padding: 24px;
+      min-height: 100vh;
       font-family: system-ui, sans-serif;
       color: #e0e0e0;
       background: #1a1a1a;
     }
 
+    .shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      flex-shrink: 0;
+      width: 220px;
+      padding: 24px 0;
+      border-right: 1px solid #333;
+      background: #141414;
+    }
+
+    .brand {
+      margin: 0 0 20px;
+      padding: 0 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffd34e;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 20px;
+      border: none;
+      border-left: 3px solid transparent;
+      background: transparent;
+      color: #aaa;
+      font-family: inherit;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      color: #e0e0e0;
+      background: #1f1f1f;
+    }
+
+    .nav-btn--active {
+      border-left-color: #ffd34e;
+      color: #ffd34e;
+      background: #242424;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 32px 40px;
+    }
+
     h1 {
-      margin: 0 0 16px;
-      font-size: 20px;
+      margin: 0 0 8px;
+      font-size: 22px;
     }
 
     h2 {
@@ -53,8 +125,11 @@ export class MwOptions extends LitElement {
       font-size: 16px;
     }
 
-    section {
-      margin-bottom: 28px;
+    .section-lead {
+      margin: 0 0 24px;
+      font-size: 13px;
+      color: #888;
+      line-height: 1.5;
     }
 
     label {
@@ -89,6 +164,16 @@ export class MwOptions extends LitElement {
       margin-top: 12px;
       font-size: 13px;
       color: #ffd34e;
+    }
+
+    .placeholder {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed #444;
+      border-radius: 8px;
+      color: #888;
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     .usage-summary {
@@ -194,6 +279,10 @@ export class MwOptions extends LitElement {
     this.usageLoading = false;
   }
 
+  private selectSection(section: OptionsSection): void {
+    this.activeSection = section;
+  }
+
   private async onLangChange(event: Event): Promise<void> {
     const select = event.target;
     if (!(select instanceof HTMLSelectElement)) {
@@ -296,50 +385,127 @@ export class MwOptions extends LitElement {
     `;
   }
 
+  private renderGeneralSection() {
+    return html`
+      <h1>一般</h1>
+      <p class="section-lead">ハイライトと popup の基本設定です。</p>
+      <label for="translate-lang">ハイライト翻訳の既定言語</label>
+      <select
+        id="translate-lang"
+        .value=${this.translateTargetLang}
+        @change=${(event: Event) => {
+          void this.onLangChange(event);
+        }}
+      >
+        ${Object.entries(TRANSLATE_LANGUAGE_LABELS).map(
+          ([code, label]) => html`
+            <option value=${code}>${label}</option>
+          `,
+        )}
+      </select>
+      <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
+      ${this.saved ? html`<p class="status">保存しました</p>` : nothing}
+    `;
+  }
+
+  private renderAiSection() {
+    return html`
+      <h1>AI</h1>
+      <p class="section-lead">ローカルに保存された当月の Gemini 利用量です。外部には送信されません。</p>
+      ${this.renderUsageSection()}
+    `;
+  }
+
+  private renderTagsSection() {
+    return html`
+      <h1>タグ</h1>
+      <p class="section-lead">
+        タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。
+      </p>
+      <mw-tag-manager></mw-tag-manager>
+    `;
+  }
+
+  private renderProjectsSection() {
+    return html`
+      <h1>プロジェクト</h1>
+      <p class="section-lead">
+        プロジェクトの作成・編集・削除ができます。削除してもハイライト自体は残り、プロジェクト未所属になります。Free
+        プランでは最大 2 個まで作成できます。
+      </p>
+      <mw-project-manager></mw-project-manager>
+    `;
+  }
+
+  private renderPremiumSection() {
+    return html`
+      <h1>Premium</h1>
+      <p class="section-lead">ライセンスと Premium 機能の管理です。</p>
+      <p class="placeholder">Premium 設定は今後このセクションに追加されます。</p>
+    `;
+  }
+
+  private renderDataSection() {
+    return html`
+      <h1>データ</h1>
+      <p class="section-lead">ハイライトのエクスポート・インポートとバックアップです。</p>
+      <p class="placeholder">データ管理は今後このセクションに追加されます。</p>
+    `;
+  }
+
+  private renderAboutSection() {
+    return html`
+      <h1>About</h1>
+      <p class="section-lead">Markwell のバージョン情報とリンクです。</p>
+      <p class="placeholder">Markwell — ウェブハイライトと AI 支援のための拡張機能です。</p>
+    `;
+  }
+
+  private renderMainContent() {
+    switch (this.activeSection) {
+      case 'general':
+        return this.renderGeneralSection();
+      case 'ai':
+        return this.renderAiSection();
+      case 'tags':
+        return this.renderTagsSection();
+      case 'projects':
+        return this.renderProjectsSection();
+      case 'premium':
+        return this.renderPremiumSection();
+      case 'data':
+        return this.renderDataSection();
+      case 'about':
+        return this.renderAboutSection();
+      default:
+        return this.renderGeneralSection();
+    }
+  }
+
   render() {
     return html`
-      <h1>Markwell 設定</h1>
-      <section>
-        <label for="translate-lang">ハイライト翻訳の既定言語</label>
-        <select
-          id="translate-lang"
-          .value=${this.translateTargetLang}
-          @change=${(event: Event) => {
-            void this.onLangChange(event);
-          }}
-        >
-          ${Object.entries(TRANSLATE_LANGUAGE_LABELS).map(
-            ([code, label]) => html`
-              <option value=${code}>${label}</option>
-            `,
-          )}
-        </select>
-        <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
-        ${this.saved ? html`<p class="status">保存しました</p>` : ''}
-      </section>
-
-      <section aria-labelledby="tags-title">
-        <h2 id="tags-title">タグ</h2>
-        <p class="hint">タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。</p>
-        <mw-tag-manager></mw-tag-manager>
-      </section>
-
-      <section aria-labelledby="projects-title">
-        <h2 id="projects-title">プロジェクト</h2>
-        <p class="hint">
-          プロジェクトの作成・編集・削除ができます。削除してもハイライト自体は残り、プロジェクト未所属になります。Free
-          プランでは最大 2 個まで作成できます。
-        </p>
-        <mw-project-manager></mw-project-manager>
-      </section>
-
-      <section aria-labelledby="ai-usage-title">
-        <h2 id="ai-usage-title">AI 使用量</h2>
-        <p class="hint">ローカルに保存された当月の Gemini 利用量です。外部には送信されません。</p>
-        ${this.renderUsageSection()}
-      </section>
+      <div class="shell">
+        <nav class="sidebar" aria-label="設定セクション">
+          <p class="brand">Markwell</p>
+          <div class="nav">
+            ${SECTIONS.map(
+              (section) => html`
+                <button
+                  type="button"
+                  class="nav-btn ${this.activeSection === section.id ? 'nav-btn--active' : ''}"
+                  aria-current=${this.activeSection === section.id ? 'page' : 'false'}
+                  @click=${() => {
+                    this.selectSection(section.id);
+                  }}
+                >
+                  ${section.label}
+                </button>
+              `,
+            )}
+          </div>
+        </nav>
+        <main class="main">${this.renderMainContent()}</main>
+      </div>
     `;
   }
 }
-
-document.body.appendChild(document.createElement('mw-options'));
