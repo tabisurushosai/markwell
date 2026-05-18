@@ -3,7 +3,7 @@
     "message": "Markwell — Web Highlighter with AI Synthesis"
   },
   "extension_description": {
-    "message": "Highlight web text, then let AI synthesize your highlights into coherent essays. For researchers, writers, and learners."
+    "message": "Highlight text on the web, then let AI turn your highlights into coherent essays. Built for research, writing, and learning."
   },
   "popup_tab_current": {
     "message": "Current page"
@@ -18,7 +18,7 @@
     "message": "Search…"
   },
   "popup_empty_current": {
-    "message": "No highlights on this page yet. Select text on the page to create one."
+    "message": "No highlights on this page yet. Select some text to create your first highlight."
   },
   "popup_empty_all": {
     "message": "No highlights match your filters."
@@ -66,7 +66,7 @@
     "message": "Extract quotes"
   },
   "synthesis_instruction_placeholder": {
-    "message": "Tell AI how to synthesize the highlights in this project (optional)…"
+    "message": "Tell AI how to synthesize this project's highlights (optional)…"
   },
   "synthesis_run": {
     "message": "Run synthesis"
@@ -75,7 +75,7 @@
     "message": "Cancel"
   },
   "synthesis_history": {
-    "message": "Saved history"
+    "message": "History"
   },
   "options_section_general": {
     "message": "General"
@@ -120,7 +120,7 @@
     "message": "API key"
   },
   "option_test_key": {
-    "message": "Test key"
+    "message": "Test API key"
   },
   "option_model": {
     "message": "Model"
@@ -135,7 +135,7 @@
     "message": "PREMIUM"
   },
   "tier_trial_remaining": {
-    "message": "$days$ left",
+    "message": "$days$ days left",
     "placeholders": {
       "days": {
         "content": "$1",
@@ -147,10 +147,10 @@
     "message": "Upgrade to Premium"
   },
   "upgrade_modal_body_free": {
-    "message": "Premium raises your limits and unlocks every AI feature."
+    "message": "Premium gives you higher limits and unlocks every AI feature."
   },
   "upgrade_modal_body_trial_used": {
-    "message": "You have already used the free trial. Purchase Premium to keep using advanced features."
+    "message": "You've already used the free trial. Purchase Premium to unlock advanced features."
   },
   "upgrade_purchase": {
     "message": "Buy now"
@@ -162,19 +162,19 @@
     "message": "What is Markwell?"
   },
   "onboarding_step1_body": {
-    "message": "Markwell lets you highlight text on the web, organize it with tags, and connect ideas with AI synthesis."
+    "message": "Markwell is a Chrome extension that lets you highlight text on the web, tag it, and connect ideas with AI synthesis."
   },
   "onboarding_step2_title": {
-    "message": "Try Premium free for 7 days"
+    "message": "7-day Premium trial"
   },
   "onboarding_step2_body": {
-    "message": "Enjoy Premium features free for seven days. No email sign-up required."
+    "message": "Try Premium free for seven days. No email sign-up required."
   },
   "onboarding_step3_title": {
     "message": "Keyboard shortcuts"
   },
   "onboarding_step3_body": {
-    "message": "Select text on any page and press Alt+H to save a highlight. Press Alt+S to open the synthesis side panel."
+    "message": "On any page, select text and press Alt+H to save a highlight, or Alt+S to open the synthesis side panel."
   },
   "onboarding_finish": {
     "message": "Get started"
@@ -186,10 +186,10 @@
     "message": "Delete this highlight? This cannot be undone."
   },
   "confirm_delete_all": {
-    "message": "Delete all highlights, tags, projects, and syntheses? License data will be kept. This cannot be undone."
+    "message": "Delete all highlights, tags, projects, and syntheses? Your license data will be kept. This cannot be undone."
   },
   "confirm_merge_tag": {
-    "message": "Merge “$source$” into “$target$”? The source tag will be removed and highlights will use the target tag.",
+    "message": "Merge “$source$” into “$target$”? The source tag will be removed and highlights will be reassigned to the target tag.",
     "placeholders": {
       "source": {
         "content": "$1",
