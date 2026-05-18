@@ -15,7 +15,7 @@ import './general-section.js';
 import './ai-section.js';
 import './data-section.js';
 import './tag-manager.js';
-import './data-section.js';
+import './project-manager.js';
 
 type OptionsSection = 'general' | 'ai' | 'tags' | 'projects' | 'premium' | 'data' | 'about';
 
