@@ -199,19 +199,25 @@ async function fetchWithRetry(
   throw lastError ?? new GeminiError('Request failed after retries', 'SERVER');
 }
 
+function buildGeminiRequestInit(body: string, signal?: AbortSignal): RequestInit {
+  const init: RequestInit = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  };
+  if (signal !== undefined) {
+    init.signal = signal;
+  }
+  return init;
+}
+
 async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'generateContent', apiKey);
   const response = await fetchWithRetry(
     url,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: buildRequestBody(prompt),
-      signal,
-    },
+    buildGeminiRequestInit(buildRequestBody(prompt), signal),
     apiKey,
-    signal,
   );
 
   const payload = (await response.json()) as GenerateContentResponse;
@@ -231,14 +237,8 @@ async function* streamGeminiChunks(
   const url = buildEndpoint(model, 'streamGenerateContent', apiKey);
   const response = await fetchWithRetry(
     url,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: buildRequestBody(prompt),
-      signal,
-    },
+    buildGeminiRequestInit(buildRequestBody(prompt), signal),
     apiKey,
-    signal,
   );
 
   if (response.body === null) {
