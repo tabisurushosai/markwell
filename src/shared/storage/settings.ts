@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: Settings = {
     open_synthesis: 'Alt+S',
   },
   translate_target_lang: 'ja',
+  stripe_payment_link: '',
   onboarding_seen: false,
 };
 

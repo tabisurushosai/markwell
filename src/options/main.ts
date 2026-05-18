@@ -15,6 +15,7 @@ import './general-section.js';
 import './ai-section.js';
 import './data-section.js';
 import './about-section.js';
+import './premium-section.js';
 import './tag-manager.js';
 import './project-manager.js';
 
@@ -415,7 +416,7 @@ export class MwOptions extends LitElement {
     return html`
       <h1>Premium</h1>
       <p class="section-lead">ライセンスと Premium 機能の管理です。</p>
-      <p class="placeholder">Premium 設定は今後このセクションに追加されます。</p>
+      <mw-premium-section></mw-premium-section>
     `;
   }
 
