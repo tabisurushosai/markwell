@@ -39,6 +39,12 @@ function createFakeChromeStorage() {
 
 describe('applyLicenseKey', () => {
   beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ valid: true, tier: 'premium' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ));
     vi.stubGlobal('chrome', {
       storage: {
         local: createFakeChromeStorage(),
@@ -50,9 +56,10 @@ describe('applyLicenseKey', () => {
     vi.unstubAllGlobals();
   });
 
-  it('stores trimmed license key', async () => {
+  it('stores trimmed license key and activates premium', async () => {
     const status = await applyLicenseKey('  MW-TEST-KEY  ');
     expect(status.license_key).toBe('MW-TEST-KEY');
+    expect(status.tier).toBe('premium');
     expect((await getLicenseStatus()).license_key).toBe('MW-TEST-KEY');
   });
 

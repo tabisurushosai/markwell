@@ -215,7 +215,7 @@ export class MwPremiumSection extends LitElement {
       this.storedLicenseKey = next.license_key ?? '';
       this.licenseKeyDraft = this.storedLicenseKey;
       this.currentTier = await getCurrentTier();
-      this.showToast('ライセンスキーを保存しました');
+      this.showToast('ライセンスキーを適用しました。Premium が有効になりました');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'ライセンスキーの適用に失敗しました';
       this.showToast(message, true);
