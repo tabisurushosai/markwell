@@ -1,6 +1,7 @@
 import { listHighlights } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
+import { initSelectionDetection } from './selection.js';
 import { getCanonicalUrl, isPageBlocked } from '../shared/utils/url.js';
 
 function renderHighlights(highlights: Highlight[]): void {
@@ -18,6 +19,8 @@ async function bootstrap(): Promise<void> {
   }
 
   console.log('Markwell content ready');
+
+  initSelectionDetection();
 
   chrome.runtime
     .sendMessage({
