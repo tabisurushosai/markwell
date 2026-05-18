@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { exportAll, importAll } from '../shared/storage/io.js';
+import { deleteAllData } from '../shared/storage/delete-all-data.js';
 import {
   buildMarkwellExportFilename,
   downloadJsonFile,
@@ -25,6 +26,12 @@ export class MwDataSection extends LitElement {
   @state() private toastMessage = '';
 
   @state() private toastIsError = false;
+
+  @state() private showDeleteDialog = false;
+
+  @state() private deleteConfirmText = '';
+
+  @state() private deleting = false;
 
   private toastTimer: number | undefined;
 
@@ -149,6 +156,82 @@ export class MwDataSection extends LitElement {
       color: #f0a0a0;
       border-color: #8b3a3a;
     }
+
+    .danger-section {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #333;
+    }
+
+    .danger-note {
+      margin: 0 0 12px;
+      font-size: 12px;
+      color: #c88;
+      line-height: 1.5;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.55);
+      box-sizing: border-box;
+    }
+
+    .dialog-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: min(420px, 100%);
+      padding: 20px;
+      border: 1px solid #444;
+      border-radius: 12px;
+      background: #1f1f1f;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      box-sizing: border-box;
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #f0a0a0;
+    }
+
+    .dialog-message {
+      margin: 0;
+      font-size: 13px;
+      color: #ccc;
+      line-height: 1.6;
+    }
+
+    .dialog-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #242424;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .dialog-input:focus {
+      outline: 2px solid #c44;
+      outline-offset: 0;
+      border-color: #c44;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
   `;
 
   disconnectedCallback(): void {
@@ -251,6 +334,114 @@ export class MwDataSection extends LitElement {
     }
   }
 
+  private openDeleteDialog(): void {
+    this.deleteConfirmText = '';
+    this.showDeleteDialog = true;
+  }
+
+  private closeDeleteDialog(): void {
+    if (this.deleting) {
+      return;
+    }
+    this.showDeleteDialog = false;
+    this.deleteConfirmText = '';
+  }
+
+  private async handleDeleteAllData(): Promise<void> {
+    if (this.deleting || this.deleteConfirmText !== 'DELETE') {
+      return;
+    }
+
+    this.deleting = true;
+    try {
+      await deleteAllData();
+      this.resetFileSelection();
+      this.showDeleteDialog = false;
+      this.deleteConfirmText = '';
+      this.showToast('すべてのデータを削除しました。ライセンス情報は保持されています');
+    } catch {
+      this.showToast('データの削除に失敗しました', true);
+    } finally {
+      this.deleting = false;
+    }
+  }
+
+  private renderDeleteDialog() {
+    const canConfirm = this.deleteConfirmText === 'DELETE' && !this.deleting;
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: MouseEvent) => {
+          if (event.target === event.currentTarget) {
+            this.closeDeleteDialog();
+          }
+        }}
+      >
+        <div
+          class="dialog-panel"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="delete-all-title"
+          @click=${(event: Event) => {
+            event.stopPropagation();
+          }}
+        >
+          <h2 id="delete-all-title" class="dialog-title">全データを削除</h2>
+          <p class="dialog-message">
+            ハイライト・タグ・プロジェクト・合成・設定など、すべてのローカルデータを削除します。この操作は取り消せません。
+          </p>
+          <p class="dialog-message"><strong>ライセンスは保持されます。</strong></p>
+          <p class="dialog-message">続行するには「DELETE」と入力してください。</p>
+          <input
+            class="dialog-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="DELETE"
+            .value=${this.deleteConfirmText}
+            ?disabled=${this.deleting}
+            @input=${(event: Event) => {
+              const input = event.target;
+              if (input instanceof HTMLInputElement) {
+                this.deleteConfirmText = input.value;
+              }
+            }}
+            @keydown=${(event: KeyboardEvent) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                this.closeDeleteDialog();
+              }
+            }}
+          />
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="btn"
+              ?disabled=${this.deleting}
+              @click=${() => {
+                this.closeDeleteDialog();
+              }}
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              class="btn btn--danger"
+              ?disabled=${!canConfirm}
+              @click=${() => {
+                void this.handleDeleteAllData();
+              }}
+            >
+              ${this.deleting ? '削除中…' : '削除する'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     const canImport = this.importPayload !== null && !this.importing;
 
@@ -339,6 +530,27 @@ export class MwDataSection extends LitElement {
           </button>
         </div>
       </section>
+
+      <section class="section danger-section" aria-labelledby="delete-all-title-section">
+        <span id="delete-all-title-section" class="section-title">危険な操作</span>
+        <p class="danger-note">
+          すべてのローカルデータを削除します。ライセンス情報のみ保持されます。事前にエクスポートすることをおすすめします。
+        </p>
+        <div class="actions">
+          <button
+            type="button"
+            class="btn btn--danger"
+            ?disabled=${this.deleting}
+            @click=${() => {
+              this.openDeleteDialog();
+            }}
+          >
+            全データを削除
+          </button>
+        </div>
+      </section>
+
+      ${this.showDeleteDialog ? this.renderDeleteDialog() : nothing}
 
       ${this.toastMessage !== ''
         ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
