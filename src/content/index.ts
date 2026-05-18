@@ -1,13 +1,13 @@
 import { listHighlights } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
 import type { Highlight } from '../shared/types/highlight.js';
+import { restoreHighlights } from './highlighter.js';
 import { initMiniToolbar } from './mini-toolbar.js';
 import { initSelectionDetection } from './selection.js';
 import { getCanonicalUrl, isPageBlocked } from '../shared/utils/url.js';
 
 function renderHighlights(highlights: Highlight[]): void {
-  // markwell-018: highlight renderer
-  void highlights;
+  restoreHighlights(highlights);
 }
 
 async function bootstrap(): Promise<void> {
