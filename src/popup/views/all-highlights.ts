@@ -24,6 +24,8 @@ export class MarkwellAllHighlightsView extends LitElement {
 
   @property({ type: Number }) focusedCardIndex = -1;
 
+  @property() licenseTier: 'free' | 'trial' | 'premium' = 'free';
+
   @state() private debouncedQuery = '';
 
   @state() private results: Highlight[] = [];
@@ -181,6 +183,7 @@ export class MarkwellAllHighlightsView extends LitElement {
               mode="search"
               .highlight=${highlight}
               .tagsById=${this.tagsById}
+              .licenseTier=${this.licenseTier}
               ?keyboard-focused=${index === this.focusedCardIndex}
               @mw-open-highlight=${(event: Event) => {
                 this.handleOpenHighlight(event);

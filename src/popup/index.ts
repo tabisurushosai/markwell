@@ -1,9 +1,12 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { findRelatedHighlights } from '../shared/ai/related-highlights.js';
 import { getCurrentTier } from '../shared/storage/license.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { listProjects } from '../shared/storage/projects.js';
 import { listTags } from '../shared/storage/tags.js';
+import type { Highlight } from '../shared/types/highlight.js';
+import { buildHighlightOpenUrl } from './utils/highlight-url.js';
 import type { Project } from '../shared/types/project.js';
 import type { Tag } from '../shared/types/tag.js';
 import type { ThemePreference } from '../shared/types/settings.js';
@@ -62,6 +65,14 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private focusedCardIndex = -1;
 
+  @state() private relatedLoading = false;
+
+  @state() private relatedSource: Highlight | null = null;
+
+  @state() private relatedHighlights: Highlight[] = [];
+
+  @state() private relatedTagsById: ReadonlyMap<string, Tag> = new Map();
+
   private systemThemeQuery: MediaQueryList | null = null;
 
   static styles = popupStyles;
@@ -73,6 +84,8 @@ export class MarkwellPopupRoot extends LitElement {
     this.addEventListener('mw-tag-toggle', this.onTagToggle);
     this.addEventListener('mw-project-filter', this.onProjectFilter);
     this.addEventListener('mw-date-filter', this.onDateFilter);
+    this.addEventListener('mw-find-related', this.onFindRelated);
+    this.addEventListener('mw-open-highlight', this.onOpenHighlightFromRelated);
     this.systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
     this.systemThemeQuery.addEventListener('change', this.onSystemThemeChange);
     window.addEventListener('keydown', this.onKeyDown, true);
@@ -88,6 +101,8 @@ export class MarkwellPopupRoot extends LitElement {
     this.removeEventListener('mw-tag-toggle', this.onTagToggle);
     this.removeEventListener('mw-project-filter', this.onProjectFilter);
     this.removeEventListener('mw-date-filter', this.onDateFilter);
+    this.removeEventListener('mw-find-related', this.onFindRelated);
+    this.removeEventListener('mw-open-highlight', this.onOpenHighlightFromRelated);
     this.systemThemeQuery?.removeEventListener('change', this.onSystemThemeChange);
     this.systemThemeQuery = null;
   }
@@ -302,12 +317,7 @@ export class MarkwellPopupRoot extends LitElement {
     this.selectedTagIds = [...this.selectedTagIds, tagId];
   };
 
-  private readonly onToast = (event: Event): void => {
-    if (!(event instanceof CustomEvent)) {
-      return;
-    }
-    const detail = event.detail as { message?: string };
-    const message = detail.message ?? '';
+  private showToast(message: string): void {
     if (message === '') {
       return;
     }
@@ -315,6 +325,14 @@ export class MarkwellPopupRoot extends LitElement {
     window.setTimeout(() => {
       this.toastMessage = '';
     }, 3000);
+  }
+
+  private readonly onToast = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
+    const detail = event.detail as { message?: string };
+    this.showToast(detail.message ?? '');
   };
 
   private onSearchInput(event: Event): void {
@@ -341,6 +359,7 @@ export class MarkwellPopupRoot extends LitElement {
             .selectedProjectFilter=${this.selectedProjectFilter}
             .dateFilter=${this.dateFilter}
             .focusedCardIndex=${this.focusedCardIndex}
+            .licenseTier=${this.licenseTier}
           ></markwell-current-page-view>
         `;
       case 'all':
@@ -351,6 +370,7 @@ export class MarkwellPopupRoot extends LitElement {
             .selectedProjectFilter=${this.selectedProjectFilter}
             .dateFilter=${this.dateFilter}
             .focusedCardIndex=${this.focusedCardIndex}
+            .licenseTier=${this.licenseTier}
           ></markwell-all-highlights-view>
         `;
       case 'projects':
@@ -403,6 +423,96 @@ export class MarkwellPopupRoot extends LitElement {
     void chrome.tabs.create({ url: 'https://github.com/markwell' });
   }
 
+  private readonly onFindRelated = (event: Event): void => {
+    const custom = event as CustomEvent<{ highlight: Highlight }>;
+    void this.loadRelatedHighlights(custom.detail.highlight);
+  };
+
+  private readonly onOpenHighlightFromRelated = (event: Event): void => {
+    const custom = event as CustomEvent<{ highlight: Highlight }>;
+    void chrome.tabs.create({ url: buildHighlightOpenUrl(custom.detail.highlight) });
+  };
+
+  private async loadRelatedHighlights(source: Highlight): Promise<void> {
+    this.relatedSource = source;
+    this.relatedLoading = true;
+    this.relatedHighlights = [];
+
+    try {
+      const [related, tags] = await Promise.all([findRelatedHighlights(source), listTags()]);
+      this.relatedHighlights = related;
+      this.relatedTagsById = new Map(tags.map((tag) => [tag.id, tag]));
+      if (related.length === 0) {
+        this.showToast('関連ハイライトが見つかりませんでした');
+      }
+    } catch {
+      this.relatedHighlights = [];
+      this.showToast('関連ハイライトの取得に失敗しました');
+    } finally {
+      this.relatedLoading = false;
+    }
+  }
+
+  private closeRelatedSection(): void {
+    this.relatedSource = null;
+    this.relatedHighlights = [];
+    this.relatedLoading = false;
+  }
+
+  private renderRelatedSection() {
+    if (this.relatedSource === null && !this.relatedLoading) {
+      return nothing;
+    }
+
+    const preview =
+      this.relatedSource !== null
+        ? this.relatedSource.selected_text.slice(0, 48) +
+          (this.relatedSource.selected_text.length > 48 ? '…' : '')
+        : '';
+
+    return html`
+      <section class="related-section" aria-label="関連ハイライト">
+        <div class="related-section__header">
+          <div>
+            <h2 class="related-section__title">関連ハイライト</h2>
+            ${preview !== ''
+              ? html`<p class="related-section__source">「${preview}」に近い候補</p>`
+              : nothing}
+          </div>
+          <button
+            type="button"
+            class="related-section__close"
+            aria-label="関連ハイライトを閉じる"
+            @click=${() => {
+              this.closeRelatedSection();
+            }}
+          >
+            閉じる
+          </button>
+        </div>
+        ${this.relatedLoading
+          ? html`<p class="related-section__status">関連を検索中…</p>`
+          : this.relatedHighlights.length === 0
+            ? html`<p class="related-section__status">表示できる関連ハイライトがありません</p>`
+            : html`
+                <div class="related-section__list">
+                  ${this.relatedHighlights.map(
+                    (highlight) => html`
+                      <markwell-highlight-card
+                        mode="search"
+                        .highlight=${highlight}
+                        .tagsById=${this.relatedTagsById}
+                        .licenseTier=${this.licenseTier}
+                        ?show-related-action=${false}
+                      ></markwell-highlight-card>
+                    `,
+                  )}
+                </div>
+              `}
+      </section>
+    `;
+  }
+
   render() {
     return html`
       <header class="header">
@@ -446,6 +556,8 @@ export class MarkwellPopupRoot extends LitElement {
       </nav>
 
       <main class="main" role="tabpanel">${this.renderTabPanel()}</main>
+
+      ${this.renderRelatedSection()}
 
       ${this.toastMessage
         ? html`<div class="toast" role="status">${this.toastMessage}</div>`

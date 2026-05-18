@@ -231,6 +231,68 @@ const popupLayoutStyles = css`
     color: var(--accent);
   }
 
+  .related-section {
+    flex-shrink: 0;
+    max-height: 40%;
+    overflow: auto;
+    padding: var(--space-2) var(--space-3);
+    border-top: 1px solid var(--surface-raised);
+    background: var(--surface);
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--surface);
+  }
+
+  .related-section__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .related-section__title {
+    margin: 0;
+    font-size: var(--font-size-tab);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .related-section__source {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  .related-section__close {
+    flex-shrink: 0;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+  }
+
+  .related-section__close:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .related-section__status {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  .related-section__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
   .footer {
     display: flex;
     gap: 6px;

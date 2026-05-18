@@ -30,7 +30,11 @@ export class MarkwellHighlightCard extends LitElement {
 
   @property({ reflect: true }) mode: 'page' | 'search' = 'page';
 
+  @property() licenseTier: 'free' | 'trial' | 'premium' = 'free';
+
   @property({ type: Boolean, attribute: 'keyboard-focused' }) keyboardFocused = false;
+
+  @property({ type: Boolean, attribute: 'show-related-action' }) showRelatedAction = true;
 
   @state() private copyMenuOpen = false;
 
@@ -358,6 +362,24 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
+  private canUseRelatedHighlights(): boolean {
+    return (
+      this.showRelatedAction &&
+      (this.licenseTier === 'trial' || this.licenseTier === 'premium')
+    );
+  }
+
+  private handleFindRelated(event: Event): void {
+    event.stopPropagation();
+    this.dispatchEvent(
+      new CustomEvent('mw-find-related', {
+        bubbles: true,
+        composed: true,
+        detail: { highlight: this.highlight },
+      }),
+    );
+  }
+
   private async handleJump(): Promise<void> {
     const tabId = await getActiveTabId();
     if (tabId === null) {
@@ -478,6 +500,20 @@ export class MarkwellHighlightCard extends LitElement {
             >
               削除
             </button>
+            ${this.canUseRelatedHighlights()
+              ? html`
+                  <button
+                    type="button"
+                    class="action-btn"
+                    title="意味的に近いハイライトを提案"
+                    @click=${(event: Event) => {
+                      this.handleFindRelated(event);
+                    }}
+                  >
+                    🔗 関連
+                  </button>
+                `
+              : nothing}
             ${isSearch
               ? ''
               : html`

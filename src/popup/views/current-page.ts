@@ -29,6 +29,8 @@ export class MarkwellCurrentPageView extends LitElement {
 
   @property({ type: Number }) focusedCardIndex = -1;
 
+  @property() licenseTier: 'free' | 'trial' | 'premium' = 'free';
+
   @state() private highlights: Highlight[] = [];
 
   @state() private tagsById: ReadonlyMap<string, Tag> = new Map();
@@ -137,6 +139,7 @@ export class MarkwellCurrentPageView extends LitElement {
             <markwell-highlight-card
               .highlight=${highlight}
               .tagsById=${this.tagsById}
+              .licenseTier=${this.licenseTier}
               ?keyboard-focused=${index === this.focusedCardIndex}
               @mw-refresh=${() => {
                 this.handleRefresh();
