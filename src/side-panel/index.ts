@@ -8,7 +8,7 @@ import {
   extractUserInstructionFromPrompt,
   getSynthesisTokenWarning,
 } from '../shared/ai/synthesis-prompt.js';
-import { listHighlights, updateHighlight } from '../shared/storage/highlights.js';
+import { listHighlights, updateHighlight, type LicenseTier } from '../shared/storage/highlights.js';
 import { getCurrentTier } from '../shared/storage/license.js';
 import {
   assertProjectLimit,
@@ -39,7 +39,11 @@ import { computeInsertIndex, reorderByIndex } from './utils/drag-reorder.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import {
   copySynthesisMarkdown,
-  downloadSynthesisMarkdown,
+  exportSynthesis,
+  isPremiumSynthesisExportFormat,
+  SynthesisExportTierError,
+  type SynthesisExportFormat,
+  type SynthesisExportMeta,
 } from './utils/synthesis-export.js';
 import {
   formatSynthesisError,
@@ -97,6 +101,18 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private premiumModalOpen = false;
 
+  @state() private premiumModalContext: 'synthesis' | 'export' = 'synthesis';
+
+  @state() private currentTier: LicenseTier = 'free';
+
+  @state() private exportMenuOpen = false;
+
+  @state() private historyExportMenuId: string | null = null;
+
+  @state() private synthesisExportCreatedAt = Date.now();
+
+  @state() private lastSynthesisModel = 'gemini-2.0-flash';
+
   @state() private historyModalOpen = false;
 
   @state() private synthesisHistory: Synthesis[] = [];
@@ -147,6 +163,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async bootstrap(): Promise<void> {
     await this.applyThemeFromSettings();
+    this.currentTier = await getCurrentTier();
     await this.loadProjects();
   }
 
@@ -473,7 +490,7 @@ export class MarkwellSidePanelRoot extends LitElement {
   private async runSynthesis(opts: { savedStatusMessage: string }): Promise<void> {
     const tier = await getCurrentTier();
     if (tier === 'free') {
-      this.premiumModalOpen = true;
+      this.openPremiumModal('synthesis');
       return;
     }
 
@@ -549,6 +566,8 @@ export class MarkwellSidePanelRoot extends LitElement {
       token_input: Math.round(estimateTokens(prompt)),
       token_output: Math.round(estimateTokens(resultMarkdown)),
     });
+    this.synthesisExportCreatedAt = Date.now();
+    this.lastSynthesisModel = settings.ai.model;
     this.showStatus(statusMessage);
   }
 
@@ -567,6 +586,8 @@ export class MarkwellSidePanelRoot extends LitElement {
   private viewSynthesisFromHistory(synthesis: Synthesis): void {
     this.synthesisPrompt = extractUserInstructionFromPrompt(synthesis.prompt);
     this.synthesisMarkdown = synthesis.result_markdown;
+    this.synthesisExportCreatedAt = synthesis.created_at;
+    this.lastSynthesisModel = synthesis.model;
     this.resultVisible = true;
     this.closeHistoryModal();
   }
@@ -588,10 +609,160 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
   }
 
-  private downloadSynthesisFromHistory(synthesis: Synthesis, event: Event): void {
+  private getSelectedProjectName(): string {
+    const project = this.projects.find((item) => item.id === this.selectedProjectId);
+    return project?.name ?? 'Project';
+  }
+
+  private buildSynthesisExportMeta(createdAt: number, model: string): SynthesisExportMeta {
+    return {
+      createdAt,
+      projectName: this.getSelectedProjectName(),
+      model,
+    };
+  }
+
+  private openPremiumModal(context: 'synthesis' | 'export'): void {
+    this.premiumModalContext = context;
+    this.premiumModalOpen = true;
+  }
+
+  private closeExportMenus(): void {
+    this.exportMenuOpen = false;
+    this.historyExportMenuId = null;
+  }
+
+  private toggleResultExportMenu(): void {
+    this.historyExportMenuId = null;
+    this.exportMenuOpen = !this.exportMenuOpen;
+  }
+
+  private toggleHistoryExportMenu(synthesisId: string, event: Event): void {
     event.stopPropagation();
-    downloadSynthesisMarkdown(synthesis.result_markdown, synthesis.created_at);
-    this.showStatus('Markdown をダウンロードしました');
+    this.exportMenuOpen = false;
+    this.historyExportMenuId =
+      this.historyExportMenuId === synthesisId ? null : synthesisId;
+  }
+
+  private exportStatusMessage(format: SynthesisExportFormat): string {
+    switch (format) {
+      case 'markdown':
+        return 'Markdown (.md) をダウンロードしました';
+      case 'obsidian':
+        return 'Obsidian 形式をダウンロードしました';
+      case 'roam':
+        return 'Roam Research 形式をダウンロードしました';
+      default:
+        return 'エクスポートしました';
+    }
+  }
+
+  private handleExportFormat(
+    format: SynthesisExportFormat,
+    markdown: string,
+    createdAt: number,
+    model: string,
+    event?: Event,
+  ): void {
+    event?.stopPropagation();
+    if (isPremiumSynthesisExportFormat(format) && this.currentTier !== 'premium') {
+      this.closeExportMenus();
+      this.openPremiumModal('export');
+      return;
+    }
+
+    try {
+      exportSynthesis(
+        this.currentTier,
+        format,
+        markdown,
+        this.buildSynthesisExportMeta(createdAt, model),
+      );
+      this.showStatus(this.exportStatusMessage(format));
+    } catch (error) {
+      if (error instanceof SynthesisExportTierError) {
+        this.closeExportMenus();
+        this.openPremiumModal('export');
+        return;
+      }
+      this.showStatus('エクスポートに失敗しました');
+    }
+    this.closeExportMenus();
+  }
+
+  private renderPremiumBadge(): ReturnType<typeof html> {
+    return html`<span class="premium-badge">🔒 Premium</span>`;
+  }
+
+  private toggleExportMenu(): void {
+    this.toggleResultExportMenu();
+  }
+
+  private handleExportFormatClick(format: SynthesisExportFormat): void {
+    this.handleExportFormat(
+      format,
+      this.synthesisMarkdown,
+      this.synthesisExportCreatedAt,
+      this.lastSynthesisModel,
+    );
+  }
+
+  private renderExportMenu(
+    markdown: string,
+    createdAt: number,
+    model: string,
+    menuKey: 'result' | string,
+    isOpen: boolean,
+  ) {
+    const formats: Array<{ format: SynthesisExportFormat; label: string }> = [
+      { format: 'markdown', label: 'Markdown (.md)' },
+      { format: 'obsidian', label: 'Obsidian 形式' },
+      { format: 'roam', label: 'Roam Research 形式' },
+    ];
+
+    return html`
+      <div class="export-menu-wrap">
+        <button
+          type="button"
+          class="btn export-menu-trigger"
+          aria-expanded=${isOpen}
+          aria-haspopup="menu"
+          @click=${(event: Event) => {
+            event.stopPropagation();
+            if (menuKey === 'result') {
+              this.toggleResultExportMenu();
+            } else {
+              this.toggleHistoryExportMenu(menuKey, event);
+            }
+          }}
+        >
+          エクスポート ▾
+        </button>
+        ${isOpen
+          ? html`
+              <div class="export-menu" role="menu" @click=${(event: Event) => event.stopPropagation()}>
+                ${formats.map(
+                  ({ format, label }) => html`
+                    <button
+                      type="button"
+                      class="export-menu-item"
+                      role="menuitem"
+                      @click=${(event: Event) => {
+                        this.handleExportFormat(format, markdown, createdAt, model, event);
+                      }}
+                    >
+                      <span class="export-menu-item__label">${label}</span>
+                      ${isPremiumSynthesisExportFormat(format) && this.currentTier !== 'premium'
+                        ? this.renderPremiumBadge()
+                        : nothing}
+                    </button>
+                  `,
+                )}
+              </div>
+            `
+          : nothing}
+      </div>
+    `;
   }
 
   private formatHistoryDate(timestamp: number): string {
@@ -620,10 +791,18 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     this.resultVisible = false;
     this.synthesisMarkdown = '';
+    this.closeExportMenus();
   }
 
   private closePremiumModal(): void {
     this.premiumModalOpen = false;
+  }
+
+  private renderPremiumModalMessage(): string {
+    if (this.premiumModalContext === 'export') {
+      return 'Obsidian 形式・Roam Research 形式のエクスポートは Premium で利用できます。';
+    }
+    return 'ハイライトの AI 合成は Premium（またはトライアル）で利用できます。';
   }
 
   private renderHighlightList() {
@@ -870,10 +1049,23 @@ export class MarkwellSidePanelRoot extends LitElement {
           >
             ${this.resultVisible
               ? html`
-                  <h2 class="result-header">
-                    合成結果
-                    ${this.synthesizing ? html`<span class="result-badge">生成中</span>` : nothing}
-                  </h2>
+                  <div class="result-header">
+                    <h2 class="result-header__title">合成結果</h2>
+                    <div class="result-header__actions">
+                      ${this.synthesizing
+                        ? html`<span class="result-badge">生成中</span>`
+                        : nothing}
+                      ${!this.synthesizing && !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
+                        ? this.renderExportMenu(
+                            this.synthesisMarkdown,
+                            this.synthesisExportCreatedAt,
+                            this.lastSynthesisModel,
+                            'result',
+                            this.exportMenuOpen,
+                          )
+                        : nothing}
+                    </div>
+                  </div>
                   <div class="result-body">
                     ${this.synthesizing && this.synthesisMarkdown === ''
                       ? html`<p class="result-placeholder">生成中…</p>`
@@ -909,9 +1101,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 }}
               >
                 <h2 id="premium-modal-title" class="dialog-title">Premium で解放</h2>
-                <p class="dialog-message">
-                  ハイライトの AI 合成は Premium（またはトライアル）で利用できます。
-                </p>
+                <p class="dialog-message">${this.renderPremiumModalMessage()}</p>
                 <div class="dialog-actions">
                   <button
                     type="button"
@@ -989,15 +1179,13 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 >
                                   Markdown コピー
                                 </button>
-                                <button
-                                  type="button"
-                                  class="btn"
-                                  @click=${(event: Event) => {
-                                    this.downloadSynthesisFromHistory(synthesis, event);
-                                  }}
-                                >
-                                  .md ダウンロード
-                                </button>
+                                ${this.renderExportMenu(
+                                  synthesis.result_markdown,
+                                  synthesis.created_at,
+                                  synthesis.model,
+                                  synthesis.id,
+                                  this.historyExportMenuId === synthesis.id,
+                                )}
                                 <button
                                   type="button"
                                   class="btn card-btn--exclude"
