@@ -10,6 +10,7 @@ import {
   listTags,
   mergeTag,
   renameTag,
+  updateTagColor,
 } from '../src/shared/storage/tags.js';
 
 function createFakeChromeStorage() {
@@ -124,5 +125,13 @@ describe('tag CRUD', () => {
     const counts = await getTagUsageCounts();
     expect(counts[tagA.id]).toBe(2);
     expect(counts[tagB.id]).toBe(1);
+  });
+
+  it('updateTagColor changes stored hex color', async () => {
+    const tag = await createTag('Colorful', '#ffd34e');
+    const updated = await updateTagColor(tag.id, '#336699');
+    expect(updated.color).toBe('#336699');
+    expect((await getTag(tag.id))?.color).toBe('#336699');
+    await expect(updateTagColor(tag.id, 'not-a-color')).rejects.toThrow();
   });
 });

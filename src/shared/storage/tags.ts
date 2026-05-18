@@ -89,6 +89,26 @@ export async function renameTag(id: string, newName: string): Promise<Tag> {
   return updated;
 }
 
+export async function updateTagColor(id: string, color: string): Promise<Tag> {
+  const tag = await getTag(id);
+  if (tag === null) {
+    throw new Error(`Tag not found: ${id}`);
+  }
+
+  const parsedColor = parseTagColor(color);
+  if (tag.color.toLowerCase() === parsedColor.toLowerCase()) {
+    return tag;
+  }
+
+  const updated: Tag = {
+    ...tag,
+    color: parsedColor,
+  };
+
+  await kvSet(tagKey(id), updated, StoredTagSchema);
+  return updated;
+}
+
 export async function mergeTag(sourceId: string, targetId: string): Promise<void> {
   if (sourceId === targetId) {
     return;

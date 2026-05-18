@@ -9,6 +9,7 @@ import {
   listTags,
   mergeTag,
   renameTag,
+  updateTagColor,
 } from '../shared/storage/tags.js';
 
 const DEFAULT_TAG_COLOR = '#ffd34e';
@@ -170,15 +171,30 @@ export class MwTagManager extends LitElement {
 
     .color-swatch {
       display: inline-block;
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
       border-radius: 4px;
       border: 1px solid #555;
       vertical-align: middle;
     }
 
+    .color-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-picker-hidden {
+      position: absolute;
+      width: 0;
+      height: 0;
+      padding: 0;
+      border: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .tag-name-btn {
-      margin-left: 8px;
       padding: 0;
       border: none;
       background: transparent;
@@ -194,7 +210,6 @@ export class MwTagManager extends LitElement {
     }
 
     .rename-input {
-      margin-left: 8px;
       min-width: 140px;
       padding: 4px 8px;
       border: 1px solid #666;
@@ -430,11 +445,69 @@ export class MwTagManager extends LitElement {
     }
   }
 
+  private openColorPicker(tagId: string): void {
+    const input = this.renderRoot.querySelector(`#tag-color-${tagId}`);
+    if (input instanceof HTMLInputElement) {
+      input.click();
+    }
+  }
+
+  private async handleColorChange(tagId: string, event: Event): Promise<void> {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const color = input.value;
+    const current = this.tagRows.find((row) => row.tag.id === tagId)?.tag.color;
+    if (current !== undefined && color.toLowerCase() === current.toLowerCase()) {
+      return;
+    }
+
+    try {
+      await updateTagColor(tagId, color);
+      await this.reload();
+      this.showStatus('タグの色を変更しました');
+    } catch (error) {
+      this.showStatus(error instanceof Error ? error.message : '色の変更に失敗しました', true);
+    }
+  }
+
+  private renderColorCell(row: TagRow) {
+    const { tag } = row;
+    return html`
+      <div class="color-cell">
+        <span
+          class="color-swatch"
+          style="background: ${tag.color}"
+          title=${tag.color}
+          aria-label=${`色: ${tag.color}`}
+        ></span>
+        <button
+          type="button"
+          class="btn"
+          @click=${() => this.openColorPicker(tag.id)}
+        >
+          色変更
+        </button>
+        <input
+          id=${`tag-color-${tag.id}`}
+          class="color-picker-hidden"
+          type="color"
+          .value=${tag.color}
+          aria-label=${`${tag.name} の色を変更`}
+          @change=${(event: Event) => {
+            void this.handleColorChange(tag.id, event);
+          }}
+        />
+      </div>
+    `;
+  }
+
   private renderTagNameCell(row: TagRow) {
     const { tag } = row;
     if (this.editingTagId === tag.id) {
       return html`
-        <span class="color-swatch" style="background: ${tag.color}" aria-hidden="true"></span>
         <input
           class="rename-input"
           type="text"
@@ -452,7 +525,6 @@ export class MwTagManager extends LitElement {
     }
 
     return html`
-      <span class="color-swatch" style="background: ${tag.color}" aria-hidden="true"></span>
       <button
         type="button"
         class="tag-name-btn"
@@ -611,6 +683,7 @@ export class MwTagManager extends LitElement {
                 <thead>
                   <tr>
                     <th scope="col">タグ</th>
+                    <th scope="col">色</th>
                     <th scope="col">使用回数</th>
                     <th scope="col">アクション</th>
                   </tr>
@@ -620,6 +693,7 @@ export class MwTagManager extends LitElement {
                     (row) => html`
                       <tr>
                         <td>${this.renderTagNameCell(row)}</td>
+                        <td>${this.renderColorCell(row)}</td>
                         <td>${String(row.usageCount)}</td>
                         <td>${this.renderActions(row)}</td>
                       </tr>
