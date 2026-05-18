@@ -1,4 +1,5 @@
 import { SettingsSchema, type Settings } from '../types/settings.js';
+import { DEFAULT_BLOCKED_DOMAINS } from '../constants/blocked-sites.js';
 import { kvGet, kvSet } from './kv.js';
 
 const SETTINGS_KEY = 'markwell:settings';
@@ -9,7 +10,7 @@ const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   font_scale: 1.0,
   density: 'normal',
-  blocked_domains: [],
+  blocked_domains: [...DEFAULT_BLOCKED_DOMAINS],
   blocked_url_patterns: [],
   ai: {
     provider: 'gemini',

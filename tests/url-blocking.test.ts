@@ -9,6 +9,37 @@ describe('url blocking', () => {
     expect(isDomainBlocked('notexample.com', ['example.com'])).toBe(false);
   });
 
+  it('isDomainBlocked matches localhost and loopback port wildcards', () => {
+    expect(isDomainBlocked('localhost', ['localhost:*'])).toBe(true);
+    expect(isDomainBlocked('127.0.0.1', ['127.0.0.1:*'])).toBe(true);
+    expect(isDomainBlocked('example.com', ['localhost:*'])).toBe(false);
+  });
+
+  it('isDomainBlocked matches default chrome store domains', () => {
+    expect(isDomainBlocked('chrome.google.com', ['chrome.google.com'])).toBe(true);
+    expect(isDomainBlocked('chromewebstore.google.com', ['chromewebstore.google.com'])).toBe(true);
+  });
+
+  it('isDomainBlocked matches localhost and loopback port wildcards', () => {
+    expect(isDomainBlocked('localhost', ['localhost:*'])).toBe(true);
+    expect(isDomainBlocked('127.0.0.1', ['127.0.0.1:*'])).toBe(true);
+    expect(isDomainBlocked('example.com', ['localhost:*'])).toBe(false);
+  });
+
+  it('isPageBlocked blocks default chrome and localhost domains', () => {
+    expect(
+      isPageBlocked(
+        'https://chrome.google.com/webstore',
+        'chrome.google.com',
+        ['chrome.google.com', 'chromewebstore.google.com', 'localhost:*', '127.0.0.1:*'],
+        [],
+      ),
+    ).toBe(true);
+    expect(
+      isPageBlocked('http://localhost:3000/', 'localhost', ['localhost:*'], []),
+    ).toBe(true);
+  });
+
   it('isUrlPatternBlocked uses regular expressions', () => {
     expect(isUrlPatternBlocked('https://example.com/private', ['^https://example\\.com/private'])).toBe(
       true,

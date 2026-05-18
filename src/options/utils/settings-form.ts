@@ -16,13 +16,4 @@ export function textareaFromLines(lines: readonly string[]): string {
   return lines.join('\n');
 }
 
-export function findInvalidRegExpPattern(patterns: readonly string[]): string | null {
-  for (const pattern of patterns) {
-    try {
-      void new RegExp(pattern);
-    } catch {
-      return pattern;
-    }
-  }
-  return null;
-}
+export { findInvalidRegExpPattern, isValidRegExp } from '../../shared/utils/regexp.js';

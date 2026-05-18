@@ -7,7 +7,19 @@ export function getCanonicalUrl(doc: Document = document, loc: Location = locati
 }
 
 export function isDomainBlocked(hostname: string, blockedDomains: string[]): boolean {
-  return blockedDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+  return blockedDomains.some((domain) => matchesBlockedDomain(hostname, domain));
+}
+
+function matchesBlockedDomain(hostname: string, domain: string): boolean {
+  const normalizedHost = hostname.toLowerCase();
+  const normalizedDomain = domain.toLowerCase();
+
+  if (normalizedDomain.endsWith(':*')) {
+    const hostPrefix = normalizedDomain.slice(0, -2);
+    return normalizedHost === hostPrefix;
+  }
+
+  return normalizedHost === normalizedDomain || normalizedHost.endsWith(`.${normalizedDomain}`);
 }
 
 export function isUrlPatternBlocked(href: string, blockedUrlPatterns: string[]): boolean {

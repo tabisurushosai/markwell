@@ -8,12 +8,10 @@ import type { Settings, ThemePreference } from '../shared/types/settings.js';
 import { applyUiPreferences } from '../popup/utils/ui-preferences.js';
 import {
   clampFontScale,
-  findInvalidRegExpPattern,
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
-  linesFromTextarea,
-  textareaFromLines,
 } from './utils/settings-form.js';
+import './blocked-sites-section.js';
 
 const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; label: string }> = [
   { id: 'yellow', hex: '#ffd34e', label: 'イエロー' },
@@ -49,19 +47,11 @@ export class MwGeneralSettings extends LitElement {
 
   @state() private translateTargetLang = 'ja';
 
-  @state() private blockedDomainsText = '';
-
-  @state() private blockedUrlPatternsText = '';
-
   @state() private toastMessage = '';
 
   @state() private toastIsError = false;
 
   private toastTimer: number | undefined;
-
-  private blockedDomainsTimer: number | undefined;
-
-  private blockedPatternsTimer: number | undefined;
 
   static styles = css`
     :host {
@@ -234,12 +224,6 @@ export class MwGeneralSettings extends LitElement {
     if (this.toastTimer !== undefined) {
       window.clearTimeout(this.toastTimer);
     }
-    if (this.blockedDomainsTimer !== undefined) {
-      window.clearTimeout(this.blockedDomainsTimer);
-    }
-    if (this.blockedPatternsTimer !== undefined) {
-      window.clearTimeout(this.blockedPatternsTimer);
-    }
   }
 
   private async load(): Promise<void> {
@@ -256,8 +240,6 @@ export class MwGeneralSettings extends LitElement {
     this.density = settings.density;
     this.theme = settings.theme;
     this.translateTargetLang = settings.translate_target_lang;
-    this.blockedDomainsText = textareaFromLines(settings.blocked_domains);
-    this.blockedUrlPatternsText = textareaFromLines(settings.blocked_url_patterns);
   }
 
   private showToast(message: string, isError = false): void {
@@ -330,41 +312,6 @@ export class MwGeneralSettings extends LitElement {
     }
     this.translateTargetLang = select.value;
     await this.persist({ translate_target_lang: select.value });
-  }
-
-  private scheduleBlockedDomainsSave(): void {
-    if (this.blockedDomainsTimer !== undefined) {
-      window.clearTimeout(this.blockedDomainsTimer);
-    }
-    this.blockedDomainsTimer = window.setTimeout(() => {
-      void this.saveBlockedDomains();
-    }, 400);
-  }
-
-  private async saveBlockedDomains(): Promise<void> {
-    const domains = linesFromTextarea(this.blockedDomainsText);
-    await this.persist({ blocked_domains: domains });
-  }
-
-  private scheduleBlockedPatternsSave(): void {
-    if (this.blockedPatternsTimer !== undefined) {
-      window.clearTimeout(this.blockedPatternsTimer);
-    }
-    this.blockedPatternsTimer = window.setTimeout(() => {
-      void this.saveBlockedUrlPatterns();
-    }, 400);
-  }
-
-  private async saveBlockedUrlPatterns(): Promise<void> {
-    const patterns = linesFromTextarea(this.blockedUrlPatternsText);
-    const invalid = findInvalidRegExpPattern(patterns);
-    if (invalid !== null) {
-      const settings = await getSettings();
-      this.blockedUrlPatternsText = textareaFromLines(settings.blocked_url_patterns);
-      this.showToast(`無効な正規表現です: ${invalid}`, true);
-      return;
-    }
-    await this.persist({ blocked_url_patterns: patterns });
   }
 
   render() {
@@ -477,39 +424,7 @@ export class MwGeneralSettings extends LitElement {
         <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
       </div>
 
-      <div class="field">
-        <label class="field-label" for="blocked-domains">ブロックドメイン</label>
-        <textarea
-          id="blocked-domains"
-          placeholder="example.com"
-          .value=${this.blockedDomainsText}
-          @input=${(event: Event) => {
-            const input = event.target;
-            if (input instanceof HTMLTextAreaElement) {
-              this.blockedDomainsText = input.value;
-              this.scheduleBlockedDomainsSave();
-            }
-          }}
-        ></textarea>
-        <p class="hint">1 行に 1 ドメイン。Markwell のハイライト機能を無効にします。</p>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="blocked-url-patterns">ブロック URL パターン</label>
-        <textarea
-          id="blocked-url-patterns"
-          placeholder="^https://example\\.com/private"
-          .value=${this.blockedUrlPatternsText}
-          @input=${(event: Event) => {
-            const input = event.target;
-            if (input instanceof HTMLTextAreaElement) {
-              this.blockedUrlPatternsText = input.value;
-              this.scheduleBlockedPatternsSave();
-            }
-          }}
-        ></textarea>
-        <p class="hint">正規表現を 1 行に 1 つ。URL 全体にマッチした場合にブロックします。</p>
-      </div>
+      <mw-blocked-sites></mw-blocked-sites>
 
       ${this.toastMessage !== ''
         ? html`<p class="toast ${this.toastIsError ? 'toast--error' : ''}" role="status">${this.toastMessage}</p>`
