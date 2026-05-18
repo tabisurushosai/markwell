@@ -120,6 +120,49 @@ export const sidePanelStyles = [
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       background: var(--surface);
+      outline: none;
+    }
+
+    .highlight-item--focused {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .highlight-item--ghost {
+      opacity: 0.35;
+    }
+
+    .drop-line {
+      height: 2px;
+      margin: calc(-1 * var(--space-1)) 0;
+      padding: 0;
+      border: none;
+      border-radius: 1px;
+      background: var(--accent);
+      list-style: none;
+    }
+
+    .drag-handle {
+      flex-shrink: 0;
+      width: 24px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface-raised);
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1;
+      cursor: grab;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .drag-handle:hover {
+      color: var(--text);
+      border-color: var(--accent);
     }
 
     .highlight-marker {

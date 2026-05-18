@@ -22,6 +22,7 @@ import {
   jumpToHighlightFromSidePanel,
   notifyHighlightColorOnOpenTabs,
 } from './utils/highlight-actions.js';
+import { computeInsertIndex, reorderByIndex } from './utils/drag-reorder.js';
 import { orderHighlightsForProject } from './utils/project-highlights.js';
 import { sidePanelStyles } from './styles.js';
 
@@ -79,6 +80,12 @@ export class MarkwellSidePanelRoot extends LitElement {
   @state() private createError = '';
 
   @state() private statusMessage = '';
+
+  @state() private dragSourceId: string | null = null;
+
+  @state() private dropInsertIndex = -1;
+
+  @state() private focusedHighlightId: string | null = null;
 
   private systemThemeQuery: MediaQueryList | null = null;
 
@@ -242,6 +249,14 @@ export class MarkwellSidePanelRoot extends LitElement {
         input.focus();
       }
     }
+    if (changed.has('focusedHighlightId') && this.focusedHighlightId !== null) {
+      const row = this.renderRoot.querySelector(
+        `#highlight-row-${this.focusedHighlightId}`,
+      );
+      if (row instanceof HTMLElement) {
+        row.focus();
+      }
+    }
   }
 
   private async persistHighlightOrder(nextOrder: string[]): Promise<void> {
@@ -282,15 +297,114 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private moveHighlight(index: number, direction: -1 | 1): void {
-    const target = index + direction;
-    if (target < 0 || target >= this.highlights.length) {
+    const insertIndex = direction < 0 ? index - 1 : index + 2;
+    if (insertIndex < 0 || insertIndex > this.highlights.length) {
       return;
     }
-    const next = [...this.highlights];
-    const [item] = next.splice(index, 1);
-    next.splice(target, 0, item);
+    const next = reorderByIndex(this.highlights, index, insertIndex);
+    if (next === this.highlights) {
+      return;
+    }
+    const movedId = this.highlights[index]?.id;
+    this.highlights = next;
+    if (movedId !== undefined) {
+      this.focusedHighlightId = movedId;
+    }
+    void this.persistHighlightOrder(next.map((highlight) => highlight.id));
+  }
+
+  private applyReorder(fromIndex: number, insertIndex: number): void {
+    const next = reorderByIndex(this.highlights, fromIndex, insertIndex);
+    const unchanged = next.every((item, i) => item.id === this.highlights[i]?.id);
+    if (unchanged) {
+      return;
+    }
     this.highlights = next;
     void this.persistHighlightOrder(next.map((highlight) => highlight.id));
+  }
+
+  private clearDragState(): void {
+    this.dragSourceId = null;
+    this.dropInsertIndex = -1;
+  }
+
+  private onDragHandleStart(event: DragEvent, highlightId: string): void {
+    if (!(event.target instanceof HTMLElement)) {
+      return;
+    }
+    event.dataTransfer?.setData('text/plain', highlightId);
+    if (event.dataTransfer !== null) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
+    this.dragSourceId = highlightId;
+    this.dropInsertIndex = -1;
+  }
+
+  private onDragEnd(): void {
+    this.clearDragState();
+  }
+
+  private onListDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer !== null) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  private onItemDragOver(event: DragEvent, listIndex: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer !== null) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    const row = event.currentTarget;
+    if (!(row instanceof HTMLElement)) {
+      return;
+    }
+    const rect = row.getBoundingClientRect();
+    this.dropInsertIndex = computeInsertIndex(event.clientY, rect.top, rect.height, listIndex);
+  }
+
+  private onListDragLeave(event: DragEvent): void {
+    const related = event.relatedTarget;
+    const list = event.currentTarget;
+    if (list instanceof HTMLElement && related instanceof Node && list.contains(related)) {
+      return;
+    }
+    this.dropInsertIndex = -1;
+  }
+
+  private onListDrop(event: DragEvent): void {
+    event.preventDefault();
+    const sourceId = event.dataTransfer?.getData('text/plain') ?? this.dragSourceId;
+    if (sourceId === null || sourceId === '') {
+      this.clearDragState();
+      return;
+    }
+    const fromIndex = this.highlights.findIndex((highlight) => highlight.id === sourceId);
+    const insertIndex =
+      this.dropInsertIndex >= 0 ? this.dropInsertIndex : this.highlights.length;
+    if (fromIndex >= 0) {
+      this.applyReorder(fromIndex, insertIndex);
+    }
+    this.clearDragState();
+  }
+
+  private onHighlightKeydown(event: KeyboardEvent, highlightId: string, index: number): void {
+    if (!(event.metaKey || event.ctrlKey)) {
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.moveHighlight(index, -1);
+      this.focusedHighlightId = highlightId;
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.moveHighlight(index, 1);
+      this.focusedHighlightId = highlightId;
+    }
   }
 
   private onSynthesisPromptInput(event: Event): void {
@@ -329,10 +443,57 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     return html`
-      <ul class="highlight-list">
+      <ul
+        class="highlight-list"
+        @dragover=${this.onListDragOver}
+        @dragleave=${this.onListDragLeave}
+        @drop=${this.onListDrop}
+      >
         ${this.highlights.map(
           (highlight, index) => html`
-            <li class="highlight-item">
+            ${this.dropInsertIndex === index
+              ? html`<li class="drop-line" aria-hidden="true"></li>`
+              : nothing}
+            <li
+              class="highlight-item ${this.dragSourceId === highlight.id
+                ? 'highlight-item--ghost'
+                : ''} ${this.focusedHighlightId === highlight.id
+                ? 'highlight-item--focused'
+                : ''}"
+              tabindex="0"
+              @dragover=${(event: DragEvent) => {
+                this.onItemDragOver(event, index);
+              }}
+              @focus=${() => {
+                this.focusedHighlightId = highlight.id;
+              }}
+              @blur=${() => {
+                if (this.focusedHighlightId === highlight.id) {
+                  this.focusedHighlightId = null;
+                }
+              }}
+              @keydown=${(event: KeyboardEvent) => {
+                this.onHighlightKeydown(event, highlight.id, index);
+              }}
+            >
+              <button
+                type="button"
+                class="drag-handle"
+                draggable="true"
+                aria-label="並び替え"
+                title="ドラッグで並び替え"
+                @dragstart=${(event: DragEvent) => {
+                  this.onDragHandleStart(event, highlight.id);
+                }}
+                @dragend=${() => {
+                  this.onDragEnd();
+                }}
+                @click=${(event: Event) => {
+                  event.stopPropagation();
+                }}
+              >
+                ⠿
+              </button>
               <div
                 class="highlight-marker"
                 style="background: ${COLOR_VAR[highlight.color]}"
@@ -409,6 +570,9 @@ export class MarkwellSidePanelRoot extends LitElement {
             </li>
           `,
         )}
+        ${this.dropInsertIndex === this.highlights.length
+          ? html`<li class="drop-line" aria-hidden="true"></li>`
+          : nothing}
       </ul>
     `;
   }
