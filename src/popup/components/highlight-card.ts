@@ -932,10 +932,10 @@ export class MarkwellHighlightCard extends LitElement {
                   class="style-btn"
                   role="option"
                   @click=${() => {
-                    void this.handleRephraseStyleSelect(style.id);
+                    void this.handleRephraseStyleSelect(style);
                   }}
                 >
-                  ${style.label}
+                  ${getRephraseStyleLabel(style)}
                 </button>
               `,
             )}
