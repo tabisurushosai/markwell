@@ -5,7 +5,7 @@ import type { HighlightColor } from '../shared/types/highlight.js';
 import { getSettings, setSettings } from '../shared/storage/settings.js';
 import { TierLimitError } from '../shared/storage/highlights.js';
 import { saveHighlightFromRange } from './highlight-save.js';
-import { openTierLimitDialog } from './tier-limit-dialog.js';
+import { openUpgradeModal } from '../shared/components/upgrade-modal.js';
 import { MARKWELL_SELECTION_EVENT, type MarkwellSelectionDetail } from './selection.js';
 
 const TOOLBAR_OFFSET_PX = 8;
@@ -186,7 +186,10 @@ async function saveHighlightFromToolbar(
     await saveHighlightFromRange(range, color, note);
   } catch (error) {
     if (error instanceof TierLimitError) {
-      openTierLimitDialog();
+      void openUpgradeModal({
+        featureName: 'ハイライト保存',
+        limit: error.limit,
+      });
       return;
     }
     throw error;

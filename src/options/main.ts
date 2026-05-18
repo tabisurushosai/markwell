@@ -11,8 +11,12 @@ import {
 import type { LicenseTier } from '../shared/storage/highlights.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import '../shared/ui/tier-badge.js';
-import '../shared/ui/premium-dialog.js';
-import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
+import '../shared/components/upgrade-modal.js';
+import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
+import {
+  buildUpgradeModalHostState,
+  CLOSED_UPGRADE_MODAL_STATE,
+} from '../shared/components/upgrade-modal-host.js';
 import {
   AI_USAGE_FEATURE_LABELS,
   AI_USAGE_FEATURES,
@@ -64,9 +68,7 @@ export class MwOptions extends LitElement {
 
   @state() private trialUrgent = false;
 
-  @state() private premiumDialogOpen = false;
-
-  @state() private premiumDialogMode: PremiumDialogMode = 'purchase';
+  @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
   static styles = css`
     :host {
@@ -327,14 +329,18 @@ export class MwOptions extends LitElement {
     }
   }
 
-  private openPurchaseModal(): void {
-    this.premiumDialogMode = 'purchase';
-    this.premiumDialogOpen = true;
+  private async openPurchaseModal(): Promise<void> {
+    this.upgradeModal = await buildUpgradeModalHostState({ showFeatureList: true });
   }
 
-  private closePremiumDialog(): void {
-    this.premiumDialogOpen = false;
+  private closeUpgradeModal(): void {
+    this.upgradeModal = { ...CLOSED_UPGRADE_MODAL_STATE };
   }
+
+  private readonly onTrialStarted = async (): Promise<void> => {
+    await this.refreshLicenseTier();
+    this.closeUpgradeModal();
+  };
 
   private async loadUsage(): Promise<void> {
     this.usageLoading = true;
@@ -528,7 +534,7 @@ export class MwOptions extends LitElement {
               .trialRemainingLabel=${this.trialRemainingLabel}
               ?trialUrgent=${this.trialUrgent}
               @mw-tier-badge-click=${() => {
-                this.openPurchaseModal();
+                void this.openPurchaseModal();
               }}
             ></mw-tier-badge>
           </div>
@@ -551,13 +557,20 @@ export class MwOptions extends LitElement {
         </nav>
         <main class="main">${this.renderMainContent()}</main>
       </div>
-      <mw-premium-dialog
-        .open=${this.premiumDialogOpen}
-        .mode=${this.premiumDialogMode}
+      <mw-upgrade-modal
+        .open=${this.upgradeModal.open}
+        .featureName=${this.upgradeModal.featureName}
+        .limit=${this.upgradeModal.limit}
+        .highlightFeature=${this.upgradeModal.highlightFeature}
+        .showFeatureList=${this.upgradeModal.showFeatureList}
+        .trialUsed=${this.upgradeModal.trialUsed}
         @mw-close=${() => {
-          this.closePremiumDialog();
+          this.closeUpgradeModal();
         }}
-      ></mw-premium-dialog>
+        @mw-trial-started=${() => {
+          void this.onTrialStarted();
+        }}
+      ></mw-upgrade-modal>
     `;
   }
 }

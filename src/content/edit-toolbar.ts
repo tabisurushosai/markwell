@@ -301,7 +301,7 @@ function handleHighlightClick(event: MouseEvent): void {
 const OVERLAY_DIALOG_TAGS = new Set([
   'markwell-note-dialog',
   'markwell-delete-confirm-dialog',
-  'markwell-tier-limit-dialog',
+  'mw-upgrade-modal',
 ]);
 
 function isOverlayDialogInPath(path: EventTarget[]): boolean {

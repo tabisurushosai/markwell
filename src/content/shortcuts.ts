@@ -3,7 +3,7 @@ import { getSettings } from '../shared/storage/settings.js';
 import { saveHighlightFromRange } from './highlight-save.js';
 import { syncHighlightNoteInDom } from './highlighter.js';
 import { openNoteDialog } from './note-dialog.js';
-import { openTierLimitDialog } from './tier-limit-dialog.js';
+import { openUpgradeModal } from '../shared/components/upgrade-modal.js';
 import { getHighlightableSelection } from './selection.js';
 
 export async function handleQuickHighlightCommand(): Promise<boolean> {
@@ -17,7 +17,10 @@ export async function handleQuickHighlightCommand(): Promise<boolean> {
     await saveHighlightFromRange(payload.range, settings.default_color);
   } catch (error) {
     if (error instanceof TierLimitError) {
-      openTierLimitDialog();
+      void openUpgradeModal({
+        featureName: 'ハイライト保存',
+        limit: error.limit,
+      });
       return false;
     }
     throw error;
@@ -38,7 +41,10 @@ export async function handleHighlightWithNoteCommand(): Promise<boolean> {
     highlight = await saveHighlightFromRange(payload.range, settings.default_color, '');
   } catch (error) {
     if (error instanceof TierLimitError) {
-      openTierLimitDialog();
+      void openUpgradeModal({
+        featureName: 'ハイライト保存',
+        limit: error.limit,
+      });
       return false;
     }
     throw error;

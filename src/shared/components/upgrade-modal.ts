@@ -3,23 +3,36 @@ import { customElement, property } from 'lit/decorators.js';
 
 import type { AiFeature } from '../license/ai-access.js';
 import { navigateToOptionsPremium } from '../license/navigate-options.js';
-import {
-  findPremiumCatalogItem,
-  PREMIUM_FEATURE_CATALOG,
-} from '../license/premium-features.js';
+import { PREMIUM_FEATURE_CATALOG } from '../license/premium-features.js';
+import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../license/start-trial.js';
+import { buildUpgradeModalMessage } from './upgrade-modal-helpers.js';
 
-export type PremiumDialogMode = 'purchase' | 'unlock';
+export type UpgradeModalParams = {
+  featureName: string;
+  limit?: number | null;
+  highlightFeature?: AiFeature | null;
+  showFeatureList?: boolean;
+};
 
-@customElement('mw-premium-dialog')
-export class MwPremiumDialog extends LitElement {
+@customElement('mw-upgrade-modal')
+export class MwUpgradeModal extends LitElement {
   @property({ type: Boolean }) open = false;
 
-  @property() mode: PremiumDialogMode = 'unlock';
+  @property() featureName = '';
+
+  @property({ type: Number }) limit: number | null = null;
 
   @property({ attribute: false }) highlightFeature: AiFeature | null = null;
 
+  @property({ type: Boolean }) showFeatureList = false;
+
+  @property({ type: Boolean }) trialUsed = true;
+
+  @property({ type: Boolean }) startingTrial = false;
+
   static styles = css`
     :host {
+      all: initial;
       font-family:
         system-ui,
         -apple-system,
@@ -119,13 +132,28 @@ export class MwPremiumDialog extends LitElement {
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .btn-secondary {
       background: #2a2a2a;
       color: #e0e0e0;
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: #333;
+    }
+
+    .btn-trial {
+      background: #2e3a52;
+      color: #b8d4ff;
+      font-weight: 600;
+    }
+
+    .btn-trial:hover:not(:disabled) {
+      background: #3a4a66;
     }
 
     .btn-primary {
@@ -134,7 +162,7 @@ export class MwPremiumDialog extends LitElement {
       font-weight: 700;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       filter: brightness(1.05);
     }
   `;
@@ -143,9 +171,31 @@ export class MwPremiumDialog extends LitElement {
     this.dispatchEvent(new CustomEvent('mw-close', { bubbles: true, composed: true }));
   }
 
-  private handleUpgrade(): void {
+  private handlePurchase(): void {
     void navigateToOptionsPremium();
     this.handleClose();
+  }
+
+  private async handleStartTrial(): Promise<void> {
+    if (this.trialUsed || this.startingTrial) {
+      return;
+    }
+
+    this.startingTrial = true;
+    try {
+      await startTrial();
+      this.trialUsed = true;
+      this.dispatchEvent(
+        new CustomEvent('mw-trial-started', { bubbles: true, composed: true }),
+      );
+      this.handleClose();
+    } catch (error) {
+      if (error instanceof TrialAlreadyUsedError) {
+        this.trialUsed = true;
+      }
+    } finally {
+      this.startingTrial = false;
+    }
   }
 
   private handleBackdropClick(event: MouseEvent): void {
@@ -178,22 +228,44 @@ export class MwPremiumDialog extends LitElement {
     `;
   }
 
+  private renderActions() {
+    if (!this.trialUsed) {
+      return html`
+        <button type="button" class="btn-secondary" @click=${() => this.handleClose()}>
+          閉じる
+        </button>
+        <button
+          type="button"
+          class="btn-trial"
+          ?disabled=${this.startingTrial}
+          @click=${() => {
+            void this.handleStartTrial();
+          }}
+        >
+          ${this.startingTrial ? '開始中…' : 'まず無料トライアル'}
+        </button>
+        <button type="button" class="btn-primary" @click=${() => this.handlePurchase()}>
+          今すぐ購入
+        </button>
+      `;
+    }
+
+    return html`
+      <button type="button" class="btn-secondary" @click=${() => this.handleClose()}>
+        閉じる
+      </button>
+      <button type="button" class="btn-primary" @click=${() => this.handlePurchase()}>
+        $5 で Premium
+      </button>
+    `;
+  }
+
   override render() {
     if (!this.open) {
       return nothing;
     }
 
-    const highlighted = this.highlightFeature
-      ? findPremiumCatalogItem(this.highlightFeature)
-      : undefined;
-
-    const title = this.mode === 'purchase' ? 'Premium 購入' : 'Premium で解放';
-    const message =
-      this.mode === 'purchase'
-        ? 'Premium で上限拡大と AI 機能のフル利用ができます。'
-        : highlighted !== undefined
-          ? `「${highlighted.label}」を含む Premium 機能を利用できます。`
-          : '以下の機能を Premium で利用できます。';
+    const message = buildUpgradeModalMessage(this.featureName, this.limit);
 
     return html`
       <div
@@ -205,23 +277,16 @@ export class MwPremiumDialog extends LitElement {
           class="panel"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="mw-premium-dialog-title"
+          aria-labelledby="mw-upgrade-modal-title"
           @keydown=${this.handleKeydown}
           @click=${(event: Event) => {
             event.stopPropagation();
           }}
         >
-          <h2 id="mw-premium-dialog-title" class="title">${title}</h2>
+          <h2 id="mw-upgrade-modal-title" class="title">Premium にアップグレード</h2>
           <p class="message">${message}</p>
-          ${this.mode === 'unlock' ? this.renderFeatureList() : nothing}
-          <div class="actions">
-            <button type="button" class="btn-secondary" @click=${() => this.handleClose()}>
-              閉じる
-            </button>
-            <button type="button" class="btn-primary" @click=${() => this.handleUpgrade()}>
-              $5 で Premium に
-            </button>
-          </div>
+          ${this.showFeatureList ? this.renderFeatureList() : nothing}
+          <div class="actions">${this.renderActions()}</div>
         </div>
       </div>
     `;
@@ -230,6 +295,42 @@ export class MwPremiumDialog extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'mw-premium-dialog': MwPremiumDialog;
+    'mw-upgrade-modal': MwUpgradeModal;
   }
+}
+
+let activeModal: MwUpgradeModal | null = null;
+
+export function closeUpgradeModal(): void {
+  activeModal?.remove();
+  activeModal = null;
+}
+
+export async function openUpgradeModal(params: UpgradeModalParams): Promise<MwUpgradeModal> {
+  closeUpgradeModal();
+
+  const trialUsed = await hasUsedTrial();
+  const modal = document.createElement('mw-upgrade-modal');
+  modal.featureName = params.featureName;
+  modal.limit = params.limit ?? null;
+  modal.highlightFeature = params.highlightFeature ?? null;
+  modal.showFeatureList = params.showFeatureList ?? params.highlightFeature != null;
+  modal.trialUsed = trialUsed;
+  modal.open = true;
+
+  modal.addEventListener('mw-close', () => {
+    closeUpgradeModal();
+  });
+
+  document.body.appendChild(modal);
+  activeModal = modal;
+
+  requestAnimationFrame(() => {
+    const primary = modal.shadowRoot?.querySelector('.btn-primary, .btn-trial');
+    if (primary instanceof HTMLButtonElement) {
+      primary.focus();
+    }
+  });
+
+  return modal;
 }

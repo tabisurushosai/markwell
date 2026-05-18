@@ -32,9 +32,13 @@ import {
   shouldCycleViewTabs,
 } from './utils/keyboard-navigation.js';
 import '../shared/ui/tier-badge.js';
-import '../shared/ui/premium-dialog.js';
+import '../shared/components/upgrade-modal.js';
+import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
+import {
+  buildUpgradeModalHostState,
+  CLOSED_UPGRADE_MODAL_STATE,
+} from '../shared/components/upgrade-modal-host.js';
 import type { AiFeature } from '../shared/license/ai-access.js';
-import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
 import './views/current-page.js';
@@ -57,11 +61,7 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private trialUrgent = false;
 
-  @state() private premiumDialogOpen = false;
-
-  @state() private premiumDialogMode: PremiumDialogMode = 'purchase';
-
-  @state() private premiumHighlightFeature: AiFeature | null = null;
+  @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
   @state() private toastMessage = '';
 
@@ -449,7 +449,7 @@ export class MarkwellPopupRoot extends LitElement {
   }
 
   private readonly onTierBadgeClick = (): void => {
-    this.openPurchaseModal();
+    void this.showUpgradeModal({ showFeatureList: true });
   };
 
   private readonly onPremiumUnlock = (event: Event): void => {
@@ -457,25 +457,26 @@ export class MarkwellPopupRoot extends LitElement {
       return;
     }
     const feature = (event.detail as { feature?: AiFeature }).feature;
-    this.openUnlockModal(feature ?? null);
+    void this.showUpgradeModal({ highlightFeature: feature ?? null });
   };
 
-  private openPurchaseModal(): void {
-    this.premiumDialogMode = 'purchase';
-    this.premiumHighlightFeature = null;
-    this.premiumDialogOpen = true;
+  private async showUpgradeModal(input: {
+    featureName?: string;
+    limit?: number | null;
+    highlightFeature?: AiFeature | null;
+    showFeatureList?: boolean;
+  }): Promise<void> {
+    this.upgradeModal = await buildUpgradeModalHostState(input);
   }
 
-  private openUnlockModal(feature: AiFeature | null): void {
-    this.premiumDialogMode = 'unlock';
-    this.premiumHighlightFeature = feature;
-    this.premiumDialogOpen = true;
+  private closeUpgradeModal(): void {
+    this.upgradeModal = { ...CLOSED_UPGRADE_MODAL_STATE };
   }
 
-  private closePremiumDialog(): void {
-    this.premiumDialogOpen = false;
-    this.premiumHighlightFeature = null;
-  }
+  private readonly onTrialStarted = (): void => {
+    void this.loadFilterData();
+    this.closeUpgradeModal();
+  };
 
   private handleOpenSidePanel(): void {
     void (async () => {
@@ -641,14 +642,18 @@ export class MarkwellPopupRoot extends LitElement {
         ? html`<div class="toast" role="status">${this.toastMessage}</div>`
         : ''}
 
-      <mw-premium-dialog
-        .open=${this.premiumDialogOpen}
-        .mode=${this.premiumDialogMode}
-        .highlightFeature=${this.premiumHighlightFeature}
+      <mw-upgrade-modal
+        .open=${this.upgradeModal.open}
+        .featureName=${this.upgradeModal.featureName}
+        .limit=${this.upgradeModal.limit}
+        .highlightFeature=${this.upgradeModal.highlightFeature}
+        .showFeatureList=${this.upgradeModal.showFeatureList}
+        .trialUsed=${this.upgradeModal.trialUsed}
         @mw-close=${() => {
-          this.closePremiumDialog();
+          this.closeUpgradeModal();
         }}
-      ></mw-premium-dialog>
+        @mw-trial-started=${this.onTrialStarted}
+      ></mw-upgrade-modal>
 
       <footer class="footer">
         <button

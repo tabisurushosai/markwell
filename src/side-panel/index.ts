@@ -15,8 +15,12 @@ import {
   isTrialUrgent,
 } from '../shared/license/trial-countdown.js';
 import '../shared/ui/tier-badge.js';
-import '../shared/ui/premium-dialog.js';
-import type { PremiumDialogMode } from '../shared/ui/premium-dialog.js';
+import '../shared/components/upgrade-modal.js';
+import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
+import {
+  buildUpgradeModalHostState,
+  CLOSED_UPGRADE_MODAL_STATE,
+} from '../shared/components/upgrade-modal-host.js';
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import {
   buildGeminiTurnsFromSession,
@@ -127,11 +131,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   @state() private synthesizing = false;
 
-  @state() private premiumDialogOpen = false;
-
-  @state() private premiumDialogMode: PremiumDialogMode = 'unlock';
-
-  @state() private premiumHighlightFeature: AiFeature | null = null;
+  @state() private upgradeModal: UpgradeModalHostState = { ...CLOSED_UPGRADE_MODAL_STATE };
 
   @state() private trialRemainingLabel = '';
 
@@ -570,7 +570,7 @@ export class MarkwellSidePanelRoot extends LitElement {
   private async runSynthesis(opts: { savedStatusMessage: string }): Promise<void> {
     const tier = await getCurrentTier();
     if (tier === 'free') {
-      this.openPremiumUnlockModal('synthesis');
+      void this.openPremiumUnlockModal('synthesis');
       return;
     }
 
@@ -718,22 +718,36 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
   }
 
-  private openPremiumUnlockModal(context: 'synthesis' | 'export' | 'qa' | 'quotes'): void {
-    this.premiumDialogMode = 'unlock';
-    this.premiumHighlightFeature = this.sidePanelContextToFeature(context);
-    this.premiumDialogOpen = true;
+  private async openPremiumUnlockModal(
+    context: 'synthesis' | 'export' | 'qa' | 'quotes',
+  ): Promise<void> {
+    const highlightFeature = this.sidePanelContextToFeature(context);
+    if (highlightFeature !== null) {
+      this.upgradeModal = await buildUpgradeModalHostState({ highlightFeature });
+      return;
+    }
+    this.upgradeModal = await buildUpgradeModalHostState({
+      featureName: 'Obsidian / Roam 形式エクスポート',
+      showFeatureList: true,
+    });
   }
 
   private openPurchaseModal(): void {
-    this.premiumDialogMode = 'purchase';
-    this.premiumHighlightFeature = null;
-    this.premiumDialogOpen = true;
+    void this.showUpgradePurchaseModal();
   }
 
-  private closePremiumDialog(): void {
-    this.premiumDialogOpen = false;
-    this.premiumHighlightFeature = null;
+  private async showUpgradePurchaseModal(): Promise<void> {
+    this.upgradeModal = await buildUpgradeModalHostState({ showFeatureList: true });
   }
+
+  private closeUpgradeModal(): void {
+    this.upgradeModal = { ...CLOSED_UPGRADE_MODAL_STATE };
+  }
+
+  private readonly onTrialStarted = async (): Promise<void> => {
+    await this.refreshLicenseTier();
+    this.closeUpgradeModal();
+  };
 
   private closeExportMenus(): void {
     this.exportMenuOpen = false;
@@ -775,7 +789,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     event?.stopPropagation();
     if (isPremiumSynthesisExportFormat(format) && this.currentTier !== 'premium') {
       this.closeExportMenus();
-      this.openPremiumUnlockModal('export');
+      void this.openPremiumUnlockModal('export');
       return;
     }
 
@@ -790,7 +804,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     } catch (error) {
       if (error instanceof SynthesisExportTierError) {
         this.closeExportMenus();
-        this.openPremiumUnlockModal('export');
+        void this.openPremiumUnlockModal('export');
         return;
       }
       this.showStatus('エクスポートに失敗しました');
@@ -924,7 +938,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async handleQuoteExtract(): Promise<void> {
     if (!canUseQuoteExtractor(this.currentTier)) {
-      this.openPremiumUnlockModal('quotes');
+      void this.openPremiumUnlockModal('quotes');
       return;
     }
 
@@ -1061,7 +1075,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private onBottomTabClick(tab: 'synthesis' | 'qa'): void {
     if (tab === 'qa' && !canUseProjectQa(this.currentTier)) {
-      this.openPremiumUnlockModal('qa');
+      void this.openPremiumUnlockModal('qa');
       return;
     }
     this.activeBottomTab = tab;
@@ -1088,7 +1102,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private async handleQaSend(): Promise<void> {
     if (!canUseProjectQa(this.currentTier)) {
-      this.openPremiumUnlockModal('qa');
+      void this.openPremiumUnlockModal('qa');
       return;
     }
 
@@ -1571,14 +1585,20 @@ export class MarkwellSidePanelRoot extends LitElement {
         </div>
       </div>
 
-      <mw-premium-dialog
-        .open=${this.premiumDialogOpen}
-        .mode=${this.premiumDialogMode}
-        .highlightFeature=${this.premiumHighlightFeature}
+      <mw-upgrade-modal
+        .open=${this.upgradeModal.open}
+        .featureName=${this.upgradeModal.featureName}
+        .limit=${this.upgradeModal.limit}
+        .highlightFeature=${this.upgradeModal.highlightFeature}
+        .showFeatureList=${this.upgradeModal.showFeatureList}
+        .trialUsed=${this.upgradeModal.trialUsed}
         @mw-close=${() => {
-          this.closePremiumDialog();
+          this.closeUpgradeModal();
         }}
-      ></mw-premium-dialog>
+        @mw-trial-started=${() => {
+          void this.onTrialStarted();
+        }}
+      ></mw-upgrade-modal>
       ${this.historyModalOpen
         ? html`
             <div
