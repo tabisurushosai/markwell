@@ -1,7 +1,13 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
-import { deleteHighlight } from '../../shared/storage/highlights.js';
+import {
+  getCachedTranslation,
+  getTranslateLanguageLabel,
+  mergeTranslationCache,
+  translateHighlightText,
+} from '../../shared/ai/translation.js';
+import { deleteHighlight, updateHighlight } from '../../shared/storage/highlights.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import { formatHighlightAsMarkdown } from '../utils/format-highlight-markdown.js';
@@ -36,7 +42,15 @@ export class MarkwellHighlightCard extends LitElement {
 
   @property({ type: Boolean, attribute: 'show-related-action' }) showRelatedAction = true;
 
+  @property() translateTargetLang = 'ja';
+
   @state() private copyMenuOpen = false;
+
+  @state() private translationExpanded = false;
+
+  @state() private translationBody = '';
+
+  @state() private translating = false;
 
   private copyLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -214,6 +228,36 @@ export class MarkwellHighlightCard extends LitElement {
     .copy-menu-item:hover {
       background: var(--surface);
     }
+
+    .translation {
+      margin-top: var(--space-2);
+      padding: var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+    }
+
+    .translation-label {
+      margin: 0 0 var(--space-1);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .translation-text {
+      margin: 0;
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .translation-status {
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+    }
   `,
   ];
 
@@ -380,6 +424,51 @@ export class MarkwellHighlightCard extends LitElement {
     );
   }
 
+  private formatTranslationError(error: unknown): string {
+    if (error instanceof Error) {
+      if (error.message === 'API key not set') {
+        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+      }
+      return error.message;
+    }
+    return '翻訳に失敗しました';
+  }
+
+  private async handleTranslate(event: Event): Promise<void> {
+    event.stopPropagation();
+
+    const targetLang = this.translateTargetLang;
+    const cached = getCachedTranslation(this.highlight, targetLang);
+    if (cached !== undefined) {
+      this.translationBody = cached;
+      this.translationExpanded = !this.translationExpanded;
+      return;
+    }
+
+    if (this.translationExpanded) {
+      this.translationExpanded = false;
+      return;
+    }
+
+    this.translating = true;
+    this.translationExpanded = true;
+    this.translationBody = '';
+
+    try {
+      const translated = await translateHighlightText(this.highlight.selected_text, targetLang);
+      const updated = await updateHighlight(this.highlight.id, {
+        translation_cache: mergeTranslationCache(this.highlight, targetLang, translated),
+      });
+      this.highlight = updated;
+      this.translationBody = translated;
+    } catch (error) {
+      this.translationExpanded = false;
+      this.showToast(this.formatTranslationError(error));
+    } finally {
+      this.translating = false;
+    }
+  }
+
   private async handleJump(): Promise<void> {
     const tabId = await getActiveTabId();
     if (tabId === null) {
@@ -404,6 +493,8 @@ export class MarkwellHighlightCard extends LitElement {
     const markerColor = COLOR_VAR[this.highlight.color];
     const hasNote = this.highlight.note.trim() !== '';
     const isSearch = this.mode === 'search';
+
+    const translationLabel = getTranslateLanguageLabel(this.translateTargetLang);
 
     return html`
       <article
@@ -500,6 +591,17 @@ export class MarkwellHighlightCard extends LitElement {
             >
               削除
             </button>
+            <button
+              type="button"
+              class="action-btn"
+              title=${`翻訳先: ${getTranslateLanguageLabel(this.translateTargetLang)}`}
+              ?disabled=${this.translating}
+              @click=${(event: Event) => {
+                void this.handleTranslate(event);
+              }}
+            >
+              ${this.translating ? '翻訳中…' : '🌐 翻訳'}
+            </button>
             ${this.canUseRelatedHighlights()
               ? html`
                   <button
@@ -529,6 +631,16 @@ export class MarkwellHighlightCard extends LitElement {
                   </button>
                 `}
           </div>
+          ${this.translationExpanded
+            ? html`
+                <div class="translation" aria-live="polite">
+                  <p class="translation-label">翻訳（${translationLabel}）</p>
+                  ${this.translating
+                    ? html`<p class="translation-status">翻訳中…</p>`
+                    : html`<p class="translation-text">${this.translationBody}</p>`}
+                </div>
+              `
+            : nothing}
         </div>
       </article>
     `;

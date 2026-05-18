@@ -22,6 +22,8 @@ export type Settings = {
     quick_highlight: string;
     open_synthesis: string;
   };
+  /** ハイライト翻訳の既定ターゲット言語（ISO 639-1 など） */
+  translate_target_lang: string;
   onboarding_seen: boolean;
 };
 
@@ -42,5 +44,6 @@ export const SettingsSchema = z.object({
     quick_highlight: z.string(),
     open_synthesis: z.string(),
   }),
+  translate_target_lang: z.string().default('ja'),
   onboarding_seen: z.boolean(),
 });

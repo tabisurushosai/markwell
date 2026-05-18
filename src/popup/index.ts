@@ -61,6 +61,8 @@ export class MarkwellPopupRoot extends LitElement {
 
   @state() private licenseTier: 'free' | 'trial' | 'premium' = 'free';
 
+  @state() private translateTargetLang = 'ja';
+
   @state() private themePreference: ThemePreference = 'dark';
 
   @state() private focusedCardIndex = -1;
@@ -131,14 +133,16 @@ export class MarkwellPopupRoot extends LitElement {
   }
 
   private async loadFilterData(): Promise<void> {
-    const [tags, projects, tier] = await Promise.all([
+    const [tags, projects, tier, settings] = await Promise.all([
       listTags(),
       listProjects(),
       getCurrentTier(),
+      getSettings(),
     ]);
     this.tags = tags.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
     this.projects = projects.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
     this.licenseTier = tier;
+    this.translateTargetLang = settings.translate_target_lang;
     this.tier = tier === 'premium' ? 'PREMIUM' : tier === 'trial' ? 'TRIAL' : 'FREE';
   }
 
@@ -360,6 +364,7 @@ export class MarkwellPopupRoot extends LitElement {
             .dateFilter=${this.dateFilter}
             .focusedCardIndex=${this.focusedCardIndex}
             .licenseTier=${this.licenseTier}
+            .translateTargetLang=${this.translateTargetLang}
           ></markwell-current-page-view>
         `;
       case 'all':
@@ -371,6 +376,7 @@ export class MarkwellPopupRoot extends LitElement {
             .dateFilter=${this.dateFilter}
             .focusedCardIndex=${this.focusedCardIndex}
             .licenseTier=${this.licenseTier}
+            .translateTargetLang=${this.translateTargetLang}
           ></markwell-all-highlights-view>
         `;
       case 'projects':
@@ -503,6 +509,7 @@ export class MarkwellPopupRoot extends LitElement {
                         .highlight=${highlight}
                         .tagsById=${this.relatedTagsById}
                         .licenseTier=${this.licenseTier}
+                        .translateTargetLang=${this.translateTargetLang}
                         ?show-related-action=${false}
                       ></markwell-highlight-card>
                     `,

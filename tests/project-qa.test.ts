@@ -23,6 +23,7 @@ function makeHighlight(overrides: Partial<Highlight> = {}): Highlight {
     tag_ids: [],
     project_id: 'proj-1',
     ai_tags: [],
+    translation_cache: {},
     created_at: 1,
     updated_at: 1,
     domain: 'example.com',

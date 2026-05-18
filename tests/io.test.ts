@@ -62,6 +62,7 @@ function sampleHighlightInput(): Omit<Highlight, 'id' | 'created_at' | 'updated_
     tag_ids: [],
     project_id: null,
     ai_tags: [],
+    translation_cache: {},
     domain: 'example.com',
     favicon_data_url: '',
   };

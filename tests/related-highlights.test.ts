@@ -41,6 +41,7 @@ function sampleHighlight(overrides: Partial<Highlight> = {}): Highlight {
     tag_ids: [],
     project_id: null,
     ai_tags: [],
+    translation_cache: {},
     created_at: 1000,
     updated_at: 1000,
     domain: 'example.com',

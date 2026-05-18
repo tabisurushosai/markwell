@@ -20,6 +20,7 @@ const baseHighlight: Highlight = {
   tag_ids: [],
   project_id: null,
   ai_tags: [],
+  translation_cache: {},
   created_at: new Date('2024-06-15T12:00:00').getTime(),
   updated_at: 0,
   domain: 'example.com',

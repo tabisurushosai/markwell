@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: Settings = {
     quick_highlight: 'Alt+H',
     open_synthesis: 'Alt+S',
   },
+  translate_target_lang: 'ja',
   onboarding_seen: false,
 };
 

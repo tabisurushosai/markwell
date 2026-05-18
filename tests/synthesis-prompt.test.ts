@@ -28,6 +28,7 @@ function sampleHighlight(index: number, overrides: Partial<Highlight> = {}): Hig
     tag_ids: [],
     project_id: 'proj-1',
     ai_tags: [],
+    translation_cache: {},
     created_at: 1_700_000_000_000 + index,
     updated_at: 0,
     domain: 'example.com',

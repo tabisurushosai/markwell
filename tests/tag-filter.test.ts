@@ -20,6 +20,7 @@ const base: Omit<Highlight, 'id' | 'created_at' | 'updated_at'> = {
   tag_ids: ['t1'],
   project_id: null,
   ai_tags: [],
+  translation_cache: {},
   domain: 'example.com',
   favicon_data_url: '',
 };

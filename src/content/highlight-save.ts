@@ -37,6 +37,7 @@ export async function saveHighlightFromRange(
     tag_ids: [],
     project_id: null,
     ai_tags: [],
+    translation_cache: {},
     domain: location.hostname,
     favicon_data_url: '',
   });
