@@ -2,6 +2,13 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import {
+  canUseFactCheck,
+  factCheckHighlightText,
+  formatFactCheckForCopy,
+  getFactCheckButtonLabel,
+  type FactCheckResult,
+} from '../../shared/ai/fact-check.js';
+import {
   canUseRephrase,
   getRephraseStyleLabel,
   REPHRASE_STYLES,
@@ -70,6 +77,14 @@ export class MarkwellHighlightCard extends LitElement {
   @state() private rephrasing = false;
 
   @state() private rephraseResultText = '';
+
+  @state() private factCheckModalOpen = false;
+
+  @state() private factCheckPremiumModalOpen = false;
+
+  @state() private factChecking = false;
+
+  @state() private factCheckResult: FactCheckResult | null = null;
 
   private copyLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -431,6 +446,35 @@ export class MarkwellHighlightCard extends LitElement {
       font-size: var(--font-size-sm);
       color: var(--text-muted);
     }
+
+    .fact-check-sources {
+      margin: var(--space-3) 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .fact-check-sources-title {
+      margin: 0 0 var(--space-1);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .fact-check-source {
+      margin: 0 0 var(--space-1);
+      font-size: var(--font-size-sm);
+      line-height: 1.45;
+    }
+
+    .fact-check-source a {
+      color: var(--accent);
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .fact-check-source a:hover {
+      text-decoration: underline;
+    }
   `,
   ];
 
@@ -607,6 +651,69 @@ export class MarkwellHighlightCard extends LitElement {
 
   private closeRephrasePremiumModal(): void {
     this.rephrasePremiumModalOpen = false;
+  }
+
+  private handleFactCheckClick(event: Event): void {
+    event.stopPropagation();
+    if (!canUseFactCheck(this.licenseTier)) {
+      this.factCheckPremiumModalOpen = true;
+      return;
+    }
+    void this.runFactCheck();
+  }
+
+  private closeFactCheckModal(): void {
+    this.factCheckModalOpen = false;
+    this.factCheckResult = null;
+    this.factChecking = false;
+  }
+
+  private closeFactCheckPremiumModal(): void {
+    this.factCheckPremiumModalOpen = false;
+  }
+
+  private formatFactCheckError(error: unknown): string {
+    if (error instanceof Error) {
+      if (error.message === 'API key not set') {
+        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+      }
+      if (error.message === 'Premium required') {
+        return 'ファクトチェックは Premium で利用できます。';
+      }
+      return error.message;
+    }
+    return 'ファクトチェックに失敗しました';
+  }
+
+  private async runFactCheck(): Promise<void> {
+    this.factCheckModalOpen = true;
+    this.factChecking = true;
+    this.factCheckResult = null;
+
+    try {
+      this.factCheckResult = await factCheckHighlightText(this.highlight.selected_text);
+    } catch (error) {
+      this.closeFactCheckModal();
+      if (error instanceof Error && error.message === 'Premium required') {
+        this.factCheckPremiumModalOpen = true;
+        return;
+      }
+      this.showToast(this.formatFactCheckError(error));
+    } finally {
+      this.factChecking = false;
+    }
+  }
+
+  private async copyFactCheckResult(): Promise<void> {
+    if (this.factCheckResult === null) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(formatFactCheckForCopy(this.factCheckResult));
+      this.showToast('ファクトチェック結果をコピーしました');
+    } catch {
+      this.showToast('コピーに失敗しました');
+    }
   }
 
   private formatRephraseError(error: unknown): string {
@@ -855,6 +962,19 @@ export class MarkwellHighlightCard extends LitElement {
             >
               ${this.rephrasing ? '言い換え中…' : '✍️ 言い換え'}
             </button>
+            <button
+              type="button"
+              class="action-btn"
+              title=${canUseFactCheck(this.licenseTier)
+                ? 'web 検索で事実関係を確認（Premium）'
+                : 'Premium 限定機能'}
+              ?disabled=${this.factChecking}
+              @click=${(event: Event) => {
+                this.handleFactCheckClick(event);
+              }}
+            >
+              ${this.factChecking ? '確認中…' : getFactCheckButtonLabel(this.licenseTier)}
+            </button>
             ${this.canUseRelatedHighlights()
               ? html`
                   <button
@@ -899,6 +1019,8 @@ export class MarkwellHighlightCard extends LitElement {
       ${this.renderRephraseStyleModal()}
       ${this.renderRephraseResultModal()}
       ${this.renderRephrasePremiumModal()}
+      ${this.renderFactCheckModal()}
+      ${this.renderFactCheckPremiumModal()}
     `;
   }
 
@@ -1005,6 +1127,129 @@ export class MarkwellHighlightCard extends LitElement {
               }}
             >
               コピー
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFactCheckModal() {
+    if (!this.factCheckModalOpen) {
+      return nothing;
+    }
+
+    const result = this.factCheckResult;
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeFactCheckModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="fact-check-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="fact-check-title" class="dialog-title">🔎 ファクトチェック</h3>
+          <div class="dialog-body" aria-live="polite">
+            ${this.factChecking
+              ? 'web 検索で確認中…'
+              : result !== null
+                ? result.answer
+                : ''}
+          </div>
+          ${result !== null && result.sources.length > 0
+            ? html`
+                <div class="fact-check-sources">
+                  <p class="fact-check-sources-title">出典</p>
+                  <ul>
+                    ${result.sources.map(
+                      (source) => html`
+                        <li class="fact-check-source">
+                          <a
+                            href=${source.uri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            @click=${(event: Event) => event.stopPropagation()}
+                          >
+                            ${source.title}
+                          </a>
+                        </li>
+                      `,
+                    )}
+                  </ul>
+                </div>
+              `
+            : nothing}
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn"
+              @click=${() => {
+                this.closeFactCheckModal();
+              }}
+            >
+              閉じる
+            </button>
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              ?disabled=${this.factChecking || result === null}
+              @click=${() => {
+                void this.copyFactCheckResult();
+              }}
+            >
+              コピー
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFactCheckPremiumModal() {
+    if (!this.factCheckPremiumModalOpen) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="dialog-backdrop"
+        role="presentation"
+        @click=${(event: Event) => {
+          if (event.target === event.currentTarget) {
+            this.closeFactCheckPremiumModal();
+          }
+        }}
+      >
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="fact-check-premium-title"
+          @click=${(event: Event) => event.stopPropagation()}
+        >
+          <h3 id="fact-check-premium-title" class="dialog-title">Premium で解放</h3>
+          <p class="dialog-message">
+            ファクトチェックは Premium で利用できます。
+          </p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              class="dialog-btn dialog-btn--primary"
+              @click=${() => {
+                this.closeFactCheckPremiumModal();
+              }}
+            >
+              閉じる
             </button>
           </div>
         </div>

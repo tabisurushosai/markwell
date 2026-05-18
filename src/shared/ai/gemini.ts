@@ -24,12 +24,36 @@ type GenerateContentResponse = {
     content?: {
       parts?: Array<{ text?: string }>;
     };
+    groundingMetadata?: GeminiGroundingMetadata;
   }>;
   error?: {
     code?: number;
     message?: string;
     status?: string;
   };
+};
+
+export type GeminiGroundingChunk = {
+  web?: {
+    uri?: string;
+    title?: string;
+  };
+};
+
+export type GeminiGroundingMetadata = {
+  groundingChunks?: GeminiGroundingChunk[];
+  webSearchQueries?: string[];
+};
+
+export type GeminiGroundedSource = {
+  title: string;
+  uri: string;
+};
+
+export type GeminiGroundedResult = {
+  text: string;
+  sources: GeminiGroundedSource[];
+  webSearchQueries: string[];
 };
 
 export type CallGeminiOptions = {
@@ -75,6 +99,41 @@ export function buildChatRequestBody(
       parts: [{ text: turn.text }],
     })),
   });
+}
+
+/** REST API: Grounding with Google Search (`google_search` in JSON body). */
+export function buildGoogleSearchRequestBody(prompt: string): string {
+  return JSON.stringify({
+    contents: [
+      {
+        parts: [{ text: prompt }],
+      },
+    ],
+    tools: [{ google_search: {} }],
+  });
+}
+
+export function extractGroundingSources(
+  metadata: GeminiGroundingMetadata | undefined,
+): GeminiGroundedSource[] {
+  if (metadata?.groundingChunks === undefined) {
+    return [];
+  }
+
+  const sources: GeminiGroundedSource[] = [];
+  const seen = new Set<string>();
+
+  for (const chunk of metadata.groundingChunks) {
+    const uri = chunk.web?.uri?.trim();
+    if (uri === undefined || uri === '' || seen.has(uri)) {
+      continue;
+    }
+    seen.add(uri);
+    const title = chunk.web?.title?.trim() ?? uri;
+    sources.push({ title, uri });
+  }
+
+  return sources;
 }
 
 function maskSecret(text: string, secret: string): string {
@@ -244,6 +303,26 @@ async function parseGenerateContentResponse(
   return extractText(payload);
 }
 
+async function parseGroundedGenerateContentResponse(
+  response: Response,
+  apiKey: string,
+): Promise<GeminiGroundedResult> {
+  const payload = (await response.json()) as GenerateContentResponse;
+  if (payload.error !== undefined) {
+    const message = maskSecret(payload.error.message ?? 'Gemini API error', apiKey);
+    throw classifyHttpError(payload.error.code ?? 500, message, apiKey);
+  }
+
+  const candidate = payload.candidates?.[0];
+  const metadata = candidate?.groundingMetadata;
+
+  return {
+    text: extractText(payload),
+    sources: extractGroundingSources(metadata),
+    webSearchQueries: metadata?.webSearchQueries ?? [],
+  };
+}
+
 async function callGeminiNonStream(prompt: string, signal?: AbortSignal): Promise<string> {
   const { apiKey, model } = await resolveCredentials();
   const url = buildEndpoint(model, 'generateContent', apiKey);
@@ -271,6 +350,22 @@ async function callGeminiChatNonStream(
   );
 
   return parseGenerateContentResponse(response, apiKey);
+}
+
+export async function callGeminiWithGoogleSearch(
+  prompt: string,
+  signal?: AbortSignal,
+): Promise<GeminiGroundedResult> {
+  const { apiKey, model } = await resolveCredentials();
+  const url = buildEndpoint(model, 'generateContent', apiKey);
+  const body = buildGoogleSearchRequestBody(prompt);
+  const response = await fetchWithRetry(
+    url,
+    buildGeminiRequestInit(body, signal),
+    apiKey,
+  );
+
+  return parseGroundedGenerateContentResponse(response, apiKey);
 }
 
 async function* streamGeminiResponseBody(
