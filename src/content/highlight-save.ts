@@ -3,7 +3,7 @@ import type { HighlightColor } from '../shared/types/highlight.js';
 import { getCanonicalUrl } from '../shared/utils/url.js';
 import {
   applyHighlight,
-  computeTextOccurrence,
+  buildFallbackAnchor,
   getSelectionContext,
   serializeRange,
   syncHighlightNoteInDom,
@@ -17,7 +17,7 @@ export async function saveHighlightFromRange(
   const selectedText = range.toString();
   const serialized = serializeRange(range);
   const { before, after } = getSelectionContext(range);
-  const occurrence = computeTextOccurrence(selectedText, range);
+  const fallback = buildFallbackAnchor(range);
 
   const highlight = await createHighlight({
     url: location.href,
@@ -29,10 +29,7 @@ export async function saveHighlightFromRange(
     anchor: {
       type: 'rangy',
       serialized,
-      fallback: {
-        text: selectedText,
-        occurrence,
-      },
+      fallback,
     },
     color,
     note,

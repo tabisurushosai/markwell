@@ -162,10 +162,13 @@ export function deserializeRange(serialized: string): Range | null {
   }
 }
 
-export function findRangeByFallback(text: string, occurrence: number): Range | null {
+const MAX_TEXT_OCCURRENCES = 10_000;
+
+/** Rangy.findText でページ内の完全一致をすべて収集する。 */
+export function findAllTextOccurrenceRanges(text: string): Range[] {
   ensureRangyReady();
   if (text === '') {
-    return null;
+    return [];
   }
 
   const scope = rangyApi.createRange();
@@ -175,33 +178,53 @@ export function findRangeByFallback(text: string, occurrence: number): Range | n
   searchFrom.selectNodeContents(ROOT_NODE);
   searchFrom.collapse(true);
 
-  let matchIndex = 0;
+  const matches: Range[] = [];
 
-  while (matchIndex <= occurrence) {
+  while (matches.length < MAX_TEXT_OCCURRENCES) {
     const candidate = rangyApi.createRange();
     candidate.setStart(searchFrom.startContainer, searchFrom.startOffset);
     candidate.setEnd(scope.endContainer, scope.endOffset);
 
     if (!candidate.findText(text, { caseSensitive: true })) {
-      return null;
+      break;
     }
 
     if (candidate.toString() === text) {
-      if (matchIndex === occurrence) {
-        return toDomRange(candidate);
-      }
-      matchIndex += 1;
+      matches.push(toDomRange(candidate));
     }
 
     searchFrom.setStart(candidate.endContainer, candidate.endOffset);
     searchFrom.collapse(true);
 
     if (searchFrom.compareBoundaryPoints(Range.END_TO_END, scope) >= 0) {
-      return null;
+      break;
     }
   }
 
-  return null;
+  return matches;
+}
+
+/** fallback.occurrence は 1-based。レガシー 0-based (0 = 先頭) も受け付ける。 */
+function fallbackOccurrenceToIndex(occurrence: number): number {
+  if (occurrence >= 1) {
+    return occurrence - 1;
+  }
+  return occurrence;
+}
+
+export function findRangeByFallback(text: string, occurrence: number): Range | null {
+  const index = fallbackOccurrenceToIndex(occurrence);
+  if (text === '' || index < 0) {
+    return null;
+  }
+
+  const matches = findAllTextOccurrenceRanges(text);
+  return matches[index] ?? null;
+}
+
+export function restoreByFallback(highlight: Highlight): Range | null {
+  const { text, occurrence } = highlight.anchor.fallback;
+  return findRangeByFallback(text, occurrence);
 }
 
 export function getSelectionContext(
@@ -222,25 +245,24 @@ export function getSelectionContext(
   };
 }
 
-export function computeTextOccurrence(text: string, target: Range): number {
-  let occurrence = 0;
-  let index = 0;
-
-  while (index < 10_000) {
-    const found = findRangeByFallback(text, index);
-    if (found === null) {
-      break;
+/** 選択範囲がページ内の何個目の一致か（1-based）を返す。 */
+export function computeFallbackOccurrence(text: string, target: Range): number {
+  const matches = findAllTextOccurrenceRanges(text);
+  for (let i = 0; i < matches.length; i++) {
+    if (rangesEqual(matches[i], target)) {
+      return i + 1;
     }
-
-    if (rangesEqual(found, target)) {
-      return occurrence;
-    }
-
-    occurrence += 1;
-    index += 1;
   }
+  return 1;
+}
 
-  return occurrence;
+/** applyHighlight 直前に保存する fallback アンカー。text は selected_text と同値だが役割を分離。 */
+export function buildFallbackAnchor(range: Range): { text: string; occurrence: number } {
+  const text = range.toString();
+  return {
+    text,
+    occurrence: text === '' ? 1 : computeFallbackOccurrence(text, range),
+  };
 }
 
 function rangesEqual(a: Range, b: Range): boolean {
@@ -268,7 +290,7 @@ export function restoreHighlight(highlight: Highlight): boolean {
   }
 
   if (range === null) {
-    range = findRangeByFallback(highlight.anchor.fallback.text, highlight.anchor.fallback.occurrence);
+    range = restoreByFallback(highlight);
   }
 
   if (range === null) {
