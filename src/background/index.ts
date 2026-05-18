@@ -1,3 +1,4 @@
+import { handleExtensionInstalled } from './onboarding.js';
 import { initContextMenu, registerContextMenus } from './context-menu.js';
 import { initPageSummaryMessaging } from './page-summary.js';
 import { initLicenseRecheck } from './license-recheck.js';
@@ -21,11 +22,12 @@ async function configureSidePanelBehavior(): Promise<void> {
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   void configureSidePanelBehavior();
   void runMigrations();
   void registerContextMenus();
   void getOrCreateDeviceId();
+  void handleExtensionInstalled(details.reason);
 });
 
 void configureSidePanelBehavior();
