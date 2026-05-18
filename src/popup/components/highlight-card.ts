@@ -22,10 +22,16 @@ import {
   translateHighlightText,
 } from '../../shared/ai/translation.js';
 import { deleteHighlight, updateHighlight } from '../../shared/storage/highlights.js';
+import { createTag } from '../../shared/storage/tags.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Tag } from '../../shared/types/tag.js';
 import { formatHighlightAsMarkdown } from '../utils/format-highlight-markdown.js';
 import { openDeleteConfirmDialog } from '../delete-confirm-dialog.js';
+import {
+  buildTagAutocompleteOptions,
+  formatTagAutocompleteLabel,
+  type TagAutocompleteOption,
+} from '../utils/tag-autocomplete.js';
 import { notifyHighlightRemovedOnOpenTabs } from '../utils/notify-highlight-removed.js';
 import { formatRelativeTime } from '../utils/relative-time.js';
 import { isJumpToHighlightResponse } from '../utils/jump.js';
@@ -33,6 +39,7 @@ import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
 const COPY_LONG_PRESS_MS = 300;
+const DEFAULT_NEW_TAG_COLOR = '#ffd34e';
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
   yellow: 'var(--hl-yellow)',
@@ -85,6 +92,14 @@ export class MarkwellHighlightCard extends LitElement {
   @state() private factChecking = false;
 
   @state() private factCheckResult: FactCheckResult | null = null;
+
+  @state() private tagMenuOpen = false;
+
+  @state() private tagInput = '';
+
+  @state() private tagSuggestionIndex = 0;
+
+  @state() private tagAdding = false;
 
   private copyLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -231,6 +246,82 @@ export class MarkwellHighlightCard extends LitElement {
 
     .copy-wrap {
       position: relative;
+    }
+
+    .tag-wrap {
+      position: relative;
+    }
+
+    .tag-menu {
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 4px);
+      z-index: 10;
+      width: min(240px, 70vw);
+      padding: var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-raised);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .tag-input {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: var(--space-1);
+      padding: var(--space-1) var(--space-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+    }
+
+    .tag-input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 0;
+      border-color: var(--accent);
+    }
+
+    .tag-suggestions {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .tag-suggestion {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      width: 100%;
+      padding: var(--space-1) var(--space-2);
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--font-size-sm);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .tag-suggestion:hover,
+    .tag-suggestion--active {
+      background: var(--surface);
+    }
+
+    .tag-suggestion--create {
+      color: var(--accent);
+    }
+
+    .tag-suggestion-swatch {
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
     }
 
     .copy-menu {
@@ -490,15 +581,242 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   private readonly onDocumentPointerDown = (event: Event): void => {
-    if (!this.copyMenuOpen) {
+    const target = event.target;
+    if (!(target instanceof Node)) {
       return;
     }
-    const target = event.target;
-    if (target instanceof Node && this.renderRoot.contains(target)) {
+    if (this.renderRoot.contains(target)) {
       return;
     }
     this.copyMenuOpen = false;
+    this.tagMenuOpen = false;
   };
+
+  protected updated(changed: Map<string, unknown>): void {
+    if (changed.has('tagMenuOpen') && this.tagMenuOpen) {
+      const input = this.renderRoot.querySelector('.tag-input');
+      if (input instanceof HTMLInputElement) {
+        input.focus();
+      }
+    }
+  }
+
+  private getTagSuggestions(): TagAutocompleteOption[] {
+    return buildTagAutocompleteOptions(
+      [...this.tagsById.values()],
+      this.tagInput,
+      this.highlight.tag_ids,
+    );
+  }
+
+  private clampTagSuggestionIndex(suggestions: TagAutocompleteOption[]): void {
+    if (suggestions.length === 0) {
+      this.tagSuggestionIndex = 0;
+      return;
+    }
+    if (this.tagSuggestionIndex >= suggestions.length) {
+      this.tagSuggestionIndex = suggestions.length - 1;
+    }
+    if (this.tagSuggestionIndex < 0) {
+      this.tagSuggestionIndex = 0;
+    }
+  }
+
+  private toggleTagMenu(event: Event): void {
+    event.stopPropagation();
+    this.copyMenuOpen = false;
+    this.tagMenuOpen = !this.tagMenuOpen;
+    if (!this.tagMenuOpen) {
+      this.tagInput = '';
+      this.tagSuggestionIndex = 0;
+    }
+  }
+
+  private closeTagMenu(): void {
+    this.tagMenuOpen = false;
+    this.tagInput = '';
+    this.tagSuggestionIndex = 0;
+  }
+
+  private onTagInput(event: Event): void {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+    this.tagInput = input.value;
+    this.tagSuggestionIndex = 0;
+    this.clampTagSuggestionIndex(this.getTagSuggestions());
+  }
+
+  private onTagInputKeydown(event: KeyboardEvent): void {
+    event.stopPropagation();
+    const suggestions = this.getTagSuggestions();
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeTagMenu();
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (suggestions.length === 0) {
+        return;
+      }
+      this.tagSuggestionIndex = (this.tagSuggestionIndex + 1) % suggestions.length;
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (suggestions.length === 0) {
+        return;
+      }
+      this.tagSuggestionIndex =
+        (this.tagSuggestionIndex - 1 + suggestions.length) % suggestions.length;
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const activeIndex =
+        suggestions.length === 0 ? 0 : Math.min(this.tagSuggestionIndex, suggestions.length - 1);
+      void this.applyTagSuggestion(suggestions[activeIndex] ?? null);
+    }
+  }
+
+  private async applyTagSuggestion(suggestion: TagAutocompleteOption | null): Promise<void> {
+    if (suggestion === null) {
+      const trimmed = this.tagInput.trim();
+      if (trimmed === '') {
+        return;
+      }
+      await this.applyTagName(trimmed);
+      return;
+    }
+
+    if (suggestion.kind === 'existing') {
+      await this.applyTagName(suggestion.tag.name);
+      return;
+    }
+
+    await this.applyTagName(suggestion.name);
+  }
+
+  private async applyTagName(name: string): Promise<void> {
+    const trimmed = name.trim();
+    if (trimmed === '' || this.tagAdding) {
+      return;
+    }
+
+    this.tagAdding = true;
+    try {
+      const existingByName = [...this.tagsById.values()].find(
+        (tag) => tag.name.toLowerCase() === trimmed.toLowerCase(),
+      );
+      const tag = existingByName ?? (await createTag(trimmed, DEFAULT_NEW_TAG_COLOR));
+
+      if (this.highlight.tag_ids.includes(tag.id)) {
+        this.showToast('このタグは既に付いています');
+        return;
+      }
+
+      const updated = await updateHighlight(this.highlight.id, {
+        tag_ids: [...this.highlight.tag_ids, tag.id],
+      });
+      this.highlight = updated;
+      this.tagInput = '';
+      this.tagSuggestionIndex = 0;
+      this.dispatchRefresh();
+      this.showToast(`タグ「${tag.name}」を追加しました`);
+    } catch (error) {
+      this.showToast(error instanceof Error ? error.message : 'タグの追加に失敗しました');
+    } finally {
+      this.tagAdding = false;
+    }
+  }
+
+  private renderTagMenu() {
+    if (!this.tagMenuOpen) {
+      return nothing;
+    }
+
+    const suggestions = this.getTagSuggestions();
+    const activeIndex =
+      suggestions.length === 0 ? 0 : Math.min(this.tagSuggestionIndex, suggestions.length - 1);
+
+    return html`
+      <div
+        class="tag-menu"
+        role="listbox"
+        aria-label="タグ候補"
+        @click=${(event: Event) => {
+          event.stopPropagation();
+        }}
+      >
+        <input
+          class="tag-input"
+          type="text"
+          placeholder="タグを追加…"
+          .value=${this.tagInput}
+          ?disabled=${this.tagAdding}
+          @input=${(event: Event) => {
+            this.onTagInput(event);
+          }}
+          @keydown=${(event: KeyboardEvent) => {
+            this.onTagInputKeydown(event);
+          }}
+        />
+        <ul class="tag-suggestions">
+          ${suggestions.length === 0
+            ? html`<li><span class="tag-suggestion">候補がありません</span></li>`
+            : suggestions.map((suggestion, index) => {
+                const isActive = index === activeIndex;
+                if (suggestion.kind === 'create') {
+                  return html`
+                    <li>
+                      <button
+                        type="button"
+                        class="tag-suggestion tag-suggestion--create ${isActive
+                          ? 'tag-suggestion--active'
+                          : ''}"
+                        role="option"
+                        aria-selected=${isActive}
+                        @click=${() => {
+                          void this.applyTagSuggestion(suggestion);
+                        }}
+                      >
+                        ${formatTagAutocompleteLabel(suggestion)}
+                      </button>
+                    </li>
+                  `;
+                }
+
+                return html`
+                  <li>
+                    <button
+                      type="button"
+                      class="tag-suggestion ${isActive ? 'tag-suggestion--active' : ''}"
+                      role="option"
+                      aria-selected=${isActive}
+                      @click=${() => {
+                        void this.applyTagSuggestion(suggestion);
+                      }}
+                    >
+                      <span
+                        class="tag-suggestion-swatch"
+                        style="background: ${suggestion.tag.color}"
+                        aria-hidden="true"
+                      ></span>
+                      ${suggestion.tag.name}
+                    </button>
+                  </li>
+                `;
+              })}
+        </ul>
+      </div>
+    `;
+  }
 
   private dispatchRefresh(): void {
     this.dispatchEvent(
@@ -611,7 +929,7 @@ export class MarkwellHighlightCard extends LitElement {
     if (this.mode !== 'search') {
       return;
     }
-    if ((event.target as HTMLElement).closest('button')) {
+    if ((event.target as HTMLElement).closest('button, input, .tag-menu')) {
       return;
     }
     this.dispatchEvent(
@@ -881,6 +1199,21 @@ export class MarkwellHighlightCard extends LitElement {
             </time>
           </div>
           <div class="actions">
+            <div class="tag-wrap">
+              <button
+                type="button"
+                class="action-btn action-btn--icon"
+                title="タグを追加"
+                aria-expanded=${this.tagMenuOpen}
+                aria-haspopup="listbox"
+                @click=${(event: Event) => {
+                  this.toggleTagMenu(event);
+                }}
+              >
+                ▾
+              </button>
+              ${this.renderTagMenu()}
+            </div>
             <div class="copy-wrap">
               <button
                 type="button"
