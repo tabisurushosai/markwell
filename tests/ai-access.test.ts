@@ -33,6 +33,6 @@ describe('ai-access', () => {
 
   it('provides lock tooltips', () => {
     expect(getAiFeatureLockTooltip('fact_check')).toContain('Premium');
-    expect(getAiFeatureLockTooltip('synthesis')).toContain('トライアル');
+    expect(getAiFeatureLockTooltip('synthesis')).toContain('Trial');
   });
 });

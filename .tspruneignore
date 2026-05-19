@@ -72,3 +72,10 @@ src/shared/types/index.ts:13 - LicenseStatusSchema
 src/shared/types/index.ts:13 - LicenseStatus
 src/shared/utils/highlight-hash.ts:1 - MARKWELL_FRAGMENT_PREFIX
 src/side-panel/utils/synthesis-export.ts:155 - downloadSynthesisMarkdown
+src/content/edit-toolbar.ts:30 - MarkwellEditToolbar (used in module)
+src/side-panel/index.ts:113 - MarkwellSidePanelRoot (used in module)
+src/popup/utils/page-summary-client.ts:9 - PageTextFetchResult (used in module)
+src/popup/utils/page-summary-client.ts:13 - PageSummaryBackgroundResult (used in module)
+src/popup/utils/tag-autocomplete.ts:8 - normalizeTagQuery (used in module)
+src/popup/utils/theme.ts:4 - ResolvedTheme (used in module)
+src/shared/ai/translation.ts:16 - getTranslateLanguageLabel (used in module)

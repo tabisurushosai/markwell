@@ -17,6 +17,6 @@ describe('export download helpers', () => {
       formatImportResultMessage({
         imported: { highlights: 3, tags: 2, projects: 1, syntheses: 0 },
       }),
-    ).toBe('インポート完了: ハイライト 3、タグ 2、プロジェクト 1、合成 0');
+    ).toBe('Import complete: 3 highlights, 2 tags, 1 projects, 0 syntheses');
   });
 });

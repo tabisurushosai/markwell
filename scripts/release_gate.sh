@@ -146,13 +146,20 @@ else
   git status --short >&2
 fi
 
-section "onboarding i18n (no hardcoded Japanese)"
-ONBOARDING_I18N="$(i18n_hardcode_hits src/onboarding/)"
-if [[ -z "$ONBOARDING_I18N" ]]; then
-  pass "src/onboarding/ has no hardcoded Japanese"
+section "i18n hardcode (onboarding/options/popup/side-panel/content)"
+I18N_TARGETS=(src/onboarding/ src/options/ src/popup/ src/side-panel/ src/content/)
+I18N_HARDCODE=""
+for target in "${I18N_TARGETS[@]}"; do
+  hits="$(i18n_hardcode_hits "$target")"
+  if [[ -n "$hits" ]]; then
+    I18N_HARDCODE+="${hits}"$'\n'
+  fi
+done
+if [[ -z "$I18N_HARDCODE" ]]; then
+  pass "no hardcoded Japanese in UI source trees"
 else
-  fail "hardcoded Japanese in src/onboarding/"
-  echo "$ONBOARDING_I18N" >&2
+  fail "i18n hardcode remains"
+  echo "$I18N_HARDCODE" >&2
 fi
 
 section "toast unified in options (no class=\"status\")"

@@ -47,7 +47,7 @@ describe('tag autocomplete', () => {
   it('buildTagAutocompleteOptions offers create when no prefix match', () => {
     const options = buildTagAutocompleteOptions(tags, 'novel', []);
     expect(options).toEqual([{ kind: 'create', name: 'novel' }]);
-    expect(formatTagAutocompleteLabel(options[0])).toBe('新規作成: "novel"');
+    expect(formatTagAutocompleteLabel(options[0])).toBe('Create: "novel"');
   });
 
   it('buildTagAutocompleteOptions does not offer create for empty query', () => {
