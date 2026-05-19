@@ -21,8 +21,8 @@ import {
   CLOSED_UPGRADE_MODAL_STATE,
 } from '../shared/components/upgrade-modal-host.js';
 import {
-  AI_USAGE_FEATURE_LABELS,
   AI_USAGE_FEATURES,
+  getAiUsageFeatureLabel,
   clearMonthlyUsage,
   currentUsageMonth,
   getMonthlyUsage,
@@ -408,7 +408,7 @@ export class MwOptions extends LitElement {
       const featureCost = estimateTokenCostUsd(stats.token_input, stats.token_output);
       return html`
         <tr>
-          <td>${AI_USAGE_FEATURE_LABELS[feature]}</td>
+          <td>${getAiUsageFeatureLabel(feature)}</td>
           <td>${String(stats.request_count)}</td>
           <td>${formatTokenCount(stats.token_input)} / ${formatTokenCount(stats.token_output)}</td>
           <td>${formatUsdEstimate(featureCost)}</td>

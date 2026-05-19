@@ -2006,5 +2006,92 @@
   "ai_access_lock_tooltip_trial": {
     "message": "トライアルまたは Premium で利用できます",
     "description": "AI button lock tooltip when Trial or Premium is required"
+  },
+  "ai_usage_feature_synthesis": {
+    "message": "合成",
+    "description": "AI usage table: synthesis feature label"
+  },
+  "ai_usage_feature_auto_tag": {
+    "message": "自動タグ",
+    "description": "AI usage table: auto tag feature label"
+  },
+  "ai_usage_feature_translation": {
+    "message": "翻訳",
+    "description": "AI usage table: translation feature label"
+  },
+  "ai_usage_feature_rephrase": {
+    "message": "言い換え",
+    "description": "AI usage table: rephrase feature label"
+  },
+  "ai_usage_feature_fact_check": {
+    "message": "ファクトチェック",
+    "description": "AI usage table: fact check feature label"
+  },
+  "ai_usage_feature_page_summary": {
+    "message": "ページ要約",
+    "description": "AI usage table: page summary feature label"
+  },
+  "ai_usage_feature_related_highlights": {
+    "message": "関連ハイライト",
+    "description": "AI usage table: related highlights feature label"
+  },
+  "ai_usage_feature_quote_extractor": {
+    "message": "引用抽出",
+    "description": "AI usage table: quote extractor feature label"
+  },
+  "ai_usage_feature_qa": {
+    "message": "Q&A",
+    "description": "AI usage table: Q&A feature label"
+  },
+  "tier_note_trial_or_above": {
+    "message": "Trial 以上",
+    "description": "Premium catalog tier note"
+  },
+  "tier_note_premium": {
+    "message": "Premium",
+    "description": "Premium catalog tier note"
+  },
+  "tier_note_premium_only": {
+    "message": "Premium のみ",
+    "description": "Premium catalog tier note"
+  },
+  "premium_catalog_highlights_limit": {
+    "message": "ハイライト最大 5,000 件",
+    "description": "Premium catalog feature label"
+  },
+  "premium_catalog_unlimited_projects": {
+    "message": "プロジェクト無制限",
+    "description": "Premium catalog feature label"
+  },
+  "premium_catalog_obsidian_roam_export": {
+    "message": "Obsidian / Roam 形式エクスポート",
+    "description": "Premium catalog feature label"
+  },
+  "synthesis_default_instruction": {
+    "message": "これらのハイライトの共通テーマを抽出し、論考としてまとめてください",
+    "description": "Default synthesis user instruction"
+  },
+  "synthesis_token_warning": {
+    "message": "このプロンプトは概算 $1 トークンです（上限の目安: $2）。ハイライトを減らすか、指示を短くしてください。",
+    "description": "Synthesis token estimate warning toast",
+    "placeholders": {
+      "estimated": { "content": "$1", "example": "9000" },
+      "threshold": { "content": "$2", "example": "8000" }
+    }
+  },
+  "upgrade_modal_limit_reached": {
+    "message": "「$1」の上限（$2 件）に達しました。Premium で上限を引き上げられます。",
+    "description": "Upgrade modal body when tier limit reached",
+    "placeholders": {
+      "feature": { "content": "$1", "example": "ハイライト保存" },
+      "limit": { "content": "$2", "example": "50" }
+    }
+  },
+  "upgrade_modal_premium_required": {
+    "message": "「$1」を利用するには Premium（または無料トライアル）が必要です。",
+    "description": "Upgrade modal body when feature is locked",
+    "placeholders": {
+      "feature": { "content": "$1", "example": "AI 合成" }
+    }
   }
 }

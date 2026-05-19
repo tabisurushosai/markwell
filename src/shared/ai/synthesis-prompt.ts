@@ -1,8 +1,10 @@
 import type { Highlight } from '../types/highlight.js';
+import { t } from '../utils/i18n.js';
 
-/** userInstruction が空のときの既定指示 */
-export const DEFAULT_SYNTHESIS_INSTRUCTION =
-  'これらのハイライトの共通テーマを抽出し、論考としてまとめてください';
+/** Default synthesis instruction when userInstruction is empty. */
+export function getDefaultSynthesisInstruction(): string {
+  return t('synthesis_default_instruction');
+}
 
 /** 1 文字 ≈ 0.7 token（概算） */
 const CHARS_PER_TOKEN = 1 / 0.7;
@@ -18,12 +20,15 @@ export function getSynthesisTokenWarning(text: string): string | null {
   if (estimated <= SYNTHESIS_TOKEN_WARNING_THRESHOLD) {
     return null;
   }
-  return `このプロンプトは概算 ${Math.round(estimated)} トークンです（上限の目安: ${SYNTHESIS_TOKEN_WARNING_THRESHOLD}）。ハイライトを減らすか、指示を短くしてください。`;
+  return t('synthesis_token_warning', [
+    String(Math.round(estimated)),
+    String(SYNTHESIS_TOKEN_WARNING_THRESHOLD),
+  ]);
 }
 
 function resolveInstruction(userInstruction: string): string {
   const trimmed = userInstruction.trim();
-  return trimmed === '' ? DEFAULT_SYNTHESIS_INSTRUCTION : trimmed;
+  return trimmed === '' ? getDefaultSynthesisInstruction() : trimmed;
 }
 
 /** 保存済みプロンプトから userInstruction を復元（既定指示のときは空文字） */
@@ -33,7 +38,7 @@ export function extractUserInstructionFromPrompt(savedPrompt: string): string {
     return '';
   }
   const instruction = match[1]?.trim() ?? '';
-  if (instruction === DEFAULT_SYNTHESIS_INSTRUCTION) {
+  if (instruction === getDefaultSynthesisInstruction()) {
     return '';
   }
   return instruction;

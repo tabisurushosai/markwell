@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 
 import type { AiFeature } from '../license/ai-access.js';
 import { navigateToOptionsPremium } from '../license/navigate-options.js';
-import { PREMIUM_FEATURE_CATALOG } from '../license/premium-features.js';
+import { getPremiumFeatureCatalog } from '../license/premium-features.js';
 import { hasUsedTrial, startTrial, TrialAlreadyUsedError } from '../license/start-trial.js';
 import { t } from '../utils/i18n.js';
 import { buildUpgradeModalMessage } from './upgrade-modal-helpers.js';
@@ -215,7 +215,7 @@ export class MwUpgradeModal extends LitElement {
   private renderFeatureList() {
     return html`
       <ul class="feature-list">
-        ${PREMIUM_FEATURE_CATALOG.map((item) => {
+        ${getPremiumFeatureCatalog().map((item) => {
           const highlighted =
             item.feature !== undefined && item.feature === this.highlightFeature;
           return html`

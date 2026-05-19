@@ -7,17 +7,17 @@ import {
 
 describe('upgrade-modal-helpers', () => {
   it('builds limit message with feature name and cap', () => {
-    expect(buildUpgradeModalMessage('ハイライト保存', 50)).toContain('50 件');
-    expect(buildUpgradeModalMessage('ハイライト保存', 50)).toContain('ハイライト保存');
+    expect(buildUpgradeModalMessage('Highlight save', 50)).toContain('50');
+    expect(buildUpgradeModalMessage('Highlight save', 50)).toContain('Highlight save');
   });
 
   it('builds feature lock message without limit', () => {
-    const message = buildUpgradeModalMessage('AI 合成', null);
-    expect(message).toContain('AI 合成');
-    expect(message).not.toContain('件）に達しました');
+    const message = buildUpgradeModalMessage('AI synthesis', null);
+    expect(message).toContain('AI synthesis');
+    expect(message).not.toContain('reached the limit');
   });
 
   it('resolves AI feature display name', () => {
-    expect(getAiFeatureDisplayName('synthesis')).toBe('合成');
+    expect(getAiFeatureDisplayName('synthesis')).toBe('Synthesis');
   });
 });

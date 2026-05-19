@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Highlight } from '../src/shared/types/highlight.js';
 import {
   buildSynthesisPrompt,
-  DEFAULT_SYNTHESIS_INSTRUCTION,
+  getDefaultSynthesisInstruction,
   estimateTokens,
   extractUserInstructionFromPrompt,
   getSynthesisTokenWarning,
@@ -42,7 +42,7 @@ const tenHighlights = Array.from({ length: 10 }, (_, index) => sampleHighlight(i
 describe('synthesis-prompt', () => {
   it('uses default instruction when userInstruction is empty', () => {
     const prompt = buildSynthesisPrompt(tenHighlights, '');
-    expect(prompt).toContain(`指示: ${DEFAULT_SYNTHESIS_INSTRUCTION}`);
+    expect(prompt).toContain(`指示: ${getDefaultSynthesisInstruction()}`);
     expect(prompt).not.toContain('指示: \n');
   });
 

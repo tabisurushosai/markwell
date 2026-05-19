@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { kvDelete, kvGet, kvSet } from '../storage/kv.js';
+import { t } from '../utils/i18n.js';
 
 export const AI_USAGE_FEATURES = [
   'synthesis',
@@ -16,17 +17,21 @@ export const AI_USAGE_FEATURES = [
 
 export type AiUsageFeature = (typeof AI_USAGE_FEATURES)[number];
 
-export const AI_USAGE_FEATURE_LABELS: Record<AiUsageFeature, string> = {
-  synthesis: '合成',
-  auto_tag: '自動タグ',
-  translation: '翻訳',
-  rephrase: '言い換え',
-  fact_check: 'ファクトチェック',
-  page_summary: 'ページ要約',
-  related_highlights: '関連ハイライト',
-  quote_extractor: '引用抽出',
-  qa: 'Q&A',
+const AI_USAGE_FEATURE_I18N_KEYS: Record<AiUsageFeature, string> = {
+  synthesis: 'ai_usage_feature_synthesis',
+  auto_tag: 'ai_usage_feature_auto_tag',
+  translation: 'ai_usage_feature_translation',
+  rephrase: 'ai_usage_feature_rephrase',
+  fact_check: 'ai_usage_feature_fact_check',
+  page_summary: 'ai_usage_feature_page_summary',
+  related_highlights: 'ai_usage_feature_related_highlights',
+  quote_extractor: 'ai_usage_feature_quote_extractor',
+  qa: 'ai_usage_feature_qa',
 };
+
+export function getAiUsageFeatureLabel(feature: AiUsageFeature): string {
+  return t(AI_USAGE_FEATURE_I18N_KEYS[feature]);
+}
 
 const FeatureUsageSchema = z.object({
   request_count: z.number().int().nonnegative(),

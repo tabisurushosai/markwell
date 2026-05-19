@@ -2123,5 +2123,92 @@
   "ai_access_lock_tooltip_trial": {
     "message": "Available with Trial or Premium",
     "description": "AI button lock tooltip when Trial or Premium is required"
+  },
+  "ai_usage_feature_synthesis": {
+    "message": "Synthesis",
+    "description": "AI usage table: synthesis feature label"
+  },
+  "ai_usage_feature_auto_tag": {
+    "message": "Auto-tag",
+    "description": "AI usage table: auto tag feature label"
+  },
+  "ai_usage_feature_translation": {
+    "message": "Translation",
+    "description": "AI usage table: translation feature label"
+  },
+  "ai_usage_feature_rephrase": {
+    "message": "Rephrase",
+    "description": "AI usage table: rephrase feature label"
+  },
+  "ai_usage_feature_fact_check": {
+    "message": "Fact check",
+    "description": "AI usage table: fact check feature label"
+  },
+  "ai_usage_feature_page_summary": {
+    "message": "Page summary",
+    "description": "AI usage table: page summary feature label"
+  },
+  "ai_usage_feature_related_highlights": {
+    "message": "Related highlights",
+    "description": "AI usage table: related highlights feature label"
+  },
+  "ai_usage_feature_quote_extractor": {
+    "message": "Quote extract",
+    "description": "AI usage table: quote extractor feature label"
+  },
+  "ai_usage_feature_qa": {
+    "message": "Q&A",
+    "description": "AI usage table: Q&A feature label"
+  },
+  "tier_note_trial_or_above": {
+    "message": "Trial or above",
+    "description": "Premium catalog tier note"
+  },
+  "tier_note_premium": {
+    "message": "Premium",
+    "description": "Premium catalog tier note"
+  },
+  "tier_note_premium_only": {
+    "message": "Premium only",
+    "description": "Premium catalog tier note"
+  },
+  "premium_catalog_highlights_limit": {
+    "message": "Up to 5,000 highlights",
+    "description": "Premium catalog feature label"
+  },
+  "premium_catalog_unlimited_projects": {
+    "message": "Unlimited projects",
+    "description": "Premium catalog feature label"
+  },
+  "premium_catalog_obsidian_roam_export": {
+    "message": "Obsidian / Roam export",
+    "description": "Premium catalog feature label"
+  },
+  "synthesis_default_instruction": {
+    "message": "Extract the common themes from these highlights and synthesize them into an essay.",
+    "description": "Default synthesis user instruction"
+  },
+  "synthesis_token_warning": {
+    "message": "This prompt is about $1 tokens (guideline limit: $2). Remove highlights or shorten your instruction.",
+    "description": "Synthesis token estimate warning toast",
+    "placeholders": {
+      "estimated": { "content": "$1", "example": "9000" },
+      "threshold": { "content": "$2", "example": "8000" }
+    }
+  },
+  "upgrade_modal_limit_reached": {
+    "message": "You reached the limit for “$1” ($2 items). Upgrade to Premium for higher limits.",
+    "description": "Upgrade modal body when tier limit reached",
+    "placeholders": {
+      "feature": { "content": "$1", "example": "Highlight save" },
+      "limit": { "content": "$2", "example": "50" }
+    }
+  },
+  "upgrade_modal_premium_required": {
+    "message": "“$1” requires Premium (or a free trial).",
+    "description": "Upgrade modal body when feature is locked",
+    "placeholders": {
+      "feature": { "content": "$1", "example": "AI synthesis" }
+    }
   }
 }
