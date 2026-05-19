@@ -182,6 +182,58 @@
   "onboarding_skip": {
     "message": "スキップ"
   },
+  "onboarding_next": {
+    "message": "次へ"
+  },
+  "onboarding_back": {
+    "message": "戻る"
+  },
+  "onboarding_done": {
+    "message": "完了"
+  },
+  "onboarding_dont_show_again": {
+    "message": "次回から表示しない"
+  },
+  "onboarding_step_label": {
+    "message": "ステップ $current$ / $total$",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "1"
+      },
+      "total": {
+        "content": "$2",
+        "example": "3"
+      }
+    }
+  },
+  "onboarding_step1_demo_hint": {
+    "message": "テキストを選択してハイライトすると、ページ上に色付きのマーカーが残ります。"
+  },
+  "onboarding_start_trial": {
+    "message": "無料で 7 日間 Premium を試す"
+  },
+  "onboarding_starting_trial": {
+    "message": "開始中…"
+  },
+  "onboarding_trial_once": {
+    "message": "トライアルは 1 回のみ"
+  },
+  "onboarding_trial_once_skip_note": {
+    "message": "トライアルは 1 回のみ。ショートカットの説明に進めます。"
+  },
+  "onboarding_trial_failed": {
+    "message": "トライアルの開始に失敗しました"
+  },
+  "onboarding_shortcut_alt_h": {
+    "message": "選択中のテキストをデフォルト色でハイライト保存"
+  },
+  "onboarding_shortcut_alt_s": {
+    "message": "合成サイドパネルを開く"
+  },
+  "onboarding_wikipedia_hint": {
+    "message": "Wikipedia でテキストを選択し、Alt+H を押してお試しください。"
+  },
   "confirm_delete_highlight": {
     "message": "このハイライトを削除しますか？この操作は取り消せません。"
   },

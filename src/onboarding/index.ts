@@ -193,7 +193,7 @@ export class MwOnboarding extends LitElement {
   }
 
   private stepLabel(): string {
-    return `Step ${String(this.step)} / ${String(TOTAL_STEPS)}`;
+    return t('onboarding_step_label', [String(this.step), String(TOTAL_STEPS)]);
   }
 
   private renderDots() {
@@ -235,9 +235,9 @@ export class MwOnboarding extends LitElement {
     } catch (error) {
       if (error instanceof TrialAlreadyUsedError) {
         this.trialUsed = true;
-        this.trialMessage = 'トライアルは 1 回のみ';
+        this.trialMessage = t('onboarding_trial_once');
       } else {
-        this.trialMessage = 'トライアルの開始に失敗しました';
+        this.trialMessage = t('onboarding_trial_failed');
       }
     } finally {
       this.startingTrial = false;
@@ -269,7 +269,7 @@ export class MwOnboarding extends LitElement {
             .checked=${this.dontShowAgain}
             @change=${this.handleDontShowAgainChange}
           />
-          次回から表示しない
+          ${t('onboarding_dont_show_again')}
         </label>
       </div>
     `;
@@ -282,23 +282,24 @@ export class MwOnboarding extends LitElement {
       <h1>${t('onboarding_step1_title')}</h1>
       <p>${t('onboarding_step1_body')}</p>
       <mw-onboarding-demo></mw-onboarding-demo>
-      <p>テキストを選択してハイライトすると、ページ上に色付きのマーカーが残ります。</p>
+      <p>${t('onboarding_step1_demo_hint')}</p>
       <div class="actions">
         <button
           type="button"
           class="btn btn--primary"
-          aria-label="次へ"
+          aria-label=${t('onboarding_next')}
           @click=${() => {
             this.step = 2;
           }}
         >
-          次へ
+          ${t('onboarding_next')}
         </button>
       </div>
     `;
   }
 
   private renderStep2() {
+    const trialLabel = this.startingTrial ? t('onboarding_starting_trial') : t('onboarding_start_trial');
     return html`
       <p class="step-label">${this.stepLabel()}</p>
       ${this.renderDots()}
@@ -308,13 +309,13 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
-          aria-label=${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
+          aria-label=${trialLabel}
           ?disabled=${this.trialUsed || this.startingTrial}
           @click=${() => {
             void this.handleStartTrial();
           }}
         >
-          ${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
+          ${trialLabel}
         </button>
         <button
           type="button"
@@ -330,16 +331,16 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
-          aria-label="戻る"
+          aria-label=${t('onboarding_back')}
           @click=${() => {
             this.step = 1;
           }}
         >
-          戻る
+          ${t('onboarding_back')}
         </button>
       </div>
       ${this.trialUsed
-        ? html`<p class="trial-note">トライアルは 1 回のみ。ショートカットの説明に進めます。</p>`
+        ? html`<p class="trial-note">${t('onboarding_trial_once_skip_note')}</p>`
         : this.trialMessage !== ''
           ? html`<p class="trial-note">${this.trialMessage}</p>`
           : null}
@@ -355,14 +356,14 @@ export class MwOnboarding extends LitElement {
       <ul class="shortcut-list">
         <li class="shortcut-item">
           <kbd>Alt+H</kbd>
-          <span>選択中のテキストをデフォルト色でハイライト保存</span>
+          <span>${t('onboarding_shortcut_alt_h')}</span>
         </li>
         <li class="shortcut-item">
           <kbd>Alt+S</kbd>
-          <span>合成サイドパネルを開く</span>
+          <span>${t('onboarding_shortcut_alt_s')}</span>
         </li>
       </ul>
-      <p>Wikipedia でテキストを選択し、Alt+H を押してお試しください。</p>
+      <p>${t('onboarding_wikipedia_hint')}</p>
       <div class="actions">
         <button
           type="button"
@@ -377,22 +378,22 @@ export class MwOnboarding extends LitElement {
         <button
           type="button"
           class="btn"
-          aria-label="完了"
+          aria-label=${t('onboarding_done')}
           @click=${() => {
             void this.completeOnboarding();
           }}
         >
-          完了
+          ${t('onboarding_done')}
         </button>
         <button
           type="button"
           class="btn"
-          aria-label="戻る"
+          aria-label=${t('onboarding_back')}
           @click=${() => {
             this.step = 2;
           }}
         >
-          戻る
+          ${t('onboarding_back')}
         </button>
       </div>
       ${this.renderFooter()}
