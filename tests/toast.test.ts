@@ -22,7 +22,7 @@ describe('ToastQueue', () => {
     for (let i = 0; i < MAX_VISIBLE_TOASTS + 1; i++) {
       queue.enqueue(`toast-${String(i)}`, 'info');
     }
-    const firstId = queue.getVisible()[0]!.id;
+    const firstId = queue.getVisible()[0].id;
     queue.markLeaving(firstId);
     queue.remove(firstId);
     expect(queue.getVisible()).toHaveLength(MAX_VISIBLE_TOASTS);

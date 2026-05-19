@@ -6,7 +6,7 @@ import {
   TRIAL_DURATION_MS,
   TrialAlreadyUsedError,
 } from '../src/shared/license/start-trial.js';
-import { getCurrentTier, getLicenseStatus, setLicenseStatus } from '../src/shared/storage/license.js';
+import { getCurrentTier, setLicenseStatus } from '../src/shared/storage/license.js';
 
 function createFakeChromeStorage() {
   const store = new Map<string, unknown>();

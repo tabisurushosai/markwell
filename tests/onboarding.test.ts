@@ -7,7 +7,7 @@ import {
   openOnboardingIfNeeded,
   shouldOpenOnboardingOnInstall,
 } from '../src/shared/onboarding/open-onboarding.js';
-import { getSettings, setSettings } from '../src/shared/storage/settings.js';
+import { setSettings } from '../src/shared/storage/settings.js';
 
 function createFakeChromeStorage() {
   const store = new Map<string, unknown>();

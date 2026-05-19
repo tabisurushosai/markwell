@@ -48,12 +48,12 @@ describe('synthesis-export', () => {
   });
 
   it('blocks premium formats for free and trial at export function level', () => {
-    expect(() => assertSynthesisExportAllowed('free', 'obsidian')).toThrow(SynthesisExportTierError);
-    expect(() => assertSynthesisExportAllowed('trial', 'roam')).toThrow(SynthesisExportTierError);
-    expect(() => assertSynthesisExportAllowed('premium', 'obsidian')).not.toThrow();
+    expect(() => { assertSynthesisExportAllowed('free', 'obsidian'); }).toThrow(SynthesisExportTierError);
+    expect(() => { assertSynthesisExportAllowed('trial', 'roam'); }).toThrow(SynthesisExportTierError);
+    expect(() => { assertSynthesisExportAllowed('premium', 'obsidian'); }).not.toThrow();
 
     expect(() =>
-      exportSynthesis('trial', 'obsidian', '# x', meta),
+      { exportSynthesis('trial', 'obsidian', '# x', meta); },
     ).toThrow(SynthesisExportTierError);
   });
 });

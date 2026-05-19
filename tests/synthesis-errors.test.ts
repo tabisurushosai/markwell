@@ -8,8 +8,8 @@ import {
 
 describe('synthesis-errors', () => {
   it('maps GeminiError kinds to user messages', () => {
-    expect(formatSynthesisError(new GeminiError('x', 'AUTH', 403))).toContain('API キー');
-    expect(formatSynthesisError(new GeminiError('x', 'QUOTA', 429))).toContain('上限');
+    expect(formatSynthesisError(new GeminiError('x', 'AUTH', 403))).toContain('API key');
+    expect(formatSynthesisError(new GeminiError('x', 'QUOTA', 429))).toContain('limit');
   });
 
   it('detects abort errors', () => {

@@ -46,7 +46,7 @@ describe('rephrase', () => {
     const { callGemini } = await import('../src/shared/ai/gemini.js');
     vi.mocked(getCurrentTier).mockResolvedValue('trial');
     vi.mocked(getApiKey).mockResolvedValue('key');
-    vi.mocked(callGemini).mockResolvedValue('  言い換え結果  ');
+    vi.mocked(callGemini).mockResolvedValue('  言い換え結果  ' as never);
 
     const result = await rephraseHighlightText('元の文', 'concise');
     expect(result).toBe('言い換え結果');

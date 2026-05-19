@@ -52,8 +52,15 @@ describe('gemini', () => {
       density: 'normal',
       blocked_domains: [],
       blocked_url_patterns: [],
-      ai: { provider: 'gemini', api_key_encrypted: 'enc', model: MODEL },
+      ai: {
+        provider: 'gemini',
+        api_key_encrypted: 'enc',
+        model: MODEL,
+        auto_tag_on_save: true,
+      },
       shortcuts: { quick_highlight: 'Alt+H', open_synthesis: 'Alt+S' },
+      translate_target_lang: 'ja',
+      stripe_payment_link: '',
       onboarding_seen: true,
     });
   });
@@ -279,7 +286,7 @@ describe('gemini', () => {
     for await (const chunk of callGeminiChat(
       'sys',
       [{ role: 'user', text: 'q' }],
-      { stream: true, feature: 'project_qa' },
+      { stream: true, feature: 'qa' },
     )) {
       chunks.push(chunk);
     }

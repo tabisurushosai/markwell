@@ -73,7 +73,7 @@ describe('translation', () => {
     const { getApiKey } = await import('../src/shared/storage/settings.js');
     const { callGemini } = await import('../src/shared/ai/gemini.js');
     vi.mocked(getApiKey).mockResolvedValue('key');
-    vi.mocked(callGemini).mockResolvedValue('  こんにちは世界  ');
+    vi.mocked(callGemini).mockResolvedValue('  こんにちは世界  ' as never);
 
     const result = await translateHighlightText('Hello world', 'ja');
     expect(result).toBe('こんにちは世界');

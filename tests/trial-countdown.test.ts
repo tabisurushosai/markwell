@@ -21,7 +21,7 @@ describe('trial-countdown', () => {
   });
 
   it('formats remaining label', () => {
-    expect(formatTrialRemainingLabel(5)).toBe('残 5 日');
+    expect(formatTrialRemainingLabel(5)).toBe('5 days left');
   });
 
   it('flags urgent when one day or less', () => {

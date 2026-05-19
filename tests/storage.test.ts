@@ -78,7 +78,7 @@ describe('kv storage wrapper', () => {
 
   it('kvSet throws when validation fails', async () => {
     await expect(
-      kvSet('markwell:item:bad', { id: 1, label: 'x' }, ItemSchema),
+      kvSet('markwell:item:bad', { id: 'bad' } as never, ItemSchema),
     ).rejects.toThrow(/Storage validation failed/);
   });
 

@@ -49,6 +49,9 @@ describe('trial-check', () => {
     vi.stubGlobal('chrome', {
       storage: { local: fakeStorage },
       notifications: { create: notificationsCreate },
+      runtime: {
+        getURL: (path: string) => `chrome-extension://test/${path}`,
+      },
     });
   });
 
@@ -66,6 +69,8 @@ describe('trial-check', () => {
         trial_end: end,
         last_verified_at: null,
         verify_failure_count: 0,
+        license_revoked_at: null,
+        license_revoked_reason: null,
       }),
     ).toBe(true);
   });
@@ -86,6 +91,7 @@ describe('trial-check', () => {
     expect(notificationsCreate).toHaveBeenCalledTimes(1);
     expect(notificationsCreate).toHaveBeenCalledWith(TRIAL_EXPIRED_NOTIFICATION_ID, {
       type: 'basic',
+      iconUrl: 'chrome-extension://test/icons/icon-128.png',
       title: 'Markwell',
       message: TRIAL_EXPIRED_NOTIFICATION_MESSAGE,
     });

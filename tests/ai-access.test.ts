@@ -11,19 +11,19 @@ import {
 describe('ai-access', () => {
   it('allows translation on free tier', () => {
     expect(canUseAiFeature('free', 'translation')).toBe(true);
-    expect(() => assertAiAccess('free', 'translation')).not.toThrow();
+    expect(() => { assertAiAccess('free', 'translation'); }).not.toThrow();
   });
 
   it('requires trial for synthesis', () => {
     expect(canUseAiFeature('free', 'synthesis')).toBe(false);
     expect(canUseAiFeature('trial', 'synthesis')).toBe(true);
-    expect(() => assertAiAccess('free', 'synthesis')).toThrow(AiAccessError);
+    expect(() => { assertAiAccess('free', 'synthesis'); }).toThrow(AiAccessError);
   });
 
   it('requires premium for fact_check', () => {
     expect(canUseAiFeature('trial', 'fact_check')).toBe(false);
     expect(canUseAiFeature('premium', 'fact_check')).toBe(true);
-    expect(() => assertAiAccess('trial', 'fact_check')).toThrow(AiAccessError);
+    expect(() => { assertAiAccess('trial', 'fact_check'); }).toThrow(AiAccessError);
   });
 
   it('formats locked button label', () => {

@@ -122,7 +122,7 @@ describe('related-highlights', () => {
     vi.mocked(getCurrentTier).mockResolvedValue('trial');
     vi.mocked(getApiKey).mockResolvedValue('key');
     vi.mocked(listHighlights).mockResolvedValue([source, c1, c2]);
-    vi.mocked(callGemini).mockResolvedValue('[2, 1]');
+    vi.mocked(callGemini).mockResolvedValue('[2, 1]' as never);
 
     const result = await findRelatedHighlights(source);
     expect(result.map((h) => h.id)).toEqual(['c2', 'c1']);
