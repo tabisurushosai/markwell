@@ -1,4 +1,5 @@
 import type { LicenseTier } from '../storage/highlights.js';
+import { t } from '../utils/i18n.js';
 
 export type AiFeature =
   | 'synthesis'
@@ -57,10 +58,10 @@ export function assertAiAccess(tier: LicenseTier, feature: AiFeature): void {
 export function getAiFeatureLockTooltip(feature: AiFeature): string {
   const required = MIN_TIER_FOR_FEATURE[feature];
   if (required === 'premium') {
-    return 'Premium で利用できます';
+    return t('ai_access_lock_tooltip_premium');
   }
   if (required === 'trial') {
-    return 'トライアルまたは Premium で利用できます';
+    return t('ai_access_lock_tooltip_trial');
   }
   return '';
 }

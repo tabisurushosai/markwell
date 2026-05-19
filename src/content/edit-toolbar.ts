@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import { t } from '../shared/utils/i18n.js';
 import { accessibilityStyles } from '../shared/styles/accessibility.js';
 import { deleteHighlight, getHighlight, updateHighlight } from '../shared/storage/highlights.js';
 import { setSettings } from '../shared/storage/settings.js';
@@ -152,7 +153,7 @@ export class MarkwellEditToolbar extends LitElement {
                 class="color-dot ${option.id === this.currentColor ? 'selected' : ''}"
                 style="background-color: ${option.hex}"
                 title=${option.id}
-                aria-label=${`色を ${option.id} に変更`}
+                aria-label=${t('content_edit_color_aria', option.id)}
                 aria-pressed=${option.id === this.currentColor ? 'true' : 'false'}
                 @click=${() => {
                   this.onColorSelect?.(option.id);
@@ -164,27 +165,27 @@ export class MarkwellEditToolbar extends LitElement {
         <button
           type="button"
           class="note-btn"
-          aria-label="メモ"
+          aria-label=${t('note_dialog_title')}
           @click=${() => {
             this.onNoteRequest?.();
           }}
         >
-          メモ
+          ${t('note_dialog_title')}
         </button>
         <button
           type="button"
           class="delete-btn"
-          aria-label="削除"
+          aria-label=${t('card_action_delete')}
           @click=${() => {
             this.onDeleteRequest?.();
           }}
         >
-          削除
+          ${t('card_action_delete')}
         </button>
         <button
           type="button"
           class="close-btn"
-          aria-label="閉じる"
+          aria-label=${t('mini_toolbar_close')}
           @click=${() => {
             this.onCloseRequest?.();
           }}

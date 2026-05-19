@@ -1,5 +1,6 @@
 import { TierLimitError, updateHighlight } from '../shared/storage/highlights.js';
 import { getSettings } from '../shared/storage/settings.js';
+import { t } from '../shared/utils/i18n.js';
 import { saveHighlightFromRange } from './highlight-save.js';
 import { syncHighlightNoteInDom } from './highlighter.js';
 import { openNoteDialog } from './note-dialog.js';
@@ -18,7 +19,7 @@ export async function handleQuickHighlightCommand(): Promise<boolean> {
   } catch (error) {
     if (error instanceof TierLimitError) {
       void openUpgradeModal({
-        featureName: 'ハイライト保存',
+        featureName: t('content_feature_highlight_save'),
         limit: error.limit,
       });
       return false;
@@ -42,7 +43,7 @@ export async function handleHighlightWithNoteCommand(): Promise<boolean> {
   } catch (error) {
     if (error instanceof TierLimitError) {
       void openUpgradeModal({
-        featureName: 'ハイライト保存',
+        featureName: t('content_feature_highlight_save'),
         limit: error.limit,
       });
       return false;

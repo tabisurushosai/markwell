@@ -164,7 +164,7 @@ export function deserializeRange(serialized: string): Range | null {
 
 const MAX_TEXT_OCCURRENCES = 10_000;
 
-/** Rangy.findText でページ内の完全一致をすべて収集する。 */
+/** Collect all exact matches on the page via Rangy.findText. */
 export function findAllTextOccurrenceRanges(text: string): Range[] {
   ensureRangyReady();
   if (text === '') {
@@ -204,7 +204,7 @@ export function findAllTextOccurrenceRanges(text: string): Range[] {
   return matches;
 }
 
-/** fallback.occurrence は 1-based。レガシー 0-based (0 = 先頭) も受け付ける。 */
+/** fallback.occurrence is 1-based; legacy 0-based (0 = first) is also accepted. */
 function fallbackOccurrenceToIndex(occurrence: number): number {
   if (occurrence >= 1) {
     return occurrence - 1;
@@ -245,7 +245,7 @@ export function getSelectionContext(
   };
 }
 
-/** 選択範囲がページ内の何個目の一致か（1-based）を返す。 */
+/** Return which occurrence (1-based) the selection matches on the page. */
 export function computeFallbackOccurrence(text: string, target: Range): number {
   const matches = findAllTextOccurrenceRanges(text);
   for (let i = 0; i < matches.length; i++) {
@@ -256,7 +256,7 @@ export function computeFallbackOccurrence(text: string, target: Range): number {
   return 1;
 }
 
-/** applyHighlight 直前に保存する fallback アンカー。text は selected_text と同値だが役割を分離。 */
+/** Fallback anchor saved just before applyHighlight; text equals selected_text but role differs. */
 export function buildFallbackAnchor(range: Range): { text: string; occurrence: number } {
   const text = range.toString();
   return {
@@ -283,7 +283,7 @@ export function findHighlightMarks(id: string): HTMLElement[] {
 const JUMP_FLASH_CLASS = 'markwell-jump-flash';
 const JUMP_FLASH_MS = 1500;
 
-/** 該当 mark へスクロールしアクセント色で点滅。見つからなければ false。 */
+/** Scroll to the mark and flash accent color; false if not found. */
 export function jumpToHighlight(id: string): boolean {
   const marks = findHighlightMarks(id);
   if (marks.length === 0) {
@@ -356,7 +356,7 @@ function getHighlightColorFromMark(mark: HTMLElement): HighlightColor {
   return 'yellow';
 }
 
-/** ページ上の Markwell ハイライト mark をすべて除去する（ストレージは触らない）。 */
+/** Remove all Markwell highlight marks from the page (does not touch storage). */
 export function removeAllHighlightsFromDom(): void {
   const marks = [...document.querySelectorAll<HTMLElement>('mark[data-markwell-id]')];
   const ids = new Set<string>();

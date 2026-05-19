@@ -140,7 +140,7 @@ export class MarkwellToolbar extends LitElement {
                 class="color-dot"
                 style="background-color: ${option.hex}"
                 title=${option.id}
-                aria-label=${`${option.id} でハイライト`}
+                aria-label=${t('content_highlight_color_aria', option.id)}
                 @click=${() => {
                   this.handleColorClick(option.id);
                 }}
@@ -209,7 +209,7 @@ async function saveHighlightFromToolbar(
   } catch (error) {
     if (error instanceof TierLimitError) {
       void openUpgradeModal({
-        featureName: 'ハイライト保存',
+        featureName: t('content_feature_highlight_save'),
         limit: error.limit,
       });
       return;

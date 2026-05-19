@@ -181,7 +181,7 @@ export class MarkwellNoteDialog extends LitElement {
           <p id="markwell-note-title" class="title">${t('note_dialog_title')}</p>
           <textarea
             .value=${this.draft}
-            placeholder="メモを入力…"
+            placeholder=${t('note_dialog_placeholder')}
             aria-label="Highlight note"
             @input=${this.handleInput}
           ></textarea>

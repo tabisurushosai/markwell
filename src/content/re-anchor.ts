@@ -59,7 +59,7 @@ function isAllowedBetweenElement(element: Element, highlightId: string): boolean
   return false;
 }
 
-/** 同一 ID の mark 群のあいだに外来要素が挟まっているか。 */
+/** Whether foreign nodes sit between marks sharing the same highlight id. */
 export function isHighlightFragmented(marks: HTMLElement[]): boolean {
   if (marks.length <= 1) {
     return false;
