@@ -13,6 +13,7 @@ import { resolveLicenseRevokedBanner } from '../shared/license/license-revoked-b
 import { getCurrentTier, getLicenseStatus } from '../shared/storage/license.js';
 import '../shared/ui/tier-badge.js';
 import '../shared/components/toast.js';
+import { toastFrom } from '../shared/components/toast.js';
 import '../shared/components/upgrade-modal.js';
 import type { UpgradeModalHostState } from '../shared/components/upgrade-modal-host.js';
 import {
@@ -63,8 +64,6 @@ export class MwOptions extends LitElement {
   @state() private usage: MonthlyUsageRecord | null = null;
 
   @state() private usageLoading = true;
-
-  @state() private usageMessage = '';
 
   @state() private licenseTier: LicenseTier = 'free';
 
@@ -388,10 +387,7 @@ export class MwOptions extends LitElement {
 
     await clearMonthlyUsage(this.usageMonth);
     await this.loadUsage();
-    this.usageMessage = '当月の使用量をリセットしました';
-    window.setTimeout(() => {
-      this.usageMessage = '';
-    }, 2000);
+    toastFrom(this, '当月の使用量をリセットしました', 'success');
   }
 
   private renderUsageSection() {
@@ -463,7 +459,6 @@ export class MwOptions extends LitElement {
           当月データをリセット
         </button>
       </div>
-      ${this.usageMessage !== '' ? html`<p class="status">${this.usageMessage}</p>` : nothing}
     `;
   }
 

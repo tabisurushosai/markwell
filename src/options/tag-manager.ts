@@ -15,6 +15,7 @@ import {
   bulkDeleteTags,
   bulkUpdateTagColors,
 } from './utils/bulk-tag-operations.js';
+import { toastFrom, type ToastKind } from '../shared/components/toast.js';
 import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
@@ -36,8 +37,6 @@ export class MwTagManager extends LitElement {
   @state() private newTagName = '';
 
   @state() private newTagColor = DEFAULT_TAG_COLOR;
-
-  @state() private statusMessage = '';
 
   @state() private editingTagId: string | null = null;
 
@@ -471,12 +470,8 @@ export class MwTagManager extends LitElement {
   }
 
   private showStatus(message: string, isError = false): void {
-    this.statusMessage = isError ? `error:${message}` : message;
-    window.setTimeout(() => {
-      if (this.statusMessage === message || this.statusMessage === `error:${message}`) {
-        this.statusMessage = '';
-      }
-    }, 2500);
+    const kind: ToastKind = isError ? 'error' : 'success';
+    toastFrom(this, message, kind);
   }
 
   private cancelEdit(): void {
@@ -657,7 +652,7 @@ export class MwTagManager extends LitElement {
           type="button"
           class="btn"
           aria-label="色変更"
-          @click=${() => this.openColorPicker(tag.id)}
+          @click=${() => { this.openColorPicker(tag.id); }}
         >
           色変更
         </button>
@@ -690,7 +685,7 @@ export class MwTagManager extends LitElement {
               this.editingName = input.value;
             }
           }}
-          @keydown=${(event: KeyboardEvent) => this.onRenameKeydown(event, tag.id)}
+          @keydown=${(event: KeyboardEvent) => { this.onRenameKeydown(event, tag.id); }}
         />
       `;
     }
@@ -701,7 +696,7 @@ export class MwTagManager extends LitElement {
         class="tag-name-btn"
         aria-label=${`タグ名を変更: ${tag.name}`}
         title="クリックして名前を変更"
-        @click=${() => this.startRename(tag)}
+        @click=${() => { this.startRename(tag); }}
       >
         ${tag.name}
       </button>
@@ -766,7 +761,7 @@ export class MwTagManager extends LitElement {
           >
             保存
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelEdit()}>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelEdit(); }}>
             キャンセル
           </button>
         </div>
@@ -806,7 +801,7 @@ export class MwTagManager extends LitElement {
           >
             統合する
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelMerge()}>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelMerge(); }}>
             キャンセル
           </button>
         </div>
@@ -815,7 +810,7 @@ export class MwTagManager extends LitElement {
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" aria-label="名前変更" @click=${() => this.startRename(tag)}>
+        <button type="button" class="btn" aria-label="名前変更" @click=${() => { this.startRename(tag); }}>
           名前変更
         </button>
         <button
@@ -823,7 +818,7 @@ export class MwTagManager extends LitElement {
           class="btn"
           aria-label="他のタグに統合"
           ?disabled=${this.tagRows.length < 2}
-          @click=${() => this.startMerge(tag.id)}
+          @click=${() => { this.startMerge(tag.id); }}
         >
           他のタグに統合
         </button>
@@ -845,8 +840,6 @@ export class MwTagManager extends LitElement {
     }
 
     const rows = this.filteredRows;
-    const isError = this.statusMessage.startsWith('error:');
-    const statusText = isError ? this.statusMessage.slice('error:'.length) : this.statusMessage;
 
     return html`
       <div class="create-form">
@@ -996,9 +989,6 @@ export class MwTagManager extends LitElement {
               </table>
             </div>
           `}
-      ${statusText !== ''
-        ? html`<p class="status ${isError ? 'status--error' : ''}">${statusText}</p>`
-        : nothing}
     `;
   }
 }

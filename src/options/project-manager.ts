@@ -15,6 +15,7 @@ import {
   FALLBACK_PROJECT_EMOJI,
   formatProjectCoverEmoji,
 } from '../shared/utils/project-emoji.js';
+import { toastFrom, type ToastKind } from '../shared/components/toast.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 const DEFAULT_COVER_EMOJI = FALLBACK_PROJECT_EMOJI;
@@ -42,8 +43,6 @@ export class MwProjectManager extends LitElement {
   @state() private newProjectDescription = '';
 
   @state() private newProjectEmoji = DEFAULT_COVER_EMOJI;
-
-  @state() private statusMessage = '';
 
   @state() private editingProjectId: string | null = null;
 
@@ -319,12 +318,8 @@ export class MwProjectManager extends LitElement {
   }
 
   private showStatus(message: string, isError = false): void {
-    this.statusMessage = isError ? `error:${message}` : message;
-    window.setTimeout(() => {
-      if (this.statusMessage === message || this.statusMessage === `error:${message}`) {
-        this.statusMessage = '';
-      }
-    }, 3000);
+    const kind: ToastKind = isError ? 'error' : 'success';
+    toastFrom(this, message, kind);
   }
 
   private cancelEdit(): void {
@@ -463,7 +458,7 @@ export class MwProjectManager extends LitElement {
               this.editingCoverEmoji = input.value;
             }
           }}
-          @keydown=${(event: KeyboardEvent) => this.onEditKeydown(event, project.id)}
+          @keydown=${(event: KeyboardEvent) => { this.onEditKeydown(event, project.id); }}
         />
       `;
     }
@@ -494,7 +489,7 @@ export class MwProjectManager extends LitElement {
               this.editingName = input.value;
             }
           }}
-          @keydown=${(event: KeyboardEvent) => this.onEditKeydown(event, project.id)}
+          @keydown=${(event: KeyboardEvent) => { this.onEditKeydown(event, project.id); }}
         />
       `;
     }
@@ -505,7 +500,7 @@ export class MwProjectManager extends LitElement {
         class="project-name-btn"
         aria-label=${`プロジェクト名を変更: ${project.name}`}
         title="クリックして名前を変更"
-        @click=${() => this.startEdit(project, 'name')}
+        @click=${() => { this.startEdit(project, 'name'); }}
       >
         ${project.name}
       </button>
@@ -557,7 +552,7 @@ export class MwProjectManager extends LitElement {
           >
             保存
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => this.cancelEdit()}>
+          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelEdit(); }}>
             キャンセル
           </button>
         </div>
@@ -566,14 +561,14 @@ export class MwProjectManager extends LitElement {
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" aria-label="名前変更" @click=${() => this.startEdit(project, 'name')}>
+        <button type="button" class="btn" aria-label="名前変更" @click=${() => { this.startEdit(project, 'name'); }}>
           名前変更
         </button>
         <button
           type="button"
           class="btn"
           aria-label="説明編集"
-          @click=${() => this.startEdit(project, 'description')}
+          @click=${() => { this.startEdit(project, 'description'); }}
         >
           説明編集
         </button>
@@ -581,7 +576,7 @@ export class MwProjectManager extends LitElement {
           type="button"
           class="btn"
           aria-label="絵文字変更"
-          @click=${() => this.startEdit(project, 'cover_emoji')}
+          @click=${() => { this.startEdit(project, 'cover_emoji'); }}
         >
           絵文字変更
         </button>
@@ -603,8 +598,6 @@ export class MwProjectManager extends LitElement {
     }
 
     const rows = this.filteredRows;
-    const isError = this.statusMessage.startsWith('error:');
-    const statusText = isError ? this.statusMessage.slice('error:'.length) : this.statusMessage;
     const tierLabel = this.tierLimitLabel;
 
     return html`
@@ -714,9 +707,6 @@ export class MwProjectManager extends LitElement {
               </table>
             </div>
           `}
-      ${statusText !== ''
-        ? html`<p class="status ${isError ? 'status--error' : ''}">${statusText}</p>`
-        : nothing}
     `;
   }
 }
