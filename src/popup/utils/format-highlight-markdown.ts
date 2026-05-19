@@ -19,7 +19,7 @@ function toBlockquoteLines(text: string): string[] {
   return text.split(/\r?\n/).map((line) => `> ${line}`);
 }
 
-/** §9: Free でも利用可 — ハイライトを Markdown ブロック引用形式に整形 */
+/** §9: Available on Free — format highlight as Markdown blockquote */
 export function formatHighlightAsMarkdown(highlight: Highlight): string {
   const date = formatYmd(highlight.created_at);
   const title = escapeMarkdownLinkLabel(highlight.page_title);

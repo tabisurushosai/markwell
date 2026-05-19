@@ -1,4 +1,4 @@
-/** テキスト入力中は矢印キーを奪わない */
+/** Do not capture arrow keys while typing in a text field */
 export function isEditableElement(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -12,7 +12,7 @@ export function isEditableElement(target: EventTarget | null): boolean {
   return target.isContentEditable;
 }
 
-/** Tab / Shift+Tab でビュータブを切り替える対象か */
+/** Whether Tab / Shift+Tab should cycle view tabs */
 export function shouldCycleViewTabs(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;

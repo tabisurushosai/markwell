@@ -10,14 +10,15 @@ import {
   isDateFilterActive,
 } from '../utils/date-filter.js';
 import { PROJECT_FILTER_ALL, type ProjectFilterValue } from '../utils/tag-filter.js';
+import { t } from '../../shared/utils/i18n.js';
 
 type LicenseTier = 'free' | 'trial' | 'premium';
 
-const DATE_PRESETS: ReadonlyArray<{ id: DateFilterPreset; label: string }> = [
-  { id: 'today', label: '今日' },
-  { id: '7d', label: '直近 7 日' },
-  { id: '30d', label: '直近 30 日' },
-  { id: 'all', label: 'すべて' },
+const DATE_PRESETS: ReadonlyArray<{ id: DateFilterPreset; labelKey: string }> = [
+  { id: 'today', labelKey: 'popup_date_today' },
+  { id: '7d', labelKey: 'popup_date_7d' },
+  { id: '30d', labelKey: 'popup_date_30d' },
+  { id: 'all', labelKey: 'popup_tab_all' },
 ];
 
 @customElement('markwell-tag-chips')
@@ -329,8 +330,8 @@ export class MarkwellTagChips extends LitElement {
             ? 'date-toggle--open'
             : ''}"
           aria-expanded=${this.datePanelOpen}
-          aria-label="日付フィルタ"
-          title="日付フィルタ"
+          aria-label=${t('popup_date_filter_label')}
+          title=${t('popup_date_filter_label')}
           @click=${() => {
             this.toggleDatePanel();
           }}
@@ -338,7 +339,7 @@ export class MarkwellTagChips extends LitElement {
           📅
         </button>
         <label class="project-filter">
-          <span class="project-filter__label">📁 プロジェクト</span>
+          <span class="project-filter__label">${t('popup_project_filter_label')}</span>
           <select
             class="project-filter__select ${projectActive ? 'project-filter__select--active' : ''}"
             .value=${this.selectedProjectFilter}
@@ -346,8 +347,8 @@ export class MarkwellTagChips extends LitElement {
               this.onProjectChange(event);
             }}
           >
-            <option value="all">すべて</option>
-            <option value="unassigned">未所属</option>
+            <option value="all">${t('popup_tab_all')}</option>
+            <option value="unassigned">${t('popup_project_unassigned')}</option>
             ${this.projects.map(
               (project) => html`
                 <option value=${project.id}>${project.cover_emoji} ${project.name}</option>
@@ -356,7 +357,7 @@ export class MarkwellTagChips extends LitElement {
           </select>
         </label>
         ${this.tags.length === 0
-          ? html`<span class="empty">タグがありません</span>`
+          ? html`<span class="empty">${t('popup_tags_empty')}</span>`
           : this.tags.map(
               (tag) => html`
                 <button
@@ -383,18 +384,18 @@ export class MarkwellTagChips extends LitElement {
                       class="preset-btn ${this.dateFilter.preset === preset.id
                         ? 'preset-btn--selected'
                         : ''}"
-                      aria-label=${preset.label}
+                      aria-label=${t(preset.labelKey)}
                       @click=${() => {
                         this.selectPreset(preset.id);
                       }}
                     >
-                      ${preset.label}
+                      ${t(preset.labelKey)}
                     </button>
                   `,
                 )}
               </div>
               <div class="custom">
-                <p class="custom-label">カスタム期間</p>
+                <p class="custom-label">${t('popup_custom_date_range')}</p>
                 ${this.isPremium
                   ? html`
                       <div class="custom-row">
@@ -425,13 +426,13 @@ export class MarkwellTagChips extends LitElement {
                       <button
                         type="button"
                         class="apply-btn"
-                        aria-label="適用"
+                        aria-label=${t('popup_apply')}
                         ?disabled=${this.customStartDraft === '' || this.customEndDraft === ''}
                         @click=${() => {
                           this.applyCustomRange();
                         }}
                       >
-                        適用
+                        ${t('popup_apply')}
                       </button>
                     `
                   : html`
@@ -440,7 +441,7 @@ export class MarkwellTagChips extends LitElement {
                         <span>〜</span>
                         <input class="custom-input" type="date" disabled />
                       </div>
-                      <p class="premium-hint">Premium で解放</p>
+                      <p class="premium-hint">${t('popup_premium_unlock_hint')}</p>
                     `}
               </div>
             </div>

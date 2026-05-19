@@ -1,7 +1,7 @@
 import { highlightFragmentId } from '../../shared/utils/highlight-hash.js';
 import type { Highlight } from '../../shared/types/highlight.js';
 
-/** 新タブで開く URL（#markwell-<id> 付き） */
+/** URL to open in a new tab (with #markwell-<id>) */
 export function buildHighlightOpenUrl(highlight: Highlight): string {
   try {
     const url = new URL(highlight.url);

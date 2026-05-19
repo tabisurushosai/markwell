@@ -401,9 +401,9 @@ export class MarkwellAllHighlightsView extends LitElement {
       this.selectionMode = false;
       await this.loadIndex();
       this.dispatchRefresh();
-      this.dispatchToast(`${String(count)} 件をプロジェクトに追加しました`);
+      this.dispatchToast(t('popup_bulk_added_to_project', [String(count)]));
     } catch {
-      this.dispatchToast('プロジェクトへの追加に失敗しました', 'error');
+      this.dispatchToast(t('popup_bulk_add_project_failed'), 'error');
     } finally {
       this.bulkWorking = false;
     }
@@ -421,9 +421,9 @@ export class MarkwellAllHighlightsView extends LitElement {
       this.selectionMode = false;
       await this.loadIndex();
       this.dispatchRefresh();
-      this.dispatchToast(`${String(count)} 件にタグを追加しました`);
+      this.dispatchToast(t('popup_bulk_tags_added', [String(count)]));
     } catch {
-      this.dispatchToast('タグの追加に失敗しました', 'error');
+      this.dispatchToast(t('popup_bulk_add_tags_failed'), 'error');
     } finally {
       this.bulkWorking = false;
     }
@@ -439,7 +439,7 @@ export class MarkwellAllHighlightsView extends LitElement {
     );
     const count = selectedHighlights.length;
     openDeleteConfirmDialog({
-      message: `選択した ${String(count)} 件のハイライトを削除しますか？この操作は取り消せません。`,
+      message: t('popup_confirm_delete_bulk', [String(count)]),
       onConfirm: async () => {
         this.bulkWorking = true;
         try {
@@ -448,9 +448,9 @@ export class MarkwellAllHighlightsView extends LitElement {
           this.selectionMode = false;
           await this.loadIndex();
           this.dispatchRefresh();
-          this.dispatchToast(`${String(deleted)} 件を削除しました`);
+          this.dispatchToast(t('popup_bulk_deleted', [String(deleted)]));
         } catch {
-          this.dispatchToast('削除に失敗しました', 'error');
+          this.dispatchToast(t('popup_bulk_delete_failed'), 'error');
         } finally {
           this.bulkWorking = false;
         }
@@ -478,27 +478,27 @@ export class MarkwellAllHighlightsView extends LitElement {
         <button
           type="button"
           class="btn ${this.selectionMode ? 'btn--active' : ''}"
-          aria-label=${this.selectionMode ? '選択を終了' : '複数選択'}
+          aria-label=${this.selectionMode ? t('popup_selection_exit') : t('popup_selection_multi')}
           @click=${() => {
             this.toggleSelectionMode();
           }}
         >
-          ${this.selectionMode ? '選択を終了' : '複数選択'}
+          ${this.selectionMode ? t('popup_selection_exit') : t('popup_selection_multi')}
         </button>
         ${this.selectionMode
           ? html`
               <button
                 type="button"
                 class="btn"
-                aria-label=${this.allVisibleSelected ? '表示分の選択を解除' : '表示分をすべて選択'}
+                aria-label=${this.allVisibleSelected ? t('popup_deselect_all_visible') : t('popup_select_all_visible')}
                 ?disabled=${this.results.length === 0}
                 @click=${() => {
                   this.toggleSelectAllVisible();
                 }}
               >
-                ${this.allVisibleSelected ? '表示分の選択を解除' : '表示分をすべて選択'}
+                ${this.allVisibleSelected ? t('popup_deselect_all_visible') : t('popup_select_all_visible')}
               </button>
-              <span class="toolbar-meta">${String(this.selectedCount)} 件選択中</span>
+              <span class="toolbar-meta">${t('popup_selection_count', [String(this.selectedCount)])}</span>
             `
           : nothing}
       </div>
@@ -518,35 +518,35 @@ export class MarkwellAllHighlightsView extends LitElement {
           <button
             type="button"
             class="btn"
-            aria-label="プロジェクトに追加"
+            aria-label=${t('popup_bulk_add_to_project')}
             ?disabled=${this.bulkWorking || this.projects.length === 0}
             @click=${() => {
               this.openBulkPanel('project');
             }}
           >
-            プロジェクトに追加
+            ${t('popup_bulk_add_to_project')}
           </button>
           <button
             type="button"
             class="btn"
-            aria-label="タグ追加"
+            aria-label=${t('popup_bulk_add_tags')}
             ?disabled=${this.bulkWorking || tags.length === 0}
             @click=${() => {
               this.openBulkPanel('tags');
             }}
           >
-            タグ追加
+            ${t('popup_bulk_add_tags')}
           </button>
           <button
             type="button"
             class="btn btn--danger"
-            aria-label="削除"
+            aria-label=${t('card_action_delete')}
             ?disabled=${this.bulkWorking}
             @click=${() => {
               this.handleBulkDelete();
             }}
           >
-            削除
+            ${t('card_action_delete')}
           </button>
         </div>
 
@@ -555,7 +555,7 @@ export class MarkwellAllHighlightsView extends LitElement {
               <div class="bulk-panel">
                 <div class="bulk-panel__row">
                   <label>
-                    <span class="toolbar-meta">プロジェクト</span>
+                    <span class="toolbar-meta">${t('popup_tab_projects')}</span>
                     <select
                       class="bulk-select"
                       .value=${this.bulkProjectId}
@@ -576,23 +576,23 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
-                    aria-label="追加する"
+                    aria-label=${t('popup_bulk_apply')}
                     ?disabled=${this.bulkWorking || this.bulkProjectId === ''}
                     @click=${() => {
                       void this.handleBulkAddToProject();
                     }}
                   >
-                    追加する
+                    ${t('popup_bulk_apply')}
                   </button>
                   <button
                     type="button"
                     class="btn"
-                    aria-label="キャンセル"
+                    aria-label=${t('note_dialog_cancel')}
                     @click=${() => {
                       this.bulkPanel = 'none';
                     }}
                   >
-                    キャンセル
+                    ${t('note_dialog_cancel')}
                   </button>
                 </div>
               </div>
@@ -624,24 +624,24 @@ export class MarkwellAllHighlightsView extends LitElement {
                   <button
                     type="button"
                     class="btn"
-                    aria-label="タグを追加"
+                    aria-label=${t('popup_bulk_add_tags_confirm')}
                     ?disabled=${this.bulkWorking || this.bulkTagIds.length === 0}
                     @click=${() => {
                       void this.handleBulkAddTags();
                     }}
                   >
-                    タグを追加
+                    ${t('popup_bulk_add_tags_confirm')}
                   </button>
                   <button
                     type="button"
                     class="btn"
-                    aria-label="キャンセル"
+                    aria-label=${t('note_dialog_cancel')}
                     @click=${() => {
                       this.bulkPanel = 'none';
                       this.bulkTagIds = [];
                     }}
                   >
-                    キャンセル
+                    ${t('note_dialog_cancel')}
                   </button>
                 </div>
               </div>
@@ -654,27 +654,27 @@ export class MarkwellAllHighlightsView extends LitElement {
   render() {
     if (this.loading) {
       return html`
-        <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">読み込み中…</p>
+        <h2 class="panel-title">${t('popup_all_search_title')}</h2>
+        <p class="empty">${t('side_panel_loading')}</p>
       `;
     }
 
     if (!this.hasActiveFilter()) {
       return html`
-        <h2 class="panel-title">全ページ横断検索</h2>
-        <p class="empty">検索・タグ・プロジェクト・日付のいずれかで絞り込んでください</p>
+        <h2 class="panel-title">${t('popup_all_search_title')}</h2>
+        <p class="empty">${t('popup_all_filter_hint')}</p>
       `;
     }
 
     if (this.results.length === 0) {
       return html`
-        <h2 class="panel-title">全ページ横断検索</h2>
+        <h2 class="panel-title">${t('popup_all_search_title')}</h2>
         <p class="empty">${t('popup_empty_all')}</p>
       `;
     }
 
     return html`
-      <h2 class="panel-title">検索結果 (${this.results.length})</h2>
+      <h2 class="panel-title">${t('popup_all_results_title', [String(this.results.length)])}</h2>
       ${this.renderToolbar()}
       ${this.renderBulkBar()}
       <div class="list">
@@ -687,7 +687,7 @@ export class MarkwellAllHighlightsView extends LitElement {
                       class="select-row__checkbox"
                       type="checkbox"
                       .checked=${this.isSelected(highlight.id)}
-                      aria-label="ハイライトを選択"
+                      aria-label=${t('popup_select_highlight')}
                       @change=${() => {
                         this.toggleHighlightSelection(highlight.id);
                       }}

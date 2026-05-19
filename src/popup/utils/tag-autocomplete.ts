@@ -1,4 +1,5 @@
 import type { Tag } from '../../shared/types/tag.js';
+import { t } from '../../shared/utils/i18n.js';
 
 export type TagAutocompleteOption =
   | { kind: 'existing'; tag: Tag }
@@ -8,7 +9,7 @@ export function normalizeTagQuery(query: string): string {
   return query.trim();
 }
 
-/** prefix match（大文字小文字を区別しない） */
+/** Prefix match (case-insensitive) */
 export function matchesTagPrefix(tagName: string, query: string): boolean {
   const normalized = normalizeTagQuery(query).toLowerCase();
   if (normalized === '') {
@@ -43,7 +44,7 @@ export function buildTagAutocompleteOptions(
 
 export function formatTagAutocompleteLabel(option: TagAutocompleteOption): string {
   if (option.kind === 'create') {
-    return `新規作成: "${option.name}"`;
+    return t('popup_tag_create_option', [option.name]);
   }
   return option.tag.name;
 }

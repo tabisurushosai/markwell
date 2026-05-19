@@ -3,12 +3,12 @@ import { css } from 'lit';
 import { accessibilityStyles } from '../shared/styles/accessibility.js';
 
 /**
- * Popup デザイントークン（Lit CSS-in-JS）。
- * 子コンポーネントの Shadow DOM でも継承される CSS 変数を :host に定義する。
+ * Popup design tokens (Lit CSS-in-JS).
+ * Defines :host CSS variables inherited by child Shadow DOM components.
  */
 export const popupDesignTokens = css`
   :host {
-    /* カラー（既定: ダーク） */
+    /* Colors (default: dark) */
     --bg: #1a1a1a;
     --surface: #242424;
     --surface-raised: #2e2e2e;
@@ -24,14 +24,14 @@ export const popupDesignTokens = css`
     --hl-orange: rgba(255, 183, 77, 0.5);
     --hl-purple: rgba(186, 104, 200, 0.5);
 
-    /* スペーシング: 4 / 8 / 12 / 16 / 24 px */
+    /* Spacing: 4 / 8 / 12 / 16 / 24 px */
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
     --space-4: 16px;
     --space-5: 24px;
 
-    /* タイポグラフィ */
+    /* Typography */
     --font-family: system-ui, 'Hiragino Sans', 'Yu Gothic UI', 'Yu Gothic', sans-serif;
     --font-size-sm: 11px;
     --font-size-base: 13px;
@@ -52,7 +52,7 @@ export const popupDesignTokens = css`
   }
 `;
 
-/** markwell-popup-root 用レイアウト + コンポーネントスタイル */
+/** Layout and component styles for markwell-popup-root */
 const popupLayoutStyles = css`
   :host {
     display: flex;

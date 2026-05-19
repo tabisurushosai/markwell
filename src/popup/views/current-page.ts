@@ -250,22 +250,22 @@ export class MarkwellCurrentPageView extends LitElement {
   private async copySummary(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.summaryText);
-      this.showToast('要約をコピーしました', 'success');
+      this.showToast(t('popup_summary_copied'), 'success');
     } catch {
-      this.showToast('コピーに失敗しました', 'error');
+      this.showToast(t('side_panel_copy_failed'), 'error');
     }
   }
 
   private pageTextErrorMessage(reason: string): string {
     switch (reason) {
       case 'empty':
-        return 'ページ本文が空です';
+        return t('popup_page_text_empty');
       case 'content_unavailable':
-        return 'このページでは本文を取得できません';
+        return t('popup_page_text_unavailable');
       case 'no_tab':
-        return 'アクティブなタブがありません';
+        return t('popup_no_active_tab');
       default:
-        return 'ページ本文の取得に失敗しました';
+        return t('popup_page_text_fetch_failed');
     }
   }
 
@@ -302,7 +302,7 @@ export class MarkwellCurrentPageView extends LitElement {
       this.summaryText = summary.summary;
       this.summaryModalOpen = true;
       if (pageText.truncated) {
-        this.showToast('本文の先頭 8000 文字で要約しました', 'info');
+        this.showToast(t('popup_summary_truncated_toast'), 'info');
       }
     } finally {
       this.summarizing = false;
@@ -337,28 +337,28 @@ export class MarkwellCurrentPageView extends LitElement {
           aria-labelledby="page-summary-title"
           @click=${(event: Event) => { event.stopPropagation(); }}
         >
-          <h3 id="page-summary-title" class="dialog-title">ページ要約</h3>
+          <h3 id="page-summary-title" class="dialog-title">${t('popup_page_summary_title')}</h3>
           <div class="dialog-body">${this.summaryText}</div>
           <div class="dialog-actions">
             <button
               type="button"
               class="dialog-btn"
-              aria-label="閉じる"
+              aria-label=${t('mini_toolbar_close')}
               @click=${() => {
                 this.closeSummaryModal();
               }}
             >
-              閉じる
+              ${t('mini_toolbar_close')}
             </button>
             <button
               type="button"
               class="dialog-btn dialog-btn--primary"
-              aria-label="コピー"
+              aria-label=${t('card_action_copy')}
               @click=${() => {
                 void this.copySummary();
               }}
             >
-              コピー
+              ${t('card_action_copy')}
             </button>
           </div>
         </div>
@@ -369,7 +369,7 @@ export class MarkwellCurrentPageView extends LitElement {
 
   private renderHighlightsBody() {
     if (this.loading) {
-      return html`<p class="empty">読み込み中…</p>`;
+      return html`<p class="empty">${t('side_panel_loading')}</p>`;
     }
 
     if (this.highlights.length === 0) {
@@ -378,11 +378,11 @@ export class MarkwellCurrentPageView extends LitElement {
 
     const visible = this.filteredHighlights;
     if (visible.length === 0) {
-      return html`<p class="empty">選択した条件に一致するハイライトはありません</p>`;
+      return html`<p class="empty">${t('popup_filtered_empty')}</p>`;
     }
 
     return html`
-      <p class="panel-title">ハイライト (${visible.length})</p>
+      <p class="panel-title">${t('popup_highlights_count', [String(visible.length)])}</p>
       <div class="list">
         ${visible.map(
           (highlight, index) => html`
@@ -405,22 +405,22 @@ export class MarkwellCurrentPageView extends LitElement {
   render() {
     return html`
       <div class="panel-header">
-        <h2 class="panel-title">このページ</h2>
+        <h2 class="panel-title">${t('popup_current_page_title')}</h2>
         <button
           type="button"
           class="summary-btn"
           aria-label=${this.summarizing
-            ? '要約中…'
-            : formatAiButtonTitle('このページの本文を AI で要約', this.licenseTier, 'page_summary')}
-          title=${formatAiButtonTitle('このページの本文を AI で要約', this.licenseTier, 'page_summary')}
+            ? t('popup_summarizing')
+            : formatAiButtonTitle(t('popup_page_summary_button_title'), this.licenseTier, 'page_summary')}
+          title=${formatAiButtonTitle(t('popup_page_summary_button_title'), this.licenseTier, 'page_summary')}
           ?disabled=${this.summarizing}
           @click=${() => {
             void this.handlePageSummary();
           }}
         >
           ${this.summarizing
-            ? '要約中…'
-            : formatAiButtonLabel('📝 ページを要約', this.licenseTier, 'page_summary')}
+            ? t('popup_summarizing')
+            : formatAiButtonLabel(t('popup_page_summary_button_label'), this.licenseTier, 'page_summary')}
         </button>
       </div>
       ${this.renderHighlightsBody()}

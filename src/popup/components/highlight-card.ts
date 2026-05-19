@@ -5,12 +5,10 @@ import {
   canUseFactCheck,
   factCheckHighlightText,
   formatFactCheckForCopy,
-  getFactCheckButtonLabel,
   type FactCheckResult,
 } from '../../shared/ai/fact-check.js';
 import {
   canUseRephrase,
-  getRephraseStyleLabel,
   REPHRASE_STYLES,
   rephraseHighlightText,
   type RephraseStyle,
@@ -23,7 +21,6 @@ import {
 } from '../../shared/license/ai-access.js';
 import {
   getCachedTranslation,
-  getTranslateLanguageLabel,
   mergeTranslationCache,
   translateHighlightText,
 } from '../../shared/ai/translation.js';
@@ -48,6 +45,15 @@ import { popupDesignTokens } from '../styles.js';
 import { getActiveTabId } from '../utils/tab-url.js';
 
 const COPY_LONG_PRESS_MS = 300;
+
+function translateLangLabel(langCode: string): string {
+  const message = t(`popup_translate_lang_${langCode}`);
+  return message.startsWith('__MISSING:') ? langCode : message;
+}
+
+function rephraseStyleLabel(style: RephraseStyle): string {
+  return t(`popup_rephrase_style_${style}`);
+}
 const DEFAULT_NEW_TAG_COLOR = '#ffd34e';
 
 const COLOR_VAR: Record<Highlight['color'], string> = {
@@ -725,7 +731,7 @@ export class MarkwellHighlightCard extends LitElement {
       const tag = existingByName ?? (await createTag(trimmed, DEFAULT_NEW_TAG_COLOR));
 
       if (this.highlight.tag_ids.includes(tag.id)) {
-        this.showToast('このタグは既に付いています', 'warning');
+        this.showToast(t('popup_card_tag_already_exists'), 'warning');
         return;
       }
 
@@ -736,10 +742,10 @@ export class MarkwellHighlightCard extends LitElement {
       this.tagInput = '';
       this.tagSuggestionIndex = 0;
       this.dispatchRefresh();
-      this.showToast(`タグ「${tag.name}」を追加しました`, 'success');
+      this.showToast(t('popup_card_tag_added', [tag.name]), 'success');
     } catch (error) {
       this.showToast(
-        error instanceof Error ? error.message : 'タグの追加に失敗しました',
+        error instanceof Error ? error.message : t('popup_card_tag_add_failed'),
         'error',
       );
     } finally {
@@ -760,7 +766,7 @@ export class MarkwellHighlightCard extends LitElement {
       <div
         class="tag-menu"
         role="listbox"
-        aria-label="タグ候補"
+        aria-label=${t('popup_card_tag_suggestions_label')}
         @click=${(event: Event) => {
           event.stopPropagation();
         }}
@@ -768,7 +774,7 @@ export class MarkwellHighlightCard extends LitElement {
         <input
           class="tag-input"
           type="text"
-          placeholder="タグを追加…"
+          placeholder=${t('popup_card_tag_add_placeholder')}
           .value=${this.tagInput}
           ?disabled=${this.tagAdding}
           @input=${(event: Event) => {
@@ -780,7 +786,7 @@ export class MarkwellHighlightCard extends LitElement {
         />
         <ul class="tag-suggestions">
           ${suggestions.length === 0
-            ? html`<li><span class="tag-suggestion">候補がありません</span></li>`
+            ? html`<li><span class="tag-suggestion">${t('popup_card_tag_no_suggestions')}</span></li>`
             : suggestions.map((suggestion, index) => {
                 const isActive = index === activeIndex;
                 if (suggestion.kind === 'create') {
@@ -880,12 +886,12 @@ export class MarkwellHighlightCard extends LitElement {
     this.copyMenuOpen = true;
   }
 
-  /** キーボード / 外部からのプレーンテキストコピー */
+  /** Plain-text copy from keyboard or external caller */
   async copyPlain(): Promise<void> {
     await this.handleCopyPlain();
   }
 
-  /** キーボード / 外部からのジャンプ（検索モードはページを開く） */
+  /** Jump from keyboard or external caller (search mode opens the page) */
   async jump(): Promise<void> {
     if (this.mode === 'search') {
       this.dispatchEvent(
@@ -900,7 +906,7 @@ export class MarkwellHighlightCard extends LitElement {
     await this.handleJump();
   }
 
-  /** キーボード / 外部からの削除（confirm 付き） */
+  /** Delete from keyboard or external caller (with confirm) */
   deleteWithConfirm(): void {
     this.handleDelete();
   }
@@ -914,7 +920,7 @@ export class MarkwellHighlightCard extends LitElement {
     this.copyMenuOpen = false;
     const markdown = formatHighlightAsMarkdown(this.highlight);
     await navigator.clipboard.writeText(markdown);
-    this.showToast('Markdown をコピーしました', 'success');
+    this.showToast(t('popup_card_markdown_copied'), 'success');
   }
 
   private handleDelete(): void {
@@ -929,7 +935,7 @@ export class MarkwellHighlightCard extends LitElement {
   }
 
   private showJumpNotFoundToast(): void {
-    this.showToast('ハイライトが見つかりません', 'warning');
+    this.showToast(t('popup_card_highlight_not_found'), 'warning');
   }
 
   private handleCardClick(event: Event): void {
@@ -1003,14 +1009,14 @@ export class MarkwellHighlightCard extends LitElement {
   private formatFactCheckError(error: unknown): string {
     if (error instanceof Error) {
       if (error.message === 'API key not set') {
-        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+        return t('synthesis_error_api_key_not_set');
       }
       if (error instanceof AiAccessError) {
-        return 'ファクトチェックは Premium で利用できます。';
+        return t('popup_error_fact_check_premium');
       }
       return error.message;
     }
-    return 'ファクトチェックに失敗しました';
+    return t('popup_error_fact_check_failed');
   }
 
   private async runFactCheck(): Promise<void> {
@@ -1038,23 +1044,23 @@ export class MarkwellHighlightCard extends LitElement {
     }
     try {
       await navigator.clipboard.writeText(formatFactCheckForCopy(this.factCheckResult));
-      this.showToast('ファクトチェック結果をコピーしました', 'success');
+      this.showToast(t('popup_card_fact_check_copied'), 'success');
     } catch {
-      this.showToast('コピーに失敗しました', 'error');
+      this.showToast(t('side_panel_copy_failed'), 'error');
     }
   }
 
   private formatRephraseError(error: unknown): string {
     if (error instanceof Error) {
       if (error.message === 'API key not set') {
-        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+        return t('synthesis_error_api_key_not_set');
       }
       if (error instanceof AiAccessError) {
-        return 'トライアルまたは Premium で利用できます。';
+        return t('synthesis_error_trial_required');
       }
       return error.message;
     }
-    return '言い換えに失敗しました';
+    return t('popup_error_rephrase_failed');
   }
 
   private async handleRephraseStyleSelect(style: RephraseStyle): Promise<void> {
@@ -1084,9 +1090,9 @@ export class MarkwellHighlightCard extends LitElement {
   private async copyRephraseResult(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.rephraseResultText);
-      this.showToast('言い換えをコピーしました', 'success');
+      this.showToast(t('popup_card_rephrase_copied'), 'success');
     } catch {
-      this.showToast('コピーに失敗しました', 'error');
+      this.showToast(t('side_panel_copy_failed'), 'error');
     }
   }
 
@@ -1108,11 +1114,11 @@ export class MarkwellHighlightCard extends LitElement {
   private formatTranslationError(error: unknown): string {
     if (error instanceof Error) {
       if (error.message === 'API key not set') {
-        return 'API キーが未設定です。設定画面で Gemini API キーを登録してください。';
+        return t('synthesis_error_api_key_not_set');
       }
       return error.message;
     }
-    return '翻訳に失敗しました';
+    return t('popup_error_translate_failed');
   }
 
   private async handleTranslate(event: Event): Promise<void> {
@@ -1175,7 +1181,7 @@ export class MarkwellHighlightCard extends LitElement {
     const hasNote = this.highlight.note.trim() !== '';
     const isSearch = this.mode === 'search';
 
-    const translationLabel = getTranslateLanguageLabel(this.translateTargetLang);
+    const translationLabel = translateLangLabel(this.translateTargetLang);
 
     return html`
       <article
@@ -1205,7 +1211,7 @@ export class MarkwellHighlightCard extends LitElement {
                 : nothing;
             })}
             ${this.highlight.ai_tags.map(
-              (aiTag) => html`<span class="tag tag--ai" title="AI タグ">${aiTag}</span>`,
+              (aiTag) => html`<span class="tag tag--ai" title=${t('popup_card_ai_tag_title')}>${aiTag}</span>`,
             )}
             ${hasNote ? html`<span class="note-icon" title=${this.highlight.note}>📝</span>` : ''}
             <time class="time" datetime=${new Date(this.highlight.created_at).toISOString()}>
@@ -1217,8 +1223,8 @@ export class MarkwellHighlightCard extends LitElement {
               <button
                 type="button"
                 class="action-btn action-btn--icon"
-                title="タグを追加"
-                aria-label="タグを追加"
+                title=${t('popup_card_add_tag')}
+                aria-label=${t('popup_card_add_tag')}
                 aria-expanded=${this.tagMenuOpen}
                 aria-haspopup="listbox"
                 @click=${(event: Event) => {
@@ -1233,7 +1239,7 @@ export class MarkwellHighlightCard extends LitElement {
               <button
                 type="button"
                 class="action-btn"
-                title="クリック: テキスト / 長押し・右クリック: Markdown"
+                title=${t('popup_card_copy_hint_title')}
                 aria-label=${t('card_action_copy')}
                 @pointerdown=${(event: PointerEvent) => {
                   this.onCopyPointerDown(event);
@@ -1294,27 +1300,27 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="action-btn"
-              title=${`翻訳先: ${getTranslateLanguageLabel(this.translateTargetLang)}`}
-              aria-label=${this.translating ? '翻訳中' : t('card_action_translate')}
+              title=${t('popup_card_translate_target_title', [translateLangLabel(this.translateTargetLang)])}
+              aria-label=${this.translating ? t('popup_card_translating') : t('card_action_translate')}
               ?disabled=${this.translating}
               @click=${(event: Event) => {
                 void this.handleTranslate(event);
               }}
             >
-              ${this.translating ? '翻訳中…' : `🌐 ${t('card_action_translate')}`}
+              ${this.translating ? t('popup_card_translating_ellipsis') : `🌐 ${t('card_action_translate')}`}
             </button>
             <button
               type="button"
               class="action-btn"
-              title=${formatAiButtonTitle('選択テキストを言い換え', this.licenseTier, 'rephrase')}
-              aria-label=${this.rephrasing ? '言い換え中' : t('card_action_rephrase')}
+              title=${formatAiButtonTitle(t('popup_card_rephrase_title'), this.licenseTier, 'rephrase')}
+              aria-label=${this.rephrasing ? t('popup_card_rephrasing') : t('card_action_rephrase')}
               ?disabled=${this.rephrasing}
               @click=${(event: Event) => {
                 this.handleRephraseClick(event);
               }}
             >
               ${this.rephrasing
-                ? '言い換え中…'
+                ? t('popup_card_rephrasing_ellipsis')
                 : canUseRephrase(this.licenseTier)
                   ? `✍️ ${t('card_action_rephrase')}`
                   : `🔒 ✍️ ${t('card_action_rephrase')}`}
@@ -1323,17 +1329,21 @@ export class MarkwellHighlightCard extends LitElement {
               type="button"
               class="action-btn"
               title=${formatAiButtonTitle(
-                'web 検索で事実関係を確認',
+                t('popup_card_fact_check_web_title'),
                 this.licenseTier,
                 'fact_check',
               )}
-              aria-label=${this.factChecking ? 'ファクトチェック中' : 'ファクトチェック'}
+              aria-label=${this.factChecking ? t('popup_card_fact_checking') : t('popup_card_fact_check_btn')}
               ?disabled=${this.factChecking}
               @click=${(event: Event) => {
                 this.handleFactCheckClick(event);
               }}
             >
-              ${this.factChecking ? '確認中…' : getFactCheckButtonLabel(this.licenseTier)}
+              ${this.factChecking
+                ? t('popup_card_fact_checking_ellipsis')
+                : canUseFactCheck(this.licenseTier)
+                  ? t('popup_card_fact_check_btn')
+                  : `🔒 ${t('popup_card_fact_check_btn')}`}
             </button>
             ${this.showRelatedHighlightsButton()
               ? html`
@@ -1341,16 +1351,18 @@ export class MarkwellHighlightCard extends LitElement {
                     type="button"
                     class="action-btn"
                     title=${formatAiButtonTitle(
-                      '意味的に近いハイライトを提案',
+                      t('popup_card_related_title'),
                       this.licenseTier,
                       'related',
                     )}
-                    aria-label="関連ハイライト"
+                    aria-label=${t('popup_card_related_aria')}
                     @click=${(event: Event) => {
                       this.handleFindRelated(event);
                     }}
                   >
-                    ${this.canUseRelatedHighlights() ? '🔗 関連' : '🔒 🔗 関連'}
+                    ${this.canUseRelatedHighlights()
+                      ? t('popup_card_related_btn')
+                      : t('popup_card_related_btn_locked')}
                   </button>
                 `
               : nothing}
@@ -1373,9 +1385,9 @@ export class MarkwellHighlightCard extends LitElement {
           ${this.translationExpanded
             ? html`
                 <div class="translation" aria-live="polite">
-                  <p class="translation-label">翻訳（${translationLabel}）</p>
+                  <p class="translation-label">${t('popup_card_translation_label', [translationLabel])}</p>
                   ${this.translating
-                    ? html`<p class="translation-status">翻訳中…</p>`
+                    ? html`<p class="translation-status">${t('popup_card_translating_ellipsis')}</p>`
                     : html`<p class="translation-text">${this.translationBody}</p>`}
                 </div>
               `
@@ -1410,7 +1422,7 @@ export class MarkwellHighlightCard extends LitElement {
           aria-labelledby="rephrase-style-title"
           @click=${(event: Event) => { event.stopPropagation(); }}
         >
-          <h3 id="rephrase-style-title" class="dialog-title">言い換えスタイル</h3>
+          <h3 id="rephrase-style-title" class="dialog-title">${t('popup_card_rephrase_style_title')}</h3>
           <div class="style-list" role="listbox">
             ${REPHRASE_STYLES.map(
               (style) => html`
@@ -1418,12 +1430,12 @@ export class MarkwellHighlightCard extends LitElement {
                   type="button"
                   class="style-btn"
                   role="option"
-                  aria-label=${getRephraseStyleLabel(style.id)}
+                  aria-label=${rephraseStyleLabel(style.id)}
                   @click=${() => {
                     void this.handleRephraseStyleSelect(style.id);
                   }}
                 >
-                  ${getRephraseStyleLabel(style.id)}
+                  ${rephraseStyleLabel(style.id)}
                 </button>
               `,
             )}
@@ -1432,12 +1444,12 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn"
-              aria-label="キャンセル"
+              aria-label=${t('note_dialog_cancel')}
               @click=${() => {
                 this.closeRephraseStyleModal();
               }}
             >
-              キャンセル
+              ${t('note_dialog_cancel')}
             </button>
           </div>
         </div>
@@ -1450,7 +1462,7 @@ export class MarkwellHighlightCard extends LitElement {
       return nothing;
     }
 
-    const styleLabel = getRephraseStyleLabel(this.rephraseStyle);
+    const styleLabel = rephraseStyleLabel(this.rephraseStyle);
 
     return html`
       <div
@@ -1470,21 +1482,21 @@ export class MarkwellHighlightCard extends LitElement {
           @click=${(event: Event) => { event.stopPropagation(); }}
         >
           <h3 id="rephrase-result-title" class="dialog-title">
-            言い換え（${styleLabel}）
+            ${t('popup_card_rephrase_result_title', [styleLabel])}
           </h3>
           <div class="dialog-body" aria-live="polite">
-            ${this.rephrasing ? '言い換え中…' : this.rephraseResultText}
+            ${this.rephrasing ? t('popup_card_rephrasing_ellipsis') : this.rephraseResultText}
           </div>
           <div class="dialog-actions">
             <button
               type="button"
               class="dialog-btn"
-              aria-label="閉じる"
+              aria-label=${t('mini_toolbar_close')}
               @click=${() => {
                 this.closeRephraseResultModal();
               }}
             >
-              閉じる
+              ${t('mini_toolbar_close')}
             </button>
             <button
               type="button"
@@ -1527,10 +1539,10 @@ export class MarkwellHighlightCard extends LitElement {
           aria-labelledby="fact-check-title"
           @click=${(event: Event) => { event.stopPropagation(); }}
         >
-          <h3 id="fact-check-title" class="dialog-title">🔎 ファクトチェック</h3>
+          <h3 id="fact-check-title" class="dialog-title">${t('popup_card_fact_check_modal_title')}</h3>
           <div class="dialog-body" aria-live="polite">
             ${this.factChecking
-              ? 'web 検索で確認中…'
+              ? t('popup_card_fact_check_web_checking')
               : result !== null
                 ? result.answer
                 : ''}
@@ -1538,7 +1550,7 @@ export class MarkwellHighlightCard extends LitElement {
           ${result !== null && result.sources.length > 0
             ? html`
                 <div class="fact-check-sources">
-                  <p class="fact-check-sources-title">出典</p>
+                  <p class="fact-check-sources-title">${t('popup_card_fact_check_sources')}</p>
                   <ul>
                     ${result.sources.map(
                       (source) => html`
@@ -1562,12 +1574,12 @@ export class MarkwellHighlightCard extends LitElement {
             <button
               type="button"
               class="dialog-btn"
-              aria-label="閉じる"
+              aria-label=${t('mini_toolbar_close')}
               @click=${() => {
                 this.closeFactCheckModal();
               }}
             >
-              閉じる
+              ${t('mini_toolbar_close')}
             </button>
             <button
               type="button"

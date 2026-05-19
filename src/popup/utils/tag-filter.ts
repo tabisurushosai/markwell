@@ -5,7 +5,7 @@ import { filterHighlights } from './search.js';
 export const PROJECT_FILTER_ALL = 'all';
 export const PROJECT_FILTER_UNASSIGNED = 'unassigned';
 
-/** `all` | `unassigned` | プロジェクト ID */
+/** `all` | `unassigned` | project id */
 export type ProjectFilterValue = string;
 
 export function isProjectFilterActive(projectFilter: ProjectFilterValue): boolean {
@@ -25,7 +25,7 @@ export function filterHighlightsByProject(
   return highlights.filter((highlight) => highlight.project_id === projectFilter);
 }
 
-/** 選択タグをすべて含むハイライトのみ（AND） */
+/** Highlights that include every selected tag (AND) */
 export function filterHighlightsByTagIds(highlights: Highlight[], tagIds: string[]): Highlight[] {
   if (tagIds.length === 0) {
     return highlights;

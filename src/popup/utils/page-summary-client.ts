@@ -3,6 +3,7 @@ import {
   isSummarizePageResponse,
   type SummarizePageMessage,
 } from '../../shared/messages/page-summary.js';
+import { t } from '../../shared/utils/i18n.js';
 import { getActiveTabId } from './tab-url.js';
 
 export type PageTextFetchResult =
@@ -46,10 +47,10 @@ export async function requestPageSummaryViaBackground(
   try {
     const response: unknown = await chrome.runtime.sendMessage(summarizeMessage);
     if (!isSummarizePageResponse(response)) {
-      return { ok: false, error: '要約レスポンスが不正です' };
+      return { ok: false, error: t('popup_summary_invalid_response') };
     }
     return response;
   } catch {
-    return { ok: false, error: '要約リクエストに失敗しました' };
+    return { ok: false, error: t('popup_summary_request_failed') };
   }
 }

@@ -54,7 +54,7 @@ function parseDateInput(value: string, endOfDay: boolean): number | null {
   return date.getTime();
 }
 
-/** フィルタ適用用の [start, end]（ミリ秒）。`all` は null */
+/** [start, end] in ms for filtering; null when `all` */
 export function resolveDateRange(filter: DateFilterValue, now = Date.now()): {
   start: number;
   end: number;

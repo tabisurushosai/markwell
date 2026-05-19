@@ -1,4 +1,4 @@
-/** タブ URL から canonical を推定（content script 未応答時のフォールバック） */
+/** Infer canonical URL from tab URL (fallback when content script does not respond) */
 export function canonicalizeHref(href: string): string {
   try {
     const url = new URL(href);

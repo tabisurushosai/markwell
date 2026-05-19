@@ -1,7 +1,7 @@
 import type { Highlight } from '../../shared/types/highlight.js';
 import { isCanonicalResponse } from './tab-url.js';
 
-/** 同一 canonical URL のタブに DOM 上の mark 削除を依頼 */
+/** Ask tabs with the same canonical URL to remove the mark from the DOM */
 export async function notifyHighlightRemovedOnOpenTabs(highlight: Highlight): Promise<void> {
   const tabs = await chrome.tabs.query({});
   const httpTabs = tabs.filter(

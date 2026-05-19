@@ -396,9 +396,9 @@ export class MarkwellPopupRoot extends LitElement {
         `;
       case 'projects':
         return html`
-          <h2 class="panel-title">プロジェクト</h2>
+          <h2 class="panel-title">${t('popup_tab_projects')}</h2>
           ${this.projects.length === 0
-            ? html`<p class="placeholder">プロジェクトがありません</p>`
+            ? html`<p class="placeholder">${t('popup_projects_empty')}</p>`
             : html`
                 <ul class="project-list">
                   ${this.projects.map(
@@ -412,7 +412,7 @@ export class MarkwellPopupRoot extends LitElement {
                             this.handleOpenSidePanel();
                           }}
                         >
-                          開く
+                          ${t('popup_project_open')}
                         </button>
                       </li>
                     `,
@@ -494,14 +494,14 @@ export class MarkwellPopupRoot extends LitElement {
       this.relatedHighlights = related;
       this.relatedTagsById = new Map(tags.map((tag) => [tag.id, tag]));
       if (related.length === 0) {
-        dispatchToast(this, '関連ハイライトが見つかりませんでした', 'info');
+        dispatchToast(this, t('popup_related_not_found'), 'info');
       }
     } catch (error) {
       this.relatedHighlights = [];
       if (error instanceof AiAccessError) {
-        dispatchToast(this, '関連ハイライトはトライアルまたは Premium で利用できます', 'warning');
+        dispatchToast(this, t('popup_related_premium_required'), 'warning');
       } else {
-        dispatchToast(this, '関連ハイライトの取得に失敗しました', 'error');
+        dispatchToast(this, t('popup_related_load_failed'), 'error');
       }
     } finally {
       this.relatedLoading = false;
@@ -526,29 +526,29 @@ export class MarkwellPopupRoot extends LitElement {
         : '';
 
     return html`
-      <section class="related-section" aria-label="関連ハイライト">
+      <section class="related-section" aria-label=${t('popup_related_section_label')}>
         <div class="related-section__header">
           <div>
-            <h2 class="related-section__title">関連ハイライト</h2>
+            <h2 class="related-section__title">${t('popup_related_section_title')}</h2>
             ${preview !== ''
-              ? html`<p class="related-section__source">「${preview}」に近い候補</p>`
+              ? html`<p class="related-section__source">${t('popup_related_source_hint', [preview])}</p>`
               : nothing}
           </div>
           <button
             type="button"
             class="related-section__close"
-            aria-label="関連ハイライトを閉じる"
+            aria-label=${t('popup_related_close')}
             @click=${() => {
               this.closeRelatedSection();
             }}
           >
-            閉じる
+            ${t('mini_toolbar_close')}
           </button>
         </div>
         ${this.relatedLoading
-          ? html`<p class="related-section__status">関連を検索中…</p>`
+          ? html`<p class="related-section__status">${t('popup_related_searching')}</p>`
           : this.relatedHighlights.length === 0
-            ? html`<p class="related-section__status">表示できる関連ハイライトがありません</p>`
+            ? html`<p class="related-section__status">${t('popup_related_none_displayable')}</p>`
             : html`
                 <div class="related-section__list">
                   ${this.relatedHighlights.map(
@@ -650,32 +650,32 @@ export class MarkwellPopupRoot extends LitElement {
         <button
           type="button"
           class="footer-btn"
-          aria-label="設定"
+          aria-label=${t('popup_footer_settings')}
           @click=${() => {
             this.handleOpenOptions();
           }}
         >
-          設定
+          ${t('popup_footer_settings')}
         </button>
         <button
           type="button"
           class="footer-btn"
-          aria-label="Side Panel を開く"
+          aria-label=${t('popup_footer_side_panel')}
           @click=${() => {
             this.handleOpenSidePanel();
           }}
         >
-          Side Panel を開く
+          ${t('popup_footer_side_panel')}
         </button>
         <button
           type="button"
           class="footer-btn"
-          aria-label="ヘルプ"
+          aria-label=${t('popup_footer_help')}
           @click=${() => {
             this.handleOpenHelp();
           }}
         >
-          ヘルプ
+          ${t('popup_footer_help')}
         </button>
       </footer>
     `;

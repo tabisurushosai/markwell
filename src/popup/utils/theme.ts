@@ -1,4 +1,5 @@
 import type { ThemePreference } from '../../shared/types/settings.js';
+import { t } from '../../shared/utils/i18n.js';
 
 export type ResolvedTheme = 'dark' | 'light';
 
@@ -45,13 +46,13 @@ export function themeToggleIcon(preference: ThemePreference): string {
 export function themeToggleLabel(preference: ThemePreference): string {
   switch (preference) {
     case 'dark':
-      return 'ダークモード';
+      return t('popup_theme_dark');
     case 'light':
-      return 'ライトモード';
+      return t('popup_theme_light');
     case 'auto':
-      return 'システムに合わせる';
+      return t('popup_theme_auto');
     default:
-      return 'ダークモード';
+      return t('popup_theme_dark');
   }
 }
 
