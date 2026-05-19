@@ -224,7 +224,7 @@ def screenshot_3() -> Image.Image:
     draw.text((cx1 - 188, cy0 + 34), "$5 USD", fill="#1a1a1a", font=_font(22, bold=True))
     features = [
         ("合成・Q&A・引用抽出", "無制限"),
-        ("Markdown / PDF / DOCX エクスポート", "Premium"),
+        ("Markdown / Obsidian / Roam エクスポート", "Premium"),
         ("ファクトチェック・言い換え", "Premium"),
         ("ページ要約・関連ハイライト", "Premium"),
         ("ハイライト上限", "緩和"),
