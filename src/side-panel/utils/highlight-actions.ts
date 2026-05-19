@@ -3,7 +3,7 @@ import { buildHighlightOpenUrl } from '../../popup/utils/highlight-url.js';
 import { isJumpToHighlightResponse } from '../../popup/utils/jump.js';
 import { isCanonicalResponse } from '../../popup/utils/tab-url.js';
 
-/** 一致タブがあればジャンプ、なければハッシュ付き URL で新規タブ */
+/** Jump on a matching tab, or open a new tab with hash URL */
 export async function jumpToHighlightFromSidePanel(highlight: Highlight): Promise<boolean> {
   const tabs = await chrome.tabs.query({});
   const httpTabs = tabs.filter(
@@ -43,7 +43,7 @@ export async function jumpToHighlightFromSidePanel(highlight: Highlight): Promis
   return true;
 }
 
-/** 同一 canonical URL のタブで DOM 上の色を更新 */
+/** Update DOM highlight color on tabs with the same canonical URL */
 export async function notifyHighlightColorOnOpenTabs(
   highlight: Highlight,
   color: HighlightColor,

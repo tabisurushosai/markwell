@@ -82,6 +82,7 @@ import {
 import {
   formatSynthesisError,
   isSynthesisAbortError,
+  isSynthesisErrorMarkdown,
 } from './utils/synthesis-errors.js';
 import './components/markdown-it.js';
 import { t } from '../shared/utils/i18n.js';
@@ -97,13 +98,9 @@ const HIGHLIGHT_COLORS: readonly HighlightColor[] = [
   'orange',
 ];
 
-const COLOR_LABELS: Record<HighlightColor, string> = {
-  yellow: '黄',
-  green: '緑',
-  pink: 'ピンク',
-  blue: '青',
-  orange: 'オレンジ',
-};
+function highlightColorLabel(color: HighlightColor): string {
+  return t(`side_panel_color_${color}`);
+}
 
 const COLOR_VAR: Record<HighlightColor, string> = {
   yellow: 'var(--hl-yellow)',
@@ -112,9 +109,6 @@ const COLOR_VAR: Record<HighlightColor, string> = {
   blue: 'var(--hl-blue)',
   orange: 'var(--hl-orange)',
 };
-
-const EMPTY_PROJECT_HIGHLIGHTS_MESSAGE =
-  'このプロジェクトにはハイライトがありません。popup からハイライトを右クリック → プロジェクトに追加 で入れられます';
 
 @customElement('markwell-side-panel-root')
 export class MarkwellSidePanelRoot extends LitElement {
@@ -346,7 +340,7 @@ export class MarkwellSidePanelRoot extends LitElement {
   private async handleCreateProject(): Promise<void> {
     const name = this.newProjectName.trim();
     if (name === '') {
-      this.createError = '名前を入力してください';
+      this.createError = t('side_panel_error_name_required');
       return;
     }
     try {
@@ -358,10 +352,10 @@ export class MarkwellSidePanelRoot extends LitElement {
       await this.selectProject(project.id);
     } catch (error) {
       if (error instanceof ProjectLimitError) {
-        this.createError = 'プロジェクト数の上限に達しています';
+        this.createError = t('side_panel_error_project_limit');
         return;
       }
-      this.createError = '作成に失敗しました';
+      this.createError = t('side_panel_error_create_failed');
     }
   }
 
@@ -401,7 +395,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
     await removeHighlightFromProject(this.selectedProjectId, highlight.id);
     await this.loadHighlightsForProject();
-    this.showStatus('プロジェクトから除外しました（ハイライト自体は削除されません）', 'info');
+    this.showStatus(t('side_panel_status_excluded'), 'info');
   }
 
   private async handleJump(highlight: Highlight): Promise<void> {
@@ -554,11 +548,11 @@ export class MarkwellSidePanelRoot extends LitElement {
   }
 
   private async handleSynthesize(): Promise<void> {
-    await this.runSynthesis({ savedStatusMessage: '合成結果を保存しました' });
+    await this.runSynthesis({ savedStatusMessage: t('synthesis_status_saved') });
   }
 
   private async handleRegenerate(): Promise<void> {
-    await this.runSynthesis({ savedStatusMessage: '再生成しました' });
+    await this.runSynthesis({ savedStatusMessage: t('synthesis_status_regenerated') });
   }
 
   private async runSynthesis(opts: { savedStatusMessage: string }): Promise<void> {
@@ -569,7 +563,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません', 'warning');
+      this.showStatus(t('side_panel_no_highlights'), 'warning');
       return;
     }
 
@@ -615,21 +609,17 @@ export class MarkwellSidePanelRoot extends LitElement {
     if (
       synthesisSucceeded &&
       this.synthesisMarkdown.trim() !== '' &&
-      !this.isSynthesisErrorMarkdown(this.synthesisMarkdown) &&
+      !isSynthesisErrorMarkdown(this.synthesisMarkdown) &&
       this.selectedProjectId !== ''
     ) {
       await this.persistSynthesisRecord(prompt, this.synthesisMarkdown, opts.savedStatusMessage);
     }
   }
 
-  private isSynthesisErrorMarkdown(markdown: string): boolean {
-    return markdown.startsWith('**エラー:**');
-  }
-
   private async persistSynthesisRecord(
     prompt: string,
     resultMarkdown: string,
-    statusMessage = '合成結果を保存しました',
+    statusMessage = t('synthesis_status_saved'),
   ): Promise<void> {
     const settings = await getSettings();
     await createSynthesis({
@@ -680,7 +670,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       await copySynthesisMarkdown(synthesis.result_markdown);
       this.showStatus(t('toast_copied'));
     } catch {
-      this.showStatus('コピーに失敗しました', 'error');
+      this.showStatus(t('side_panel_copy_failed'), 'error');
     }
   }
 
@@ -721,7 +711,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       return;
     }
     this.upgradeModal = await buildUpgradeModalHostState({
-      featureName: 'Obsidian / Roam 形式エクスポート',
+      featureName: t('side_panel_feature_export_premium'),
       showFeatureList: true,
     });
   }
@@ -763,13 +753,13 @@ export class MarkwellSidePanelRoot extends LitElement {
   private exportStatusMessage(format: SynthesisExportFormat): string {
     switch (format) {
       case 'markdown':
-        return 'Markdown (.md) をダウンロードしました';
+        return t('side_panel_export_md_done');
       case 'obsidian':
-        return 'Obsidian 形式をダウンロードしました';
+        return t('side_panel_export_obsidian_done');
       case 'roam':
-        return 'Roam Research 形式をダウンロードしました';
+        return t('side_panel_export_roam_done');
       default:
-        return 'エクスポートしました';
+        return t('side_panel_export_done');
     }
   }
 
@@ -801,7 +791,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         void this.openPremiumUnlockModal('export');
         return;
       }
-      this.showStatus('エクスポートに失敗しました', 'error');
+      this.showStatus(t('side_panel_export_failed'), 'error');
     }
     this.closeExportMenus();
   }
@@ -820,8 +810,8 @@ export class MarkwellSidePanelRoot extends LitElement {
   ) {
     const formats: Array<{ format: SynthesisExportFormat; label: string }> = [
       { format: 'markdown', label: 'Markdown (.md)' },
-      { format: 'obsidian', label: 'Obsidian 形式' },
-      { format: 'roam', label: 'Roam Research 形式' },
+      { format: 'obsidian', label: t('side_panel_export_obsidian_format') },
+      { format: 'roam', label: t('side_panel_export_roam_format') },
     ];
 
     return html`
@@ -829,7 +819,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         <button
           type="button"
           class="btn export-menu-trigger"
-          aria-label="エクスポート"
+          aria-label=${t('side_panel_export')}
           aria-expanded=${isOpen}
           aria-haspopup="menu"
           @click=${(event: Event) => {
@@ -841,7 +831,7 @@ export class MarkwellSidePanelRoot extends LitElement {
             }
           }}
         >
-          エクスポート ▾
+          ${t('side_panel_export_menu')}
         </button>
         ${isOpen
           ? html`
@@ -927,7 +917,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません', 'warning');
+      this.showStatus(t('side_panel_no_highlights'), 'warning');
       return;
     }
 
@@ -971,7 +961,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       await copySynthesisMarkdown(this.quotesMarkdown);
       this.showStatus(t('toast_copied'));
     } catch {
-      this.showStatus('コピーに失敗しました', 'error');
+      this.showStatus(t('side_panel_copy_failed'), 'error');
     }
   }
 
@@ -980,24 +970,24 @@ export class MarkwellSidePanelRoot extends LitElement {
       this.quotesMarkdown,
       buildQuoteDownloadFilename(this.quotesExportCreatedAt),
     );
-    this.showStatus('引用 Markdown をダウンロードしました');
+    this.showStatus(t('side_panel_quotes_md_downloaded'));
   }
 
   private renderResultPanel() {
     if (this.resultPanelMode === 'quotes') {
       return html`
         <div class="result-header">
-          <h2 class="result-header__title">引用抽出</h2>
+          <h2 class="result-header__title">${t('side_panel_tab_extract')}</h2>
           <div class="result-header__actions">
             ${this.extractingQuotes
-              ? html`<span class="result-badge">抽出中</span>`
+              ? html`<span class="result-badge">${t('side_panel_status_extracting')}</span>`
               : nothing}
             ${this.renderQuoteResultActions()}
           </div>
         </div>
         <div class="result-body">
           ${this.extractingQuotes && this.quotesMarkdown === ''
-            ? html`<p class="result-placeholder">抽出中…</p>`
+            ? html`<p class="result-placeholder">${t('side_panel_status_extracting_ellipsis')}</p>`
             : html`<markdown-it .content=${this.quotesMarkdown}></markdown-it>`}
         </div>
       `;
@@ -1005,10 +995,10 @@ export class MarkwellSidePanelRoot extends LitElement {
 
     return html`
       <div class="result-header">
-        <h2 class="result-header__title">合成結果</h2>
+        <h2 class="result-header__title">${t('side_panel_result_synthesis')}</h2>
         <div class="result-header__actions">
-          ${this.synthesizing ? html`<span class="result-badge">生成中</span>` : nothing}
-          ${!this.synthesizing && !this.isSynthesisErrorMarkdown(this.synthesisMarkdown)
+          ${this.synthesizing ? html`<span class="result-badge">${t('side_panel_status_generating')}</span>` : nothing}
+          ${!this.synthesizing && !isSynthesisErrorMarkdown(this.synthesisMarkdown)
             ? this.renderExportMenu(
                 this.synthesisMarkdown,
                 this.synthesisExportCreatedAt,
@@ -1021,7 +1011,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       </div>
       <div class="result-body">
         ${this.synthesizing && this.synthesisMarkdown === ''
-          ? html`<p class="result-placeholder">生成中…</p>`
+          ? html`<p class="result-placeholder">${t('side_panel_status_generating_ellipsis')}</p>`
           : html`<markdown-it .content=${this.synthesisMarkdown}></markdown-it>`}
       </div>
     `;
@@ -1031,7 +1021,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     if (
       this.extractingQuotes ||
       this.quotesMarkdown === '' ||
-      this.isSynthesisErrorMarkdown(this.quotesMarkdown)
+      isSynthesisErrorMarkdown(this.quotesMarkdown)
     ) {
       return nothing;
     }
@@ -1039,22 +1029,22 @@ export class MarkwellSidePanelRoot extends LitElement {
       <button
         type="button"
         class="btn"
-        aria-label="コピー"
+        aria-label=${t('card_action_copy')}
         @click=${() => {
           void this.copyQuotesMarkdown();
         }}
       >
-        コピー
+        ${t('card_action_copy')}
       </button>
       <button
         type="button"
         class="btn"
-        aria-label=".md ダウンロード"
+        aria-label=${t('content_download_md')}
         @click=${() => {
           this.downloadQuotesMarkdown();
         }}
       >
-        .md ダウンロード
+        ${t('content_download_md')}
       </button>
     `;
   }
@@ -1098,7 +1088,7 @@ export class MarkwellSidePanelRoot extends LitElement {
     }
 
     if (this.highlights.length === 0) {
-      this.showStatus('ハイライトがありません', 'warning');
+      this.showStatus(t('side_panel_no_highlights'), 'warning');
       return;
     }
 
@@ -1171,16 +1161,16 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private renderBottomTabs() {
     return html`
-      <div class="bottom-tabs" role="tablist" aria-label="AI 機能">
+      <div class="bottom-tabs" role="tablist" aria-label=${t('side_panel_ai_features')}>
         <button
           type="button"
           class="bottom-tab ${this.activeBottomTab === 'synthesis' ? 'bottom-tab--active' : ''}"
           role="tab"
-          aria-label=${formatAiButtonTitle('ハイライト合成', this.currentTier, 'synthesis')}
+          aria-label=${formatAiButtonTitle(t('side_panel_ai_title_synthesis'), this.currentTier, 'synthesis')}
           aria-selected=${this.activeBottomTab === 'synthesis'}
           aria-controls="synthesis-panel"
           id="tab-synthesis"
-          title=${formatAiButtonTitle('ハイライト合成', this.currentTier, 'synthesis')}
+          title=${formatAiButtonTitle(t('side_panel_ai_title_synthesis'), this.currentTier, 'synthesis')}
           @click=${() => {
             this.onBottomTabClick('synthesis');
           }}
@@ -1191,11 +1181,11 @@ export class MarkwellSidePanelRoot extends LitElement {
           type="button"
           class="bottom-tab ${this.activeBottomTab === 'qa' ? 'bottom-tab--active' : ''}"
           role="tab"
-          aria-label=${formatAiButtonTitle('プロジェクト Q&A', this.currentTier, 'qa')}
+          aria-label=${formatAiButtonTitle(t('side_panel_ai_title_qa'), this.currentTier, 'qa')}
           aria-selected=${this.activeBottomTab === 'qa'}
           aria-controls="qa-panel"
           id="tab-qa"
-          title=${formatAiButtonTitle('プロジェクト Q&A', this.currentTier, 'qa')}
+          title=${formatAiButtonTitle(t('side_panel_ai_title_qa'), this.currentTier, 'qa')}
           @click=${() => {
             this.onBottomTabClick('qa');
           }}
@@ -1215,7 +1205,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         aria-labelledby="tab-synthesis"
         ?hidden=${this.activeBottomTab !== 'synthesis'}
       >
-        <p class="synthesis-label">合成プロンプト</p>
+        <p class="synthesis-label">${t('side_panel_synthesis_prompt_label')}</p>
         <textarea
           class="synthesis-prompt"
           placeholder=${t('synthesis_instruction_placeholder')}
@@ -1229,11 +1219,11 @@ export class MarkwellSidePanelRoot extends LitElement {
             type="button"
             class="btn btn--primary"
             aria-label=${this.synthesizing
-              ? '生成中…'
+              ? t('side_panel_status_generating_ellipsis')
               : this.resultVisible && this.resultPanelMode === 'synthesis'
-                ? '再生成'
-                : '合成する'}
-            title=${formatAiButtonTitle('ハイライトを AI で合成', this.currentTier, 'synthesis')}
+                ? t('synthesis_regenerate')
+                : t('synthesis_run')}
+            title=${formatAiButtonTitle(t('side_panel_ai_title_synthesize'), this.currentTier, 'synthesis')}
             ?disabled=${this.synthesizing || this.highlights.length === 0}
             @click=${() => {
               if (this.resultVisible && this.resultPanelMode === 'synthesis') {
@@ -1244,9 +1234,9 @@ export class MarkwellSidePanelRoot extends LitElement {
             }}
           >
             ${this.synthesizing
-              ? '生成中…'
+              ? t('side_panel_status_generating_ellipsis')
               : this.resultVisible && this.resultPanelMode === 'synthesis'
-                ? formatAiButtonLabel('再生成', this.currentTier, 'synthesis')
+                ? formatAiButtonLabel(t('synthesis_regenerate'), this.currentTier, 'synthesis')
                 : formatAiButtonLabel(t('synthesis_run'), this.currentTier, 'synthesis')}
           </button>
           <button
@@ -1275,16 +1265,16 @@ export class MarkwellSidePanelRoot extends LitElement {
             type="button"
             class="btn"
             aria-label=${this.extractingQuotes
-              ? '抽出中…'
-              : formatAiButtonTitle('印象的な引用を AI で抽出', this.currentTier, 'quote_extract')}
-            title=${formatAiButtonTitle('印象的な引用を AI で抽出', this.currentTier, 'quote_extract')}
+              ? t('side_panel_status_extracting_ellipsis')
+              : formatAiButtonTitle(t('side_panel_ai_title_quote_extract'), this.currentTier, 'quote_extract')}
+            title=${formatAiButtonTitle(t('side_panel_ai_title_quote_extract'), this.currentTier, 'quote_extract')}
             ?disabled=${this.extractingQuotes || this.highlights.length === 0}
             @click=${() => {
               void this.handleQuoteExtract();
             }}
           >
             ${this.extractingQuotes
-              ? '抽出中…'
+              ? t('side_panel_status_extracting_ellipsis')
               : formatAiButtonLabel(`✂️ ${t('side_panel_tab_extract')}`, this.currentTier, 'quote_extract')}
           </button>
         </div>
@@ -1303,7 +1293,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       >
         <div id="qa-messages" class="qa-messages" aria-live="polite">
           ${this.qaMessages.length === 0
-            ? html`<p class="qa-empty">プロジェクトのハイライトについて質問できます</p>`
+            ? html`<p class="qa-empty">${t('side_panel_qa_empty')}</p>`
             : this.qaMessages.map((message) =>
                 message.role === 'user'
                   ? html`
@@ -1314,7 +1304,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                   : html`
                       <div class="qa-message qa-message--assistant">
                         ${message.content === '' && this.qaStreaming
-                          ? html`<p class="qa-message__placeholder">応答中…</p>`
+                          ? html`<p class="qa-message__placeholder">${t('side_panel_qa_responding')}</p>`
                           : html`<markdown-it .content=${message.content}></markdown-it>`}
                       </div>
                     `,
@@ -1329,7 +1319,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         >
           <textarea
             class="qa-input"
-            placeholder="ハイライトについて質問…"
+            placeholder=${t('side_panel_qa_placeholder')}
             rows="2"
             .value=${this.qaInput}
             ?disabled=${this.qaStreaming}
@@ -1348,27 +1338,27 @@ export class MarkwellSidePanelRoot extends LitElement {
               type="submit"
               class="btn btn--primary"
               aria-label=${this.qaStreaming
-                ? '応答中…'
-                : formatAiButtonTitle('ハイライトについて質問', this.currentTier, 'qa')}
-              title=${formatAiButtonTitle('ハイライトについて質問', this.currentTier, 'qa')}
+                ? t('side_panel_qa_responding')
+                : formatAiButtonTitle(t('side_panel_ai_title_qa_ask'), this.currentTier, 'qa')}
+              title=${formatAiButtonTitle(t('side_panel_ai_title_qa_ask'), this.currentTier, 'qa')}
               ?disabled=${this.qaStreaming ||
               this.qaInput.trim() === '' ||
               this.highlights.length === 0}
             >
               ${this.qaStreaming
-                ? '応答中…'
-                : formatAiButtonLabel('送信', this.currentTier, 'qa')}
+                ? t('side_panel_qa_responding')
+                : formatAiButtonLabel(t('side_panel_send'), this.currentTier, 'qa')}
             </button>
             <button
               type="button"
               class="btn"
-              aria-label="停止"
+              aria-label=${t('side_panel_stop')}
               ?disabled=${!this.qaStreaming}
               @click=${() => {
                 this.handleCancelQa();
               }}
             >
-              停止
+              ${t('side_panel_stop')}
             </button>
           </div>
         </form>
@@ -1378,13 +1368,13 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private renderHighlightList() {
     if (this.loading) {
-      return html`<p class="empty">読み込み中…</p>`;
+      return html`<p class="empty">${t('side_panel_loading')}</p>`;
     }
     if (this.projects.length === 0) {
-      return html`<p class="empty">プロジェクトがありません。上のセレクタから「+ 新規プロジェクト」を選んで作成してください。</p>`;
+      return html`<p class="empty">${t('side_panel_no_projects')}</p>`;
     }
     if (this.highlights.length === 0) {
-      return html`<p class="empty">${EMPTY_PROJECT_HIGHLIGHTS_MESSAGE}</p>`;
+      return html`<p class="empty">${t('side_panel_empty_highlights_help')}</p>`;
     }
 
     return html`
@@ -1426,8 +1416,8 @@ export class MarkwellSidePanelRoot extends LitElement {
                 type="button"
                 class="drag-handle"
                 draggable="true"
-                aria-label="並び替え"
-                title="ドラッグで並び替え"
+                aria-label=${t('side_panel_reorder')}
+                title=${t('side_panel_reorder_drag')}
                 @dragstart=${(event: DragEvent) => {
                   this.onDragHandleStart(event, highlight.id);
                 }}
@@ -1449,7 +1439,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 <button
                   type="button"
                   class="reorder-btn"
-                  aria-label="上へ"
+                  aria-label=${t('side_panel_move_up')}
                   ?disabled=${index === 0}
                   @click=${() => {
                     this.moveHighlight(index, -1);
@@ -1460,7 +1450,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 <button
                   type="button"
                   class="reorder-btn"
-                  aria-label="下へ"
+                  aria-label=${t('side_panel_move_down')}
                   ?disabled=${index === this.highlights.length - 1}
                   @click=${() => {
                     this.moveHighlight(index, 1);
@@ -1474,7 +1464,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 <p class="highlight-meta">${highlight.page_title} · ${highlight.domain}</p>
                 <div class="highlight-actions">
                   <label class="color-label">
-                    <span class="sr-only">色</span>
+                    <span class="sr-only">${t('side_panel_color_sr')}</span>
                     <select
                       class="color-select"
                       .value=${highlight.color}
@@ -1488,7 +1478,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                     >
                       ${HIGHLIGHT_COLORS.map(
                         (color) => html`
-                          <option value=${color}>${COLOR_LABELS[color]}</option>
+                          <option value=${color}>${highlightColorLabel(color)}</option>
                         `,
                       )}
                     </select>
@@ -1496,22 +1486,22 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="card-btn"
-                    aria-label="ジャンプ"
+                    aria-label=${t('card_action_jump')}
                     @click=${() => {
                       void this.handleJump(highlight);
                     }}
                   >
-                    ジャンプ
+                    ${t('card_action_jump')}
                   </button>
                   <button
                     type="button"
                     class="card-btn card-btn--exclude"
-                    aria-label="除外"
+                    aria-label=${t('side_panel_exclude')}
                     @click=${() => {
                       void this.handleExcludeFromProject(highlight);
                     }}
                   >
-                    除外
+                    ${t('side_panel_exclude')}
                   </button>
                 </div>
               </div>
@@ -1532,7 +1522,7 @@ export class MarkwellSidePanelRoot extends LitElement {
           <div class="main-column">
             <header class="header">
               <div class="header-top">
-                <label class="panel-title" for="project-select">プロジェクト</label>
+                <label class="panel-title" for="project-select">${t('side_panel_project_label')}</label>
                 <mw-tier-badge
                   .tier=${this.currentTier}
                   .trialRemainingLabel=${this.trialRemainingLabel}
@@ -1551,7 +1541,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                 }}
               >
                 ${this.projects.length === 0
-                  ? html`<option value="">プロジェクトなし</option>`
+                  ? html`<option value="">${t('side_panel_no_project')}</option>`
                   : nothing}
                 ${this.projects.map(
                   (project) => html`
@@ -1560,16 +1550,16 @@ export class MarkwellSidePanelRoot extends LitElement {
                     </option>
                   `,
                 )}
-                <option value=${NEW_PROJECT_SENTINEL}>+ 新規プロジェクト</option>
+                <option value=${NEW_PROJECT_SENTINEL}>${t('side_panel_new_project_option')}</option>
               </select>
             </header>
 
-            <section class="highlights" aria-label="ハイライト一覧">
-              <h2 class="panel-title">ハイライト</h2>
+            <section class="highlights" aria-label=${t('side_panel_highlights_aria')}>
+              <h2 class="panel-title">${t('side_panel_highlights_title')}</h2>
               ${this.renderHighlightList()}
             </section>
 
-            <section class="bottom-panel" aria-label="AI">
+            <section class="bottom-panel" aria-label=${t('side_panel_ai_panel')}>
               ${this.renderBottomTabs()}
               ${this.renderSynthesisTab()}
               ${this.renderQaTab()}
@@ -1578,7 +1568,7 @@ export class MarkwellSidePanelRoot extends LitElement {
 
           <aside
             class="result-panel ${this.isResultPanelVisible() ? 'result-panel--visible' : ''}"
-            aria-label=${this.resultPanelMode === 'quotes' ? '引用抽出' : '合成結果'}
+            aria-label=${this.resultPanelMode === 'quotes' ? t('side_panel_tab_extract') : t('side_panel_result_synthesis')}
             aria-hidden=${!this.isResultPanelVisible()}
           >
             ${this.isResultPanelVisible() ? this.renderResultPanel() : nothing}
@@ -1624,9 +1614,9 @@ export class MarkwellSidePanelRoot extends LitElement {
                   }
                 }}
               >
-                <h2 id="history-modal-title" class="dialog-title">保存履歴</h2>
+                <h2 id="history-modal-title" class="dialog-title">${t('synthesis_history')}</h2>
                 ${this.synthesisHistory.length === 0
-                  ? html`<p class="dialog-message">このプロジェクトの保存履歴はありません。</p>`
+                  ? html`<p class="dialog-message">${t('side_panel_history_empty')}</p>`
                   : html`
                       <ul class="history-list">
                         ${this.synthesisHistory.map(
@@ -1635,7 +1625,7 @@ export class MarkwellSidePanelRoot extends LitElement {
                               <button
                                 type="button"
                                 class="history-card__main"
-                                aria-label=${`合成履歴を表示: ${this.formatHistoryDate(synthesis.created_at)}`}
+                                aria-label=${t('side_panel_history_view_aria', this.formatHistoryDate(synthesis.created_at))}
                                 @click=${() => {
                                   this.viewSynthesisFromHistory(synthesis);
                                 }}
@@ -1645,9 +1635,11 @@ export class MarkwellSidePanelRoot extends LitElement {
                                     ${this.formatHistoryDate(synthesis.created_at)}
                                   </time>
                                   <span class="history-card__model"
-                                    >${synthesis.model} · 入力
-                                    ${String(synthesis.token_input)} / 出力
-                                    ${String(synthesis.token_output)}</span
+                                    >${t('side_panel_history_tokens', [
+                                      synthesis.model,
+                                      String(synthesis.token_input),
+                                      String(synthesis.token_output),
+                                    ])}</span
                                   >
                                 </span>
                                 <span class="history-card__preview"
@@ -1658,12 +1650,12 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 <button
                                   type="button"
                                   class="btn"
-                                  aria-label="Markdown コピー"
+                                  aria-label=${t('card_action_copy_md')}
                                   @click=${(event: Event) => {
                                     void this.copySynthesisFromHistory(synthesis, event);
                                   }}
                                 >
-                                  Markdown コピー
+                                  ${t('card_action_copy_md')}
                                 </button>
                                 ${this.renderExportMenu(
                                   synthesis.result_markdown,
@@ -1675,12 +1667,12 @@ export class MarkwellSidePanelRoot extends LitElement {
                                 <button
                                   type="button"
                                   class="btn card-btn--exclude"
-                                  aria-label="削除"
+                                  aria-label=${t('card_action_delete')}
                                   @click=${(event: Event) => {
                                     void this.deleteSynthesisFromHistory(synthesis, event);
                                   }}
                                 >
-                                  削除
+                                  ${t('card_action_delete')}
                                 </button>
                               </div>
                             </li>
@@ -1692,12 +1684,12 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="btn btn--primary"
-                    aria-label="閉じる"
+                    aria-label=${t('mini_toolbar_close')}
                     @click=${() => {
                       this.closeHistoryModal();
                     }}
                   >
-                    閉じる
+                    ${t('mini_toolbar_close')}
                   </button>
                 </div>
               </div>
@@ -1727,12 +1719,12 @@ export class MarkwellSidePanelRoot extends LitElement {
                   }
                 }}
               >
-                <h2 id="new-project-title" class="dialog-title">新規プロジェクト</h2>
+                <h2 id="new-project-title" class="dialog-title">${t('side_panel_new_project_title')}</h2>
                 <input
                   id="new-project-name"
                   class="dialog-input"
                   type="text"
-                  placeholder="プロジェクト名"
+                  placeholder=${t('side_panel_project_name_placeholder')}
                   .value=${this.newProjectName}
                   @input=${(event: Event) => {
                     this.onNewProjectNameInput(event);
@@ -1751,22 +1743,22 @@ export class MarkwellSidePanelRoot extends LitElement {
                   <button
                     type="button"
                     class="btn"
-                    aria-label="キャンセル"
+                    aria-label=${t('note_dialog_cancel')}
                     @click=${() => {
                       this.closeCreateDialog();
                     }}
                   >
-                    キャンセル
+                    ${t('note_dialog_cancel')}
                   </button>
                   <button
                     type="button"
                     class="btn btn--primary"
-                    aria-label="作成"
+                    aria-label=${t('side_panel_create')}
                     @click=${() => {
                       void this.handleCreateProject();
                     }}
                   >
-                    作成
+                    ${t('side_panel_create')}
                   </button>
                 </div>
               </div>

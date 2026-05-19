@@ -1,7 +1,7 @@
 import type { Highlight } from '../../shared/types/highlight.js';
 import type { Project } from '../../shared/types/project.js';
 
-/** プロジェクトの highlight_order に従って並べる（未登録は末尾・作成日降順） */
+/** Sort by project highlight_order (unknown ids last, then created_at desc) */
 export function orderHighlightsForProject(
   highlights: Highlight[],
   project: Project,

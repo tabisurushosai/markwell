@@ -1,4 +1,4 @@
-/** ドラッグ位置から挿入インデックス（0..length）を算出 */
+/** Compute insert index (0..length) from drag position */
 export function computeInsertIndex(
   clientY: number,
   itemTop: number,
@@ -9,7 +9,7 @@ export function computeInsertIndex(
   return clientY < mid ? listIndex : listIndex + 1;
 }
 
-/** fromIndex の要素を insertIndex の位置へ移動した新配列 */
+/** New array with the element at fromIndex moved to insertIndex */
 export function reorderByIndex<T>(items: readonly T[], fromIndex: number, insertIndex: number): T[] {
   if (fromIndex < 0 || fromIndex >= items.length) {
     return [...items];
