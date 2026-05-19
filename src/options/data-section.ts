@@ -234,9 +234,9 @@ export class MwDataSection extends LitElement {
     try {
       const payload = await exportAll();
       downloadJsonFile(payload, buildMarkwellExportFilename());
-      toastFrom(this, 'エクスポートをダウンロードしました', 'success');
+      toastFrom(this, t('options_data_export_downloaded'), 'success');
     } catch {
-      toastFrom(this, 'エクスポートに失敗しました', 'error');
+      toastFrom(this, t('options_data_export_failed'), 'error');
     } finally {
       this.exporting = false;
     }
@@ -263,7 +263,7 @@ export class MwDataSection extends LitElement {
       this.selectedFileName = file.name;
     } catch {
       this.resetFileSelection();
-      toastFrom(this, 'JSON ファイルの読み込みに失敗しました', 'error');
+      toastFrom(this, t('options_data_json_read_failed'), 'error');
     }
   }
 
@@ -272,9 +272,7 @@ export class MwDataSection extends LitElement {
   }
 
   private confirmReplace(): boolean {
-    return window.confirm(
-      '既存のハイライト・タグ・プロジェクト・合成をすべて削除し、インポートしたデータで置き換えます。この操作は取り消せません。続行しますか？',
-    );
+    return window.confirm(t('options_data_confirm_replace'));
   }
 
   private async handleImport(): Promise<void> {
@@ -291,7 +289,7 @@ export class MwDataSection extends LitElement {
       toastFrom(this, formatImportResultMessage(result), 'success');
       this.resetFileSelection();
     } catch {
-      toastFrom(this, 'インポートに失敗しました。データは変更されていません。', 'error');
+      toastFrom(this, t('options_data_import_failed'), 'error');
     } finally {
       this.importing = false;
     }
@@ -321,9 +319,9 @@ export class MwDataSection extends LitElement {
       this.resetFileSelection();
       this.showDeleteDialog = false;
       this.deleteConfirmText = '';
-      toastFrom(this, 'すべてのデータを削除しました。ライセンス情報は保持されています', 'success');
+      toastFrom(this, t('options_data_delete_all_success'), 'success');
     } catch {
-      toastFrom(this, 'データの削除に失敗しました', 'error');
+      toastFrom(this, t('options_data_delete_failed'), 'error');
     } finally {
       this.deleting = false;
     }
@@ -351,10 +349,10 @@ export class MwDataSection extends LitElement {
             event.stopPropagation();
           }}
         >
-          <h2 id="delete-all-title" class="dialog-title">全データを削除</h2>
+          <h2 id="delete-all-title" class="dialog-title">${t('options_data_delete_all_title')}</h2>
           <p class="dialog-message">${t('confirm_delete_all')}</p>
-          <p class="dialog-message"><strong>ライセンスは保持されます。</strong></p>
-          <p class="dialog-message">続行するには「DELETE」と入力してください。</p>
+          <p class="dialog-message"><strong>${t('options_data_license_kept_bold')}</strong></p>
+          <p class="dialog-message">${t('options_data_type_delete_hint')}</p>
           <input
             class="dialog-input"
             type="text"
@@ -380,24 +378,24 @@ export class MwDataSection extends LitElement {
             <button
               type="button"
               class="btn"
-              aria-label="キャンセル"
+              aria-label=${t('note_dialog_cancel')}
               ?disabled=${this.deleting}
               @click=${() => {
                 this.closeDeleteDialog();
               }}
             >
-              キャンセル
+              ${t('note_dialog_cancel')}
             </button>
             <button
               type="button"
               class="btn btn--danger"
-              aria-label=${this.deleting ? '削除中…' : '削除する'}
+              aria-label=${this.deleting ? t('options_action_deleting') : t('options_action_delete_confirm')}
               ?disabled=${!canConfirm}
               @click=${() => {
                 void this.handleDeleteAllData();
               }}
             >
-              ${this.deleting ? '削除中…' : '削除する'}
+              ${this.deleting ? t('options_action_deleting') : t('options_action_delete_confirm')}
             </button>
           </div>
         </div>
@@ -410,28 +408,26 @@ export class MwDataSection extends LitElement {
 
     return html`
       <section class="section" aria-labelledby="export-title">
-        <span id="export-title" class="section-title">エクスポート</span>
-        <p class="hint">
-          ハイライト・タグ・プロジェクト・合成を JSON ファイルに保存します。設定や API キーは含まれません。
-        </p>
+        <span id="export-title" class="section-title">${t('options_data_export_title')}</span>
+        <p class="hint">${t('options_data_export_hint')}</p>
         <div class="actions">
           <button
             type="button"
             class="btn btn--primary"
-            aria-label=${this.exporting ? 'エクスポート中…' : 'エクスポート'}
+            aria-label=${this.exporting ? t('options_data_exporting') : t('options_data_export_button')}
             ?disabled=${this.exporting}
             @click=${() => {
               void this.handleExport();
             }}
           >
-            ${this.exporting ? 'エクスポート中…' : 'エクスポート'}
+            ${this.exporting ? t('options_data_exporting') : t('options_data_export_button')}
           </button>
         </div>
       </section>
 
       <section class="section" aria-labelledby="import-title">
-        <span id="import-title" class="section-title">インポート</span>
-        <p class="hint">JSON ファイルを読み込み、既存データにマージするか、すべて置き換えます。</p>
+        <span id="import-title" class="section-title">${t('options_data_import_title')}</span>
+        <p class="hint">${t('options_data_import_hint')}</p>
         <input
           id="import-file"
           class="hidden-input"
@@ -445,76 +441,72 @@ export class MwDataSection extends LitElement {
           <button
             type="button"
             class="btn"
-            aria-label="ファイルを選択"
+            aria-label=${t('options_data_choose_file')}
             ?disabled=${this.importing}
             @click=${() => {
               this.openFilePicker();
             }}
           >
-            ファイルを選択
+            ${t('options_data_choose_file')}
           </button>
         </div>
         ${this.selectedFileName !== ''
-          ? html`<p class="file-name">選択中: ${this.selectedFileName}</p>`
+          ? html`<p class="file-name">${t('options_data_file_selected', [this.selectedFileName])}</p>`
           : nothing}
-        <div class="mode-row" role="radiogroup" aria-label="インポートモード">
+        <div class="mode-row" role="radiogroup" aria-label=${t('options_data_import_mode')}>
           <button
             type="button"
             class="mode-btn ${this.importMode === 'merge' ? 'mode-btn--active' : ''}"
-            aria-label="マージ"
+            aria-label=${t('options_data_mode_merge')}
             aria-pressed=${this.importMode === 'merge'}
             @click=${() => {
               this.handleModeChange('merge');
             }}
           >
-            マージ
+            ${t('options_data_mode_merge')}
           </button>
           <button
             type="button"
             class="mode-btn ${this.importMode === 'replace' ? 'mode-btn--active' : ''}"
-            aria-label="置換"
+            aria-label=${t('options_data_mode_replace')}
             aria-pressed=${this.importMode === 'replace'}
             @click=${() => {
               this.handleModeChange('replace');
             }}
           >
-            置換
+            ${t('options_data_mode_replace')}
           </button>
         </div>
-        <p class="hint">
-          マージは同じ ID のデータを上書きします。置換は既存データをすべて削除してからインポートします。
-        </p>
+        <p class="hint">${t('options_data_mode_hint')}</p>
         <div class="import-actions">
           <button
             type="button"
             class="btn ${this.importMode === 'replace' ? 'btn--danger' : 'btn--primary'}"
-            aria-label=${this.importing ? 'インポート中…' : 'インポート'}
+            aria-label=${this.importing ? t('options_data_importing') : t('options_data_import_button')}
             ?disabled=${!canImport}
             @click=${() => {
               void this.handleImport();
             }}
           >
-            ${this.importing ? 'インポート中…' : 'インポート'}
+            ${this.importing ? t('options_data_importing') : t('options_data_import_button')}
           </button>
         </div>
       </section>
 
       <section class="section danger-section" aria-labelledby="delete-all-title-section">
-        <span id="delete-all-title-section" class="section-title">危険な操作</span>
-        <p class="danger-note">
-          すべてのローカルデータを削除します。ライセンス情報のみ保持されます。事前にエクスポートすることをおすすめします。
-        </p>
+        <span id="delete-all-title-section" class="section-title">${t('options_data_danger_title')}</span>
+        <p class="danger-note">${t('options_data_danger_hint')}</p>
         <div class="actions">
           <button
             type="button"
             class="btn btn--danger"
-            aria-label="全データを削除"
+            aria-label=${t('options_data_delete_all_title')}
             ?disabled=${this.deleting}
             @click=${() => {
               this.openDeleteDialog();
             }}
           >
-            全データを削除
+            ${t('options_data_delete_all_title')}
           </button>
         </div>
       </section>

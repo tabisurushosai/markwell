@@ -173,7 +173,7 @@ export class MwBlockedSites extends LitElement {
       toastFrom(this, message, 'success');
       return true;
     } catch {
-      toastFrom(this, '保存に失敗しました', 'error');
+      toastFrom(this, t('options_save_failed'), 'error');
       return false;
     }
   }
@@ -181,17 +181,17 @@ export class MwBlockedSites extends LitElement {
   private async handleAddDomain(): Promise<void> {
     const domain = this.normalizeDomain(this.domainInput);
     if (domain === '') {
-      toastFrom(this, 'ドメインを入力してください', 'warning');
+      toastFrom(this, t('options_blocked_domain_required'), 'warning');
       return;
     }
     if (this.blockedDomains.some((entry) => entry.toLowerCase() === domain)) {
-      toastFrom(this, '同じドメインが既に登録されています', 'warning');
+      toastFrom(this, t('options_blocked_domain_duplicate'), 'warning');
       return;
     }
 
     const ok = await this.persist(
       { blocked_domains: [...this.blockedDomains, domain] },
-      'ドメインを追加しました',
+      t('options_blocked_domain_added'),
     );
     if (ok) {
       this.domainInput = '';
@@ -201,7 +201,7 @@ export class MwBlockedSites extends LitElement {
   private async handleRemoveDomain(domain: string): Promise<void> {
     await this.persist(
       { blocked_domains: this.blockedDomains.filter((entry) => entry !== domain) },
-      'ドメインを削除しました',
+      t('options_blocked_domain_removed'),
     );
   }
 
@@ -219,22 +219,22 @@ export class MwBlockedSites extends LitElement {
   private async handleAddPattern(): Promise<void> {
     const pattern = this.patternInput.trim();
     if (pattern === '') {
-      toastFrom(this, 'URL パターンを入力してください', 'warning');
+      toastFrom(this, t('options_blocked_pattern_required'), 'warning');
       return;
     }
     if (!isValidRegExp(pattern)) {
       this.patternInputInvalid = true;
-      toastFrom(this, '正規表現の構文が不正です', 'error');
+      toastFrom(this, t('options_blocked_pattern_invalid'), 'error');
       return;
     }
     if (this.blockedUrlPatterns.includes(pattern)) {
-      toastFrom(this, '同じパターンが既に登録されています', 'warning');
+      toastFrom(this, t('options_blocked_pattern_duplicate'), 'warning');
       return;
     }
 
     const ok = await this.persist(
       { blocked_url_patterns: [...this.blockedUrlPatterns, pattern] },
-      'URL パターンを追加しました',
+      t('options_blocked_pattern_added'),
     );
     if (ok) {
       this.patternInput = '';
@@ -245,13 +245,13 @@ export class MwBlockedSites extends LitElement {
   private async handleRemovePattern(pattern: string): Promise<void> {
     await this.persist(
       { blocked_url_patterns: this.blockedUrlPatterns.filter((entry) => entry !== pattern) },
-      'URL パターンを削除しました',
+      t('options_blocked_pattern_removed'),
     );
   }
 
   private renderChips(items: string[], onRemove: (value: string) => void) {
     if (items.length === 0) {
-      return html`<p class="empty-chips">登録なし</p>`;
+      return html`<p class="empty-chips">${t('options_common_none_registered')}</p>`;
     }
 
     return html`
@@ -263,7 +263,7 @@ export class MwBlockedSites extends LitElement {
               <button
                 type="button"
                 class="chip-remove"
-                aria-label="${item} を削除"
+                aria-label=${t('options_blocked_remove_item', [item])}
                 @click=${() => {
                   onRemove(item);
                 }}
@@ -279,7 +279,7 @@ export class MwBlockedSites extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="hint">ブロック設定を読み込み中…</p>`;
+      return html`<p class="hint">${t('options_blocked_loading')}</p>`;
     }
 
     const patternTrimmed = this.patternInput.trim();
@@ -311,16 +311,16 @@ export class MwBlockedSites extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="追加"
+            aria-label=${t('options_action_add')}
             @click=${() => {
               void this.handleAddDomain();
             }}
           >
-            追加
+            ${t('options_action_add')}
           </button>
         </div>
         ${this.renderChips(this.blockedDomains, (domain) => this.handleRemoveDomain(domain))}
-        <p class="hint">Markwell の content script を無効にするドメインです。</p>
+        <p class="hint">${t('options_blocked_domains_hint')}</p>
       </section>
 
       <section class="section" aria-labelledby="blocked-patterns-title">
@@ -344,17 +344,17 @@ export class MwBlockedSites extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="追加"
+            aria-label=${t('options_action_add')}
             ?disabled=${!canAddPattern}
             @click=${() => {
               void this.handleAddPattern();
             }}
           >
-            追加
+            ${t('options_action_add')}
           </button>
         </div>
         ${this.renderChips(this.blockedUrlPatterns, (pattern) => this.handleRemovePattern(pattern))}
-        <p class="hint">正規表現 (new RegExp) で URL 全体にマッチした場合にブロックします。</p>
+        <p class="hint">${t('options_blocked_patterns_hint')}</p>
       </section>
 
     `;

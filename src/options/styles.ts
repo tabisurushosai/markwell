@@ -2,7 +2,7 @@ import { css } from 'lit';
 
 import { accessibilityStyles } from '../shared/styles/accessibility.js';
 
-/** Options ページ共通: コントラスト AA 用トークン + a11y フォーカス / reduced-motion */
+/** Shared options page tokens (AA contrast) + a11y focus / reduced-motion */
 export const optionsAccessibilityStyles = [
   accessibilityStyles,
   css`

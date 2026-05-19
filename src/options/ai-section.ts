@@ -257,9 +257,9 @@ export class MwAiSettings extends LitElement {
       });
       this.selectedModel = model;
       this.testStatus = { kind: 'idle' };
-      toastFrom(this, 'モデルを保存しました', 'success');
+      toastFrom(this, t('options_ai_model_saved'), 'success');
     } catch {
-      toastFrom(this, 'モデルの保存に失敗しました', 'error');
+      toastFrom(this, t('options_ai_model_save_failed'), 'error');
     }
   }
 
@@ -278,9 +278,13 @@ export class MwAiSettings extends LitElement {
         },
       });
       this.autoTagOnSave = auto_tag_on_save;
-      toastFrom(this, auto_tag_on_save ? 'AI 自動タグを有効化しました' : 'AI 自動タグを無効化しました', 'success');
+      toastFrom(
+        this,
+        auto_tag_on_save ? t('options_ai_auto_tag_enabled') : t('options_ai_auto_tag_disabled'),
+        'success',
+      );
     } catch {
-      toastFrom(this, '設定の保存に失敗しました', 'error');
+      toastFrom(this, t('options_ai_settings_save_failed'), 'error');
     }
   }
 
@@ -295,7 +299,7 @@ export class MwAiSettings extends LitElement {
   private async handleTestKey(): Promise<void> {
     const draft = this.apiKeyDraft.trim();
     if (draft === '' && !this.hasStoredKey) {
-      this.testStatus = { kind: 'error', message: 'API キーを入力してください' };
+      this.testStatus = { kind: 'error', message: t('options_ai_api_key_required') };
       return;
     }
 
@@ -311,7 +315,7 @@ export class MwAiSettings extends LitElement {
         await setApiKey(draft);
         this.hasStoredKey = true;
         this.apiKeyDraft = '';
-        toastFrom(this, 'API キーを保存しました', 'success');
+        toastFrom(this, t('options_ai_api_key_saved'), 'success');
       }
       this.testStatus = { kind: 'valid' };
     } catch (error) {
@@ -320,13 +324,13 @@ export class MwAiSettings extends LitElement {
           ? error.message
           : error instanceof Error
             ? error.message
-            : 'キーのテストに失敗しました';
+            : t('options_ai_key_test_failed');
       this.testStatus = { kind: 'error', message };
     }
   }
 
   private async handleDeleteKey(): Promise<void> {
-    const confirmed = window.confirm('保存済みの API キーを削除しますか？');
+    const confirmed = window.confirm(t('options_ai_confirm_delete_key'));
     if (!confirmed) {
       return;
     }
@@ -335,18 +339,18 @@ export class MwAiSettings extends LitElement {
       this.hasStoredKey = false;
       this.apiKeyDraft = '';
       this.testStatus = { kind: 'idle' };
-      toastFrom(this, 'API キーを削除しました', 'success');
+      toastFrom(this, t('options_ai_api_key_deleted'), 'success');
     } catch {
-      toastFrom(this, 'API キーの削除に失敗しました', 'error');
+      toastFrom(this, t('options_ai_api_key_delete_failed'), 'error');
     }
   }
 
   private renderTestStatus() {
     if (this.testStatus.kind === 'testing') {
-      return html`<p class="test-status">テスト中…</p>`;
+      return html`<p class="test-status">${t('options_ai_testing')}</p>`;
     }
     if (this.testStatus.kind === 'valid') {
-      return html`<p class="test-status test-status--valid">✓ 有効</p>`;
+      return html`<p class="test-status test-status--valid">${t('options_ai_key_valid')}</p>`;
     }
     if (this.testStatus.kind === 'error') {
       return html`<p class="test-status test-status--error">${this.testStatus.message}</p>`;
@@ -356,18 +360,18 @@ export class MwAiSettings extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="loading">AI 設定を読み込み中…</p>`;
+      return html`<p class="loading">${t('options_ai_loading')}</p>`;
     }
 
     return html`
       <h2>Gemini API</h2>
-      <p class="privacy-note">このキーは Markwell サーバには一切送信されません。</p>
+      <p class="privacy-note">${t('options_ai_privacy_note')}</p>
 
       <div class="field">
         <label class="field-label" for="api-key">${t('option_api_key')}</label>
         <p class="hint">
           <a href=${GEMINI_API_KEY_URL} target="_blank" rel="noopener noreferrer">
-            Google AI Studio で API キーを取得
+            ${t('options_ai_get_key_link')}
           </a>
         </p>
         <div class="api-key-row">
@@ -378,7 +382,7 @@ export class MwAiSettings extends LitElement {
               type=${this.showApiKey ? 'text' : 'password'}
               autocomplete="off"
               spellcheck="false"
-              placeholder=${this.hasStoredKey ? '保存済み（再入力で上書き）' : 'API キーを入力'}
+              placeholder=${this.hasStoredKey ? t('options_ai_placeholder_stored') : t('options_ai_placeholder_enter_key')}
               .value=${this.apiKeyDraft}
               @input=${(event: Event) => {
                 const input = event.target;
@@ -391,7 +395,7 @@ export class MwAiSettings extends LitElement {
             <button
               type="button"
               class="toggle-visibility"
-              aria-label=${this.showApiKey ? 'API キーを隠す' : 'API キーを表示'}
+              aria-label=${this.showApiKey ? t('options_ai_hide_key') : t('options_ai_show_key')}
               @click=${() => {
                 this.showApiKey = !this.showApiKey;
               }}
@@ -415,13 +419,13 @@ export class MwAiSettings extends LitElement {
           <button
             type="button"
             class="btn btn--danger"
-            aria-label="API キーを削除"
+            aria-label=${t('options_ai_delete_key')}
             ?disabled=${!this.hasStoredKey}
             @click=${() => {
               void this.handleDeleteKey();
             }}
           >
-            API キーを削除
+            ${t('options_ai_delete_key')}
           </button>
         </div>
         ${this.renderTestStatus()}
@@ -442,7 +446,7 @@ export class MwAiSettings extends LitElement {
             `,
           )}
         </select>
-        <p class="hint">翻訳・言い換え・合成などの AI 機能で使用する Gemini モデルです。</p>
+        <p class="hint">${t('options_ai_model_hint')}</p>
       </div>
 
       <div class="field">
@@ -454,9 +458,9 @@ export class MwAiSettings extends LitElement {
               void this.handleAutoTagChange(event);
             }}
           />
-          AI 自動タグを有効化
+          ${t('options_ai_auto_tag_label')}
         </label>
-        <p class="hint">ハイライト保存時に AI がタグ候補を付与します（trial / premium）。</p>
+        <p class="hint">${t('options_ai_auto_tag_hint')}</p>
       </div>
 
     `;

@@ -1,4 +1,5 @@
 import type { ImportResult } from '../../shared/storage/io.js';
+import { t } from '../../shared/utils/i18n.js';
 
 export function buildMarkwellExportFilename(date = new Date()): string {
   const year = date.getFullYear();
@@ -20,5 +21,10 @@ export function downloadJsonFile(data: unknown, filename: string): void {
 
 export function formatImportResultMessage(result: ImportResult): string {
   const { highlights, tags, projects, syntheses } = result.imported;
-  return `インポート完了: ハイライト ${highlights}、タグ ${tags}、プロジェクト ${projects}、合成 ${syntheses}`;
+  return t('options_data_import_result', [
+    String(highlights),
+    String(tags),
+    String(projects),
+    String(syntheses),
+  ]);
 }

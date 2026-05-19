@@ -276,5 +276,1852 @@
   },
   "toast_deleted": {
     "message": "Deleted"
+  },
+  "side_panel_color_yellow": {
+    "message": "Yellow"
+  },
+  "side_panel_color_green": {
+    "message": "Green"
+  },
+  "side_panel_color_pink": {
+    "message": "Pink"
+  },
+  "side_panel_color_blue": {
+    "message": "Blue"
+  },
+  "side_panel_color_orange": {
+    "message": "Orange"
+  },
+  "side_panel_empty_highlights_help": {
+    "message": "This project has no highlights yet. In the popup, right-click a highlight and choose Add to project."
+  },
+  "side_panel_error_name_required": {
+    "message": "Enter a name."
+  },
+  "side_panel_error_project_limit": {
+    "message": "You've reached the project limit."
+  },
+  "side_panel_error_create_failed": {
+    "message": "Could not create project."
+  },
+  "side_panel_status_excluded": {
+    "message": "Removed from project (the highlight itself was not deleted)."
+  },
+  "synthesis_status_saved": {
+    "message": "Synthesis saved."
+  },
+  "synthesis_status_regenerated": {
+    "message": "Regenerated."
+  },
+  "side_panel_no_highlights": {
+    "message": "No highlights."
+  },
+  "synthesis_error_prefix": {
+    "message": "**Error:**"
+  },
+  "synthesis_error_server": {
+    "message": "Gemini server error. Wait a moment and try again."
+  },
+  "synthesis_error_trial_required": {
+    "message": "Available on trial or Premium."
+  },
+  "synthesis_error_api_key_not_set": {
+    "message": "API key not set. Add your Gemini API key in Settings."
+  },
+  "synthesis_error_failed": {
+    "message": "Synthesis failed."
+  },
+  "side_panel_copy_failed": {
+    "message": "Could not copy."
+  },
+  "side_panel_feature_export_premium": {
+    "message": "Obsidian / Roam export"
+  },
+  "side_panel_export_md_done": {
+    "message": "Downloaded Markdown (.md)."
+  },
+  "side_panel_export_obsidian_done": {
+    "message": "Downloaded Obsidian export."
+  },
+  "side_panel_export_roam_done": {
+    "message": "Downloaded Roam Research export."
+  },
+  "side_panel_export_done": {
+    "message": "Exported."
+  },
+  "side_panel_export_failed": {
+    "message": "Export failed."
+  },
+  "side_panel_export": {
+    "message": "Export"
+  },
+  "side_panel_export_menu": {
+    "message": "Export ▾"
+  },
+  "side_panel_export_obsidian_format": {
+    "message": "Obsidian format"
+  },
+  "side_panel_export_roam_format": {
+    "message": "Roam Research format"
+  },
+  "side_panel_result_synthesis": {
+    "message": "Synthesis result"
+  },
+  "side_panel_status_generating": {
+    "message": "Generating"
+  },
+  "side_panel_status_extracting": {
+    "message": "Extracting"
+  },
+  "side_panel_status_generating_ellipsis": {
+    "message": "Generating…"
+  },
+  "side_panel_status_extracting_ellipsis": {
+    "message": "Extracting…"
+  },
+  "side_panel_quotes_md_downloaded": {
+    "message": "Downloaded quote Markdown."
+  },
+  "content_download_md": {
+    "message": "Download .md"
+  },
+  "side_panel_ai_features": {
+    "message": "AI features"
+  },
+  "side_panel_synthesis_prompt_label": {
+    "message": "Synthesis prompt"
+  },
+  "synthesis_regenerate": {
+    "message": "Regenerate"
+  },
+  "side_panel_ai_title_synthesis": {
+    "message": "Highlight synthesis"
+  },
+  "side_panel_ai_title_qa": {
+    "message": "Project Q&A"
+  },
+  "side_panel_ai_title_synthesize": {
+    "message": "Synthesize highlights with AI"
+  },
+  "side_panel_ai_title_quote_extract": {
+    "message": "Extract notable quotes with AI"
+  },
+  "side_panel_ai_title_qa_ask": {
+    "message": "Ask about highlights"
+  },
+  "side_panel_qa_empty": {
+    "message": "Ask questions about this project's highlights."
+  },
+  "side_panel_qa_responding": {
+    "message": "Responding…"
+  },
+  "side_panel_qa_placeholder": {
+    "message": "Ask about highlights…"
+  },
+  "side_panel_send": {
+    "message": "Send"
+  },
+  "side_panel_stop": {
+    "message": "Stop"
+  },
+  "side_panel_loading": {
+    "message": "Loading…"
+  },
+  "side_panel_no_projects": {
+    "message": "No projects yet. Choose “+ New project” in the selector above to create one."
+  },
+  "side_panel_reorder": {
+    "message": "Reorder"
+  },
+  "side_panel_reorder_drag": {
+    "message": "Drag to reorder"
+  },
+  "side_panel_move_up": {
+    "message": "Move up"
+  },
+  "side_panel_move_down": {
+    "message": "Move down"
+  },
+  "side_panel_color_sr": {
+    "message": "Color"
+  },
+  "side_panel_exclude": {
+    "message": "Remove"
+  },
+  "side_panel_project_label": {
+    "message": "Project"
+  },
+  "side_panel_no_project": {
+    "message": "No project"
+  },
+  "side_panel_new_project_option": {
+    "message": "+ New project"
+  },
+  "side_panel_highlights_aria": {
+    "message": "Highlight list"
+  },
+  "side_panel_highlights_title": {
+    "message": "Highlights"
+  },
+  "side_panel_ai_panel": {
+    "message": "AI"
+  },
+  "side_panel_history_empty": {
+    "message": "No saved history for this project."
+  },
+  "side_panel_history_view_aria": {
+    "message": "View synthesis from $date$",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "05/19/2026, 12:00 PM"
+      }
+    }
+  },
+  "side_panel_history_tokens": {
+    "message": "$model$ · in $input$ / out $output$",
+    "placeholders": {
+      "model": {
+        "content": "$1",
+        "example": "gemini-2.0-flash"
+      },
+      "input": {
+        "content": "$2",
+        "example": "100"
+      },
+      "output": {
+        "content": "$3",
+        "example": "200"
+      }
+    }
+  },
+  "side_panel_new_project_title": {
+    "message": "New project"
+  },
+  "side_panel_project_name_placeholder": {
+    "message": "Project name"
+  },
+  "side_panel_create": {
+    "message": "Create"
+  },
+  "content_feature_highlight_save": {
+    "message": "Save highlight"
+  },
+  "content_edit_color_aria": {
+    "message": "Change color to $color$",
+    "placeholders": {
+      "color": {
+        "content": "$1",
+        "example": "yellow"
+      }
+    }
+  },
+  "content_highlight_color_aria": {
+    "message": "Highlight with $color$",
+    "placeholders": {
+      "color": {
+        "content": "$1",
+        "example": "yellow"
+      }
+    }
+  },
+  "note_dialog_placeholder": {
+    "message": "Enter a note…"
+  },
+  "popup_summary_copied": {
+    "message": "Summary copied.",
+    "description": "Page summary copied toast"
+  },
+  "popup_page_text_empty": {
+    "message": "This page has no body text.",
+    "description": "Page text fetch empty"
+  },
+  "popup_page_text_unavailable": {
+    "message": "Can't read body text on this page.",
+    "description": "Page text unavailable on page"
+  },
+  "popup_no_active_tab": {
+    "message": "No active tab.",
+    "description": "No active browser tab"
+  },
+  "popup_page_text_fetch_failed": {
+    "message": "Couldn't load page text.",
+    "description": "Page text fetch failed"
+  },
+  "popup_summary_truncated_toast": {
+    "message": "Summarized the first 8,000 characters of the page.",
+    "description": "Summary used truncated page text"
+  },
+  "popup_page_summary_title": {
+    "message": "Page summary",
+    "description": "Page summary dialog title"
+  },
+  "popup_summarizing": {
+    "message": "Summarizing…",
+    "description": "Page summary in progress"
+  },
+  "popup_current_page_title": {
+    "message": "This page",
+    "description": "Current page panel title"
+  },
+  "popup_highlights_count": {
+    "message": "Highlights ($count$)",
+    "description": "Highlight list count heading",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_filtered_empty": {
+    "message": "No highlights match the selected filters.",
+    "description": "No highlights match filters on current page"
+  },
+  "popup_page_summary_button_title": {
+    "message": "Summarize this page with AI",
+    "description": "Summarize page button tooltip"
+  },
+  "popup_page_summary_button_label": {
+    "message": "📝 Summarize page",
+    "description": "Summarize page button label"
+  },
+  "popup_summary_invalid_response": {
+    "message": "Invalid summary response.",
+    "description": "Invalid summarize API response"
+  },
+  "popup_summary_request_failed": {
+    "message": "Summary request failed.",
+    "description": "Summarize API request failed"
+  },
+  "popup_card_tag_already_exists": {
+    "message": "This tag is already applied.",
+    "description": "Tag already on highlight"
+  },
+  "popup_card_tag_added": {
+    "message": "Added tag \"$name$\".",
+    "description": "Tag added toast",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "reading"
+      }
+    }
+  },
+  "popup_card_tag_add_failed": {
+    "message": "Couldn't add tag.",
+    "description": "Tag add failed toast"
+  },
+  "popup_card_tag_suggestions_label": {
+    "message": "Tag suggestions",
+    "description": "Tag autocomplete listbox label"
+  },
+  "popup_card_tag_add_placeholder": {
+    "message": "Add tag…",
+    "description": "Tag input placeholder"
+  },
+  "popup_card_tag_no_suggestions": {
+    "message": "No matches",
+    "description": "No tag autocomplete matches"
+  },
+  "popup_card_markdown_copied": {
+    "message": "Markdown copied.",
+    "description": "Markdown copy success toast"
+  },
+  "popup_card_highlight_not_found": {
+    "message": "Highlight not found.",
+    "description": "Jump target not found"
+  },
+  "popup_card_ai_tag_title": {
+    "message": "AI tag",
+    "description": "AI-generated tag tooltip"
+  },
+  "popup_card_add_tag": {
+    "message": "Add tag",
+    "description": "Add tag button label"
+  },
+  "popup_card_copy_hint_title": {
+    "message": "Click: text / Long press or right-click: Markdown",
+    "description": "Copy button interaction hint"
+  },
+  "popup_card_translate_target_title": {
+    "message": "Translate to: $lang$",
+    "description": "Translate target language tooltip",
+    "placeholders": {
+      "lang": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "popup_card_translating": {
+    "message": "Translating",
+    "description": "Translate in progress aria"
+  },
+  "popup_card_translating_ellipsis": {
+    "message": "Translating…",
+    "description": "Translate in progress label"
+  },
+  "popup_card_rephrase_title": {
+    "message": "Rephrase selected text",
+    "description": "Rephrase button tooltip"
+  },
+  "popup_card_rephrasing": {
+    "message": "Rephrasing",
+    "description": "Rephrase in progress aria"
+  },
+  "popup_card_rephrasing_ellipsis": {
+    "message": "Rephrasing…",
+    "description": "Rephrase in progress label"
+  },
+  "popup_card_fact_check_btn": {
+    "message": "🔎 Fact check",
+    "description": "Fact check button label"
+  },
+  "popup_card_fact_checking": {
+    "message": "Fact checking",
+    "description": "Fact check in progress aria"
+  },
+  "popup_card_fact_checking_ellipsis": {
+    "message": "Checking…",
+    "description": "Fact check in progress label"
+  },
+  "popup_card_fact_check_web_title": {
+    "message": "Verify facts with web search",
+    "description": "Fact check button tooltip"
+  },
+  "popup_card_related_title": {
+    "message": "Suggest semantically similar highlights",
+    "description": "Related highlights button tooltip"
+  },
+  "popup_card_related_btn": {
+    "message": "🔗 Related",
+    "description": "Related highlights button label"
+  },
+  "popup_card_related_btn_locked": {
+    "message": "🔒 🔗 Related",
+    "description": "Locked related highlights button"
+  },
+  "popup_card_related_aria": {
+    "message": "Related highlights",
+    "description": "Related highlights button aria"
+  },
+  "popup_card_translation_label": {
+    "message": "Translation ($lang$)",
+    "description": "Translation section heading",
+    "placeholders": {
+      "lang": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "popup_card_rephrase_style_title": {
+    "message": "Rephrase style",
+    "description": "Rephrase style dialog title"
+  },
+  "popup_card_rephrase_result_title": {
+    "message": "Rephrase ($style$)",
+    "description": "Rephrase result dialog title",
+    "placeholders": {
+      "style": {
+        "content": "$1",
+        "example": "Polite"
+      }
+    }
+  },
+  "popup_card_fact_check_modal_title": {
+    "message": "🔎 Fact check",
+    "description": "Fact check dialog title"
+  },
+  "popup_card_fact_check_web_checking": {
+    "message": "Checking with web search…",
+    "description": "Fact check dialog loading"
+  },
+  "popup_card_fact_check_sources": {
+    "message": "Sources",
+    "description": "Fact check sources heading"
+  },
+  "popup_card_fact_check_copied": {
+    "message": "Fact check result copied.",
+    "description": "Fact check copy success"
+  },
+  "popup_card_rephrase_copied": {
+    "message": "Rephrase copied.",
+    "description": "Rephrase copy success"
+  },
+  "popup_error_fact_check_premium": {
+    "message": "Fact check is available on Premium.",
+    "description": "Fact check premium required"
+  },
+  "popup_error_fact_check_failed": {
+    "message": "Fact check failed.",
+    "description": "Fact check generic error"
+  },
+  "popup_error_rephrase_failed": {
+    "message": "Rephrase failed.",
+    "description": "Rephrase generic error"
+  },
+  "popup_error_translate_failed": {
+    "message": "Translation failed.",
+    "description": "Translate generic error"
+  },
+  "popup_rephrase_style_polite": {
+    "message": "Polite",
+    "description": "Polite rephrase style"
+  },
+  "popup_rephrase_style_concise": {
+    "message": "Concise",
+    "description": "Concise rephrase style"
+  },
+  "popup_rephrase_style_academic": {
+    "message": "Academic",
+    "description": "Academic rephrase style"
+  },
+  "popup_rephrase_style_casual": {
+    "message": "Casual",
+    "description": "Casual rephrase style"
+  },
+  "popup_projects_empty": {
+    "message": "No projects yet.",
+    "description": "Empty projects list"
+  },
+  "popup_project_open": {
+    "message": "Open",
+    "description": "Open project in side panel"
+  },
+  "popup_related_not_found": {
+    "message": "No related highlights found.",
+    "description": "No related highlights found"
+  },
+  "popup_related_premium_required": {
+    "message": "Related highlights require trial or Premium.",
+    "description": "Related highlights tier gate"
+  },
+  "popup_related_load_failed": {
+    "message": "Couldn't load related highlights.",
+    "description": "Related highlights fetch error"
+  },
+  "popup_related_section_label": {
+    "message": "Related highlights",
+    "description": "Related section aria label"
+  },
+  "popup_related_section_title": {
+    "message": "Related highlights",
+    "description": "Related section heading"
+  },
+  "popup_related_source_hint": {
+    "message": "Similar to \"$preview$\"",
+    "description": "Related section source preview",
+    "placeholders": {
+      "preview": {
+        "content": "$1",
+        "example": "sample"
+      }
+    }
+  },
+  "popup_related_close": {
+    "message": "Close related highlights",
+    "description": "Close related section aria"
+  },
+  "popup_related_searching": {
+    "message": "Finding related…",
+    "description": "Related highlights loading"
+  },
+  "popup_related_none_displayable": {
+    "message": "No related highlights to show.",
+    "description": "No displayable related highlights"
+  },
+  "popup_footer_settings": {
+    "message": "Settings",
+    "description": "Open settings footer button"
+  },
+  "popup_footer_side_panel": {
+    "message": "Open side panel",
+    "description": "Open side panel footer button"
+  },
+  "popup_footer_help": {
+    "message": "Help",
+    "description": "Open help footer button"
+  },
+  "popup_all_search_title": {
+    "message": "Search all pages",
+    "description": "All highlights search panel title"
+  },
+  "popup_all_filter_hint": {
+    "message": "Filter by search, tags, project, or date.",
+    "description": "Prompt to apply a filter"
+  },
+  "popup_all_results_title": {
+    "message": "Results ($count$)",
+    "description": "Search results heading",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popup_bulk_added_to_project": {
+    "message": "Added $count$ to project.",
+    "description": "Bulk add to project success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_bulk_add_project_failed": {
+    "message": "Couldn't add to project.",
+    "description": "Bulk add to project failure"
+  },
+  "popup_bulk_tags_added": {
+    "message": "Tagged $count$ highlights.",
+    "description": "Bulk add tags success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_bulk_add_tags_failed": {
+    "message": "Couldn't add tags.",
+    "description": "Bulk add tags failure"
+  },
+  "popup_confirm_delete_bulk": {
+    "message": "Delete $count$ selected highlights? This can't be undone.",
+    "description": "Bulk delete confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_bulk_deleted": {
+    "message": "Deleted $count$.",
+    "description": "Bulk delete success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_bulk_delete_failed": {
+    "message": "Couldn't delete.",
+    "description": "Bulk delete failure"
+  },
+  "popup_selection_exit": {
+    "message": "Done selecting",
+    "description": "Exit selection mode"
+  },
+  "popup_selection_multi": {
+    "message": "Select multiple",
+    "description": "Enter selection mode"
+  },
+  "popup_select_all_visible": {
+    "message": "Select all shown",
+    "description": "Select all visible highlights"
+  },
+  "popup_deselect_all_visible": {
+    "message": "Clear selection",
+    "description": "Deselect all visible highlights"
+  },
+  "popup_selection_count": {
+    "message": "$count$ selected",
+    "description": "Selection count label",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_bulk_add_to_project": {
+    "message": "Add to project",
+    "description": "Bulk add to project button"
+  },
+  "popup_bulk_add_tags": {
+    "message": "Add tags",
+    "description": "Bulk add tags button"
+  },
+  "popup_bulk_apply": {
+    "message": "Add",
+    "description": "Apply bulk action"
+  },
+  "popup_bulk_add_tags_confirm": {
+    "message": "Add tags",
+    "description": "Confirm bulk tag add"
+  },
+  "popup_select_highlight": {
+    "message": "Select highlight",
+    "description": "Select highlight checkbox aria"
+  },
+  "popup_date_today": {
+    "message": "Today",
+    "description": "Date filter preset today"
+  },
+  "popup_date_7d": {
+    "message": "Last 7 days",
+    "description": "Date filter preset 7 days"
+  },
+  "popup_date_30d": {
+    "message": "Last 30 days",
+    "description": "Date filter preset 30 days"
+  },
+  "popup_date_filter_label": {
+    "message": "Date filter",
+    "description": "Date filter toggle label"
+  },
+  "popup_project_filter_label": {
+    "message": "📁 Project",
+    "description": "Project filter label"
+  },
+  "popup_project_unassigned": {
+    "message": "Unassigned",
+    "description": "Unassigned project filter option"
+  },
+  "popup_tags_empty": {
+    "message": "No tags",
+    "description": "No tags available"
+  },
+  "popup_custom_date_range": {
+    "message": "Custom range",
+    "description": "Custom date range label"
+  },
+  "popup_apply": {
+    "message": "Apply",
+    "description": "Apply custom date range"
+  },
+  "popup_premium_unlock_hint": {
+    "message": "Unlock with Premium",
+    "description": "Premium feature lock hint"
+  },
+  "popup_tag_create_option": {
+    "message": "Create: \"$name$\"",
+    "description": "Create new tag autocomplete option",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      }
+    }
+  },
+  "popup_theme_dark": {
+    "message": "Dark mode",
+    "description": "Dark theme toggle label"
+  },
+  "popup_theme_light": {
+    "message": "Light mode",
+    "description": "Light theme toggle label"
+  },
+  "popup_theme_auto": {
+    "message": "Match system",
+    "description": "System theme toggle label"
+  },
+  "popup_relative_just_now": {
+    "message": "Just now",
+    "description": "Relative time just now"
+  },
+  "popup_relative_minutes": {
+    "message": "$count$m ago",
+    "description": "Relative time minutes ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_relative_hours": {
+    "message": "$count$h ago",
+    "description": "Relative time hours ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_relative_days": {
+    "message": "$count$d ago",
+    "description": "Relative time days ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_relative_weeks": {
+    "message": "$count$w ago",
+    "description": "Relative time weeks ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_relative_months": {
+    "message": "$count$mo ago",
+    "description": "Relative time months ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "popup_relative_years": {
+    "message": "$count$y ago",
+    "description": "Relative time years ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popup_translate_lang_ja": {
+    "message": "Japanese",
+    "description": "Japanese language label"
+  },
+  "popup_translate_lang_en": {
+    "message": "English",
+    "description": "English language label"
+  },
+  "popup_translate_lang_zh": {
+    "message": "Chinese (Simplified)",
+    "description": "Chinese language label"
+  },
+  "popup_translate_lang_ko": {
+    "message": "Korean",
+    "description": "Korean language label"
+  },
+  "popup_translate_lang_fr": {
+    "message": "French",
+    "description": "French language label"
+  },
+  "popup_translate_lang_de": {
+    "message": "German",
+    "description": "German language label"
+  },
+  "options_action_rename": {
+    "message": "Rename",
+    "description": "Options: rename action label"
+  },
+  "options_action_add": {
+    "message": "Add",
+    "description": "Options: add action label"
+  },
+  "options_action_applying": {
+    "message": "Applying…",
+    "description": "Options: applying in progress label"
+  },
+  "options_action_merge": {
+    "message": "Merge",
+    "description": "Options: merge tags action label"
+  },
+  "options_action_delete_confirm": {
+    "message": "Delete",
+    "description": "Options: confirm delete action label"
+  },
+  "options_action_deleting": {
+    "message": "Deleting…",
+    "description": "Options: delete in progress label"
+  },
+  "options_action_edit_description": {
+    "message": "Edit description",
+    "description": "Options: edit description action"
+  },
+  "options_action_change_emoji": {
+    "message": "Change emoji",
+    "description": "Options: change emoji action"
+  },
+  "options_action_change_color": {
+    "message": "Change color",
+    "description": "Options: change color action"
+  },
+  "options_action_bulk_change_color": {
+    "message": "Change color (bulk)",
+    "description": "Options: bulk color change action"
+  },
+  "options_action_bulk_delete": {
+    "message": "Delete selected",
+    "description": "Options: bulk delete action"
+  },
+  "options_action_click_to_rename": {
+    "message": "Click to rename",
+    "description": "Options: click to rename hint"
+  },
+  "options_action_select": {
+    "message": "Select",
+    "description": "Options: selection column header"
+  },
+  "options_save_failed": {
+    "message": "Could not save.",
+    "description": "Options: save failed toast"
+  },
+  "options_common_name": {
+    "message": "Name",
+    "description": "Options: name field label"
+  },
+  "options_common_description": {
+    "message": "Description",
+    "description": "Options: description field label"
+  },
+  "options_common_color": {
+    "message": "Color",
+    "description": "Options: color field label"
+  },
+  "options_common_emoji": {
+    "message": "Emoji",
+    "description": "Options: emoji field label"
+  },
+  "options_common_optional": {
+    "message": "Optional",
+    "description": "Options: optional placeholder"
+  },
+  "options_common_action": {
+    "message": "Actions",
+    "description": "Options: actions table column"
+  },
+  "options_common_tag": {
+    "message": "Tag",
+    "description": "Options: tag table column"
+  },
+  "options_common_usage_count": {
+    "message": "Uses",
+    "description": "Options: usage count column"
+  },
+  "options_common_highlights": {
+    "message": "Highlights",
+    "description": "Options: highlights column"
+  },
+  "options_common_none_registered": {
+    "message": "None",
+    "description": "Options: empty chip list"
+  },
+  "options_color_yellow": {
+    "message": "Yellow",
+    "description": "Options: yellow highlight color name"
+  },
+  "options_color_green": {
+    "message": "Green",
+    "description": "Options: green highlight color name"
+  },
+  "options_color_blue": {
+    "message": "Blue",
+    "description": "Options: blue highlight color name"
+  },
+  "options_about_version": {
+    "message": "Version:",
+    "description": "Options about: version label"
+  },
+  "options_about_tagline": {
+    "message": "Markwell — a Chrome extension for web highlights and AI-assisted research.",
+    "description": "Options about: tagline"
+  },
+  "options_about_repo": {
+    "message": "Repository (GitHub)",
+    "description": "Options about: repository link"
+  },
+  "options_about_privacy": {
+    "message": "Privacy policy",
+    "description": "Options about: privacy policy link"
+  },
+  "options_about_terms": {
+    "message": "Terms of use",
+    "description": "Options about: terms link"
+  },
+  "options_about_oss": {
+    "message": "Open-source licenses",
+    "description": "Options about: OSS licenses link"
+  },
+  "options_about_support": {
+    "message": "Support ($1)",
+    "description": "Options about: support mailto link",
+    "placeholders": {
+      "email": {
+        "content": "$1",
+        "example": "support@example.com"
+      }
+    }
+  },
+  "options_about_lead": {
+    "message": "Markwell version information and links.",
+    "description": "Options about section lead"
+  },
+  "options_ai_model_saved": {
+    "message": "Model saved.",
+    "description": "Options AI: model saved toast"
+  },
+  "options_ai_model_save_failed": {
+    "message": "Could not save model.",
+    "description": "Options AI: model save failed toast"
+  },
+  "options_ai_auto_tag_enabled": {
+    "message": "Auto-tagging enabled.",
+    "description": "Options AI: auto tag enabled toast"
+  },
+  "options_ai_auto_tag_disabled": {
+    "message": "Auto-tagging disabled.",
+    "description": "Options AI: auto tag disabled toast"
+  },
+  "options_ai_settings_save_failed": {
+    "message": "Could not save settings.",
+    "description": "Options AI: settings save failed toast"
+  },
+  "options_ai_api_key_required": {
+    "message": "Enter an API key.",
+    "description": "Options AI: API key required message"
+  },
+  "options_ai_api_key_saved": {
+    "message": "API key saved.",
+    "description": "Options AI: API key saved toast"
+  },
+  "options_ai_key_test_failed": {
+    "message": "Key test failed.",
+    "description": "Options AI: key test failed fallback"
+  },
+  "options_ai_confirm_delete_key": {
+    "message": "Delete the saved API key?",
+    "description": "Options AI: confirm delete API key"
+  },
+  "options_ai_api_key_deleted": {
+    "message": "API key deleted.",
+    "description": "Options AI: API key deleted toast"
+  },
+  "options_ai_api_key_delete_failed": {
+    "message": "Could not delete API key.",
+    "description": "Options AI: API key delete failed toast"
+  },
+  "options_ai_testing": {
+    "message": "Testing…",
+    "description": "Options AI: testing status"
+  },
+  "options_ai_key_valid": {
+    "message": "✓ Valid",
+    "description": "Options AI: valid key status"
+  },
+  "options_ai_loading": {
+    "message": "Loading AI settings…",
+    "description": "Options AI: loading message"
+  },
+  "options_ai_privacy_note": {
+    "message": "This key is never sent to Markwell servers.",
+    "description": "Options AI: privacy note"
+  },
+  "options_ai_get_key_link": {
+    "message": "Get an API key in Google AI Studio",
+    "description": "Options AI: get API key link text"
+  },
+  "options_ai_placeholder_stored": {
+    "message": "Saved (enter again to replace)",
+    "description": "Options AI: stored key placeholder"
+  },
+  "options_ai_placeholder_enter_key": {
+    "message": "Enter API key",
+    "description": "Options AI: enter key placeholder"
+  },
+  "options_ai_hide_key": {
+    "message": "Hide API key",
+    "description": "Options AI: hide API key aria"
+  },
+  "options_ai_show_key": {
+    "message": "Show API key",
+    "description": "Options AI: show API key aria"
+  },
+  "options_ai_delete_key": {
+    "message": "Delete API key",
+    "description": "Options AI: delete API key button"
+  },
+  "options_ai_model_hint": {
+    "message": "Gemini model used for translation, rephrase, synthesis, and other AI features.",
+    "description": "Options AI: model selection hint"
+  },
+  "options_ai_auto_tag_label": {
+    "message": "Enable AI auto-tagging",
+    "description": "Options AI: auto tag checkbox label"
+  },
+  "options_ai_auto_tag_hint": {
+    "message": "AI suggests tags when saving highlights (trial / premium).",
+    "description": "Options AI: auto tag hint"
+  },
+  "options_ai_section_lead": {
+    "message": "Gemini API key, model settings, and usage for the current month.",
+    "description": "Options AI section lead text"
+  },
+  "options_blocked_domain_required": {
+    "message": "Enter a domain.",
+    "description": "Options blocked sites: domain required"
+  },
+  "options_blocked_domain_duplicate": {
+    "message": "That domain is already listed.",
+    "description": "Options blocked sites: duplicate domain"
+  },
+  "options_blocked_domain_added": {
+    "message": "Domain added.",
+    "description": "Options blocked sites: domain added toast"
+  },
+  "options_blocked_domain_removed": {
+    "message": "Domain removed.",
+    "description": "Options blocked sites: domain removed toast"
+  },
+  "options_blocked_pattern_required": {
+    "message": "Enter a URL pattern.",
+    "description": "Options blocked sites: pattern required"
+  },
+  "options_blocked_pattern_invalid": {
+    "message": "Invalid regular expression.",
+    "description": "Options blocked sites: invalid regex"
+  },
+  "options_blocked_pattern_duplicate": {
+    "message": "That pattern is already listed.",
+    "description": "Options blocked sites: duplicate pattern"
+  },
+  "options_blocked_pattern_added": {
+    "message": "URL pattern added.",
+    "description": "Options blocked sites: pattern added toast"
+  },
+  "options_blocked_pattern_removed": {
+    "message": "URL pattern removed.",
+    "description": "Options blocked sites: pattern removed toast"
+  },
+  "options_blocked_remove_item": {
+    "message": "Remove $1",
+    "description": "Options blocked sites: remove chip aria",
+    "placeholders": {
+      "item": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "options_blocked_loading": {
+    "message": "Loading block settings…",
+    "description": "Options blocked sites: loading"
+  },
+  "options_blocked_domains_hint": {
+    "message": "Domains where Markwell’s content script is disabled.",
+    "description": "Options blocked sites: domains hint"
+  },
+  "options_blocked_patterns_hint": {
+    "message": "Blocks when the full URL matches the RegExp (new RegExp).",
+    "description": "Options blocked sites: patterns hint"
+  },
+  "options_data_export_downloaded": {
+    "message": "Export downloaded.",
+    "description": "Options data: export downloaded toast"
+  },
+  "options_data_export_failed": {
+    "message": "Export failed.",
+    "description": "Options data: export failed toast"
+  },
+  "options_data_json_read_failed": {
+    "message": "Could not read JSON file.",
+    "description": "Options data: JSON read failed toast"
+  },
+  "options_data_confirm_replace": {
+    "message": "Delete all existing highlights, tags, projects, and syntheses and replace them with the import? This cannot be undone. Continue?",
+    "description": "Options data: confirm replace import"
+  },
+  "options_data_import_failed": {
+    "message": "Import failed. Your data was not changed.",
+    "description": "Options data: import failed toast"
+  },
+  "options_data_import_result": {
+    "message": "Import complete: $1 highlights, $2 tags, $3 projects, $4 syntheses",
+    "description": "Options data: import success summary",
+    "placeholders": {
+      "highlights": {
+        "content": "$1",
+        "example": "10"
+      },
+      "tags": {
+        "content": "$2",
+        "example": "5"
+      },
+      "projects": {
+        "content": "$3",
+        "example": "2"
+      },
+      "syntheses": {
+        "content": "$4",
+        "example": "1"
+      }
+    }
+  },
+  "options_data_delete_all_success": {
+    "message": "All data deleted. License information was kept.",
+    "description": "Options data: delete all success toast"
+  },
+  "options_data_delete_failed": {
+    "message": "Could not delete data.",
+    "description": "Options data: delete failed toast"
+  },
+  "options_data_delete_all_title": {
+    "message": "Delete all data",
+    "description": "Options data: delete all dialog title"
+  },
+  "options_data_license_kept_bold": {
+    "message": "Your license will be kept.",
+    "description": "Options data: license kept notice"
+  },
+  "options_data_type_delete_hint": {
+    "message": "Type DELETE to continue.",
+    "description": "Options data: type DELETE hint"
+  },
+  "options_data_export_title": {
+    "message": "Export",
+    "description": "Options data: export section title"
+  },
+  "options_data_export_hint": {
+    "message": "Save highlights, tags, projects, and syntheses to a JSON file. Settings and API keys are not included.",
+    "description": "Options data: export hint"
+  },
+  "options_data_exporting": {
+    "message": "Exporting…",
+    "description": "Options data: exporting label"
+  },
+  "options_data_export_button": {
+    "message": "Export",
+    "description": "Options data: export button"
+  },
+  "options_data_import_title": {
+    "message": "Import",
+    "description": "Options data: import section title"
+  },
+  "options_data_import_hint": {
+    "message": "Load a JSON file and merge with existing data or replace everything.",
+    "description": "Options data: import hint"
+  },
+  "options_data_choose_file": {
+    "message": "Choose file",
+    "description": "Options data: choose file button"
+  },
+  "options_data_file_selected": {
+    "message": "Selected: $1",
+    "description": "Options data: selected file name",
+    "placeholders": {
+      "filename": {
+        "content": "$1",
+        "example": "backup.json"
+      }
+    }
+  },
+  "options_data_import_mode": {
+    "message": "Import mode",
+    "description": "Options data: import mode radiogroup aria"
+  },
+  "options_data_mode_merge": {
+    "message": "Merge",
+    "description": "Options data: merge import mode"
+  },
+  "options_data_mode_replace": {
+    "message": "Replace",
+    "description": "Options data: replace import mode"
+  },
+  "options_data_mode_hint": {
+    "message": "Merge overwrites items with the same ID. Replace deletes all existing data before importing.",
+    "description": "Options data: import mode hint"
+  },
+  "options_data_importing": {
+    "message": "Importing…",
+    "description": "Options data: importing label"
+  },
+  "options_data_import_button": {
+    "message": "Import",
+    "description": "Options data: import button"
+  },
+  "options_data_danger_title": {
+    "message": "Danger zone",
+    "description": "Options data: danger zone title"
+  },
+  "options_data_danger_hint": {
+    "message": "Deletes all local data except license information. Export first if you need a backup.",
+    "description": "Options data: danger zone hint"
+  },
+  "options_data_section_lead": {
+    "message": "Export, import, and back up highlights.",
+    "description": "Options data section lead"
+  },
+  "options_general_loading": {
+    "message": "Loading settings…",
+    "description": "Options general: loading"
+  },
+  "options_general_autosave_hint": {
+    "message": "Changes are saved automatically.",
+    "description": "Options general: autosave hint"
+  },
+  "options_general_default_color_hint": {
+    "message": "Default color for new highlights.",
+    "description": "Options general: default color hint"
+  },
+  "options_general_font_scale_hint": {
+    "message": "Adjust UI text size between $1 and $2.",
+    "description": "Options general: font scale hint",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "0.85"
+      },
+      "max": {
+        "content": "$2",
+        "example": "1.25"
+      }
+    }
+  },
+  "options_general_theme_auto_hint": {
+    "message": "auto follows your OS appearance.",
+    "description": "Options general: theme auto hint"
+  },
+  "options_general_translate_lang": {
+    "message": "Default translation language",
+    "description": "Options general: translate language label"
+  },
+  "options_general_translate_hint": {
+    "message": "Used by “🌐 Translate” in the popup. Requires an API key.",
+    "description": "Options general: translate hint"
+  },
+  "options_main_sidebar_aria": {
+    "message": "Settings sections",
+    "description": "Options main: sidebar nav aria"
+  },
+  "options_usage_heading": {
+    "message": "Usage",
+    "description": "Options main: usage heading"
+  },
+  "options_usage_hint": {
+    "message": "Gemini usage for the current month stored locally. Nothing is sent externally.",
+    "description": "Options main: usage hint"
+  },
+  "options_usage_loading": {
+    "message": "Loading usage…",
+    "description": "Options main: usage loading"
+  },
+  "options_usage_confirm_reset": {
+    "message": "Reset AI usage data for $1?\nThis cannot be undone.",
+    "description": "Options main: confirm reset usage",
+    "placeholders": {
+      "month": {
+        "content": "$1",
+        "example": "2025年03月"
+      }
+    }
+  },
+  "options_usage_reset_toast": {
+    "message": "Usage for this month was reset.",
+    "description": "Options main: usage reset toast"
+  },
+  "options_usage_month_year": {
+    "message": "$1/$2",
+    "description": "Options main: year-month display",
+    "placeholders": {
+      "year": {
+        "content": "$1",
+        "example": "2025"
+      },
+      "month": {
+        "content": "$2",
+        "example": "03"
+      }
+    }
+  },
+  "options_usage_target_month": {
+    "message": "Month:",
+    "description": "Options main: target month label"
+  },
+  "options_usage_requests": {
+    "message": "Requests:",
+    "description": "Options main: request count label"
+  },
+  "options_usage_tokens": {
+    "message": "Tokens: input",
+    "description": "Options main: token count label prefix"
+  },
+  "options_usage_tokens_output": {
+    "message": "output",
+    "description": "Options main: token output label"
+  },
+  "options_usage_estimated_cost": {
+    "message": "Estimated cost:",
+    "description": "Options main: estimated cost label"
+  },
+  "options_usage_pricing_note": {
+    "message": "Estimate based on $1 pricing (input $$$2/1M · output $$$3/1M, verified $4).",
+    "description": "Options main: pricing footnote",
+    "placeholders": {
+      "model": {
+        "content": "$1",
+        "example": "gemini-2.0-flash"
+      },
+      "input_price": {
+        "content": "$2",
+        "example": "0.10"
+      },
+      "output_price": {
+        "content": "$3",
+        "example": "0.40"
+      },
+      "verified": {
+        "content": "$4",
+        "example": "2025-01-01"
+      }
+    }
+  },
+  "options_usage_table_feature": {
+    "message": "Feature",
+    "description": "Options main: usage table feature column"
+  },
+  "options_usage_table_count": {
+    "message": "Count",
+    "description": "Options main: usage table count column"
+  },
+  "options_usage_table_tokens": {
+    "message": "Tokens (in/out)",
+    "description": "Options main: usage table tokens column"
+  },
+  "options_usage_table_estimate": {
+    "message": "Estimate",
+    "description": "Options main: usage table estimate column"
+  },
+  "options_usage_empty_month": {
+    "message": "No AI usage recorded this month yet.",
+    "description": "Options main: no usage this month"
+  },
+  "options_usage_reset_button": {
+    "message": "Reset this month",
+    "description": "Options main: reset usage button"
+  },
+  "options_tags_lead": {
+    "message": "Click a tag name to rename, or use “Merge into another tag” (merge runs after confirmation).",
+    "description": "Options tags section lead"
+  },
+  "options_projects_lead": {
+    "message": "Create, edit, and delete projects. Deleting a project keeps highlights but removes project membership. Free plan: up to 2 projects.",
+    "description": "Options projects section lead"
+  },
+  "options_premium_lead": {
+    "message": "Manage your license and Premium features.",
+    "description": "Options premium section lead"
+  },
+  "options_premium_loading": {
+    "message": "Loading Premium settings…",
+    "description": "Options premium: loading"
+  },
+  "options_premium_current_plan": {
+    "message": "Current plan",
+    "description": "Options premium: current plan label"
+  },
+  "options_premium_trial_section": {
+    "message": "Premium trial",
+    "description": "Options premium: trial section title"
+  },
+  "options_premium_trial_started": {
+    "message": "Started your 7-day Premium trial.",
+    "description": "Options premium: trial started toast"
+  },
+  "options_premium_license_applied": {
+    "message": "License key applied. Premium is now active.",
+    "description": "Options premium: license applied toast"
+  },
+  "options_premium_license_apply_failed": {
+    "message": "Could not apply license key.",
+    "description": "Options premium: license apply failed"
+  },
+  "options_premium_purchase_section": {
+    "message": "Buy Premium",
+    "description": "Options premium: purchase section title"
+  },
+  "options_premium_purchase_note": {
+    "message": "After checkout, you will receive a license key by email. Paste it here.",
+    "description": "Options premium: purchase note"
+  },
+  "options_premium_purchase_button": {
+    "message": "Buy Premium for $5 USD",
+    "description": "Options premium: purchase button"
+  },
+  "options_premium_stripe_hint": {
+    "message": "Opens the Stripe checkout page in a new tab.",
+    "description": "Options premium: Stripe hint"
+  },
+  "options_premium_license_key": {
+    "message": "License key",
+    "description": "Options premium: license key label"
+  },
+  "options_premium_license_stored_hint": {
+    "message": "A license key is saved.",
+    "description": "Options premium: stored license hint"
+  },
+  "options_project_tier_limit": {
+    "message": "$1/$2 projects (Free)",
+    "description": "Options projects: free tier limit label",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "1"
+      },
+      "limit": {
+        "content": "$2",
+        "example": "2"
+      }
+    }
+  },
+  "options_project_name_required": {
+    "message": "Enter a project name.",
+    "description": "Options projects: name required"
+  },
+  "options_project_created": {
+    "message": "Project created.",
+    "description": "Options projects: created toast"
+  },
+  "options_project_limit_error": {
+    "message": "Free plan allows up to $1 projects (you have $2).",
+    "description": "Options projects: limit error",
+    "placeholders": {
+      "limit": {
+        "content": "$1",
+        "example": "2"
+      },
+      "current": {
+        "content": "$2",
+        "example": "2"
+      }
+    }
+  },
+  "options_project_create_failed": {
+    "message": "Could not create project.",
+    "description": "Options projects: create failed"
+  },
+  "options_project_emoji_required": {
+    "message": "Enter an emoji.",
+    "description": "Options projects: emoji required"
+  },
+  "options_project_updated": {
+    "message": "Project updated.",
+    "description": "Options projects: updated toast"
+  },
+  "options_project_update_failed": {
+    "message": "Could not update project.",
+    "description": "Options projects: update failed"
+  },
+  "options_project_delete_highlight_note": {
+    "message": "\n$1 highlights will remain but become unassigned from this project.",
+    "description": "Options projects: delete highlight note",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "options_project_confirm_delete": {
+    "message": "Delete project “$1”?$2",
+    "description": "Options projects: confirm delete",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Research"
+      },
+      "note": {
+        "content": "$2",
+        "example": ""
+      }
+    }
+  },
+  "options_project_deleted": {
+    "message": "Project deleted.",
+    "description": "Options projects: deleted toast"
+  },
+  "options_project_delete_failed": {
+    "message": "Could not delete project.",
+    "description": "Options projects: delete failed"
+  },
+  "options_project_edit_cover_emoji": {
+    "message": "Edit cover emoji",
+    "description": "Options projects: edit cover emoji aria"
+  },
+  "options_project_edit_name": {
+    "message": "Edit project name",
+    "description": "Options projects: edit name aria"
+  },
+  "options_project_rename_aria": {
+    "message": "Rename project: $1",
+    "description": "Options projects: rename button aria",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Research"
+      }
+    }
+  },
+  "options_project_edit_description": {
+    "message": "Edit description",
+    "description": "Options projects: edit description aria"
+  },
+  "options_project_no_description": {
+    "message": "(No description)",
+    "description": "Options projects: empty description"
+  },
+  "options_project_loading": {
+    "message": "Loading projects…",
+    "description": "Options projects: loading"
+  },
+  "options_project_new": {
+    "message": "New project",
+    "description": "Options projects: new project label"
+  },
+  "options_project_search_placeholder": {
+    "message": "Search by name or description…",
+    "description": "Options projects: search placeholder"
+  },
+  "options_project_empty": {
+    "message": "No projects",
+    "description": "Options projects: empty list"
+  },
+  "options_project_no_match": {
+    "message": "No matching projects",
+    "description": "Options projects: no search match"
+  },
+  "options_tag_bulk_delete_usage_note": {
+    "message": "\nTags will be removed from $1 highlights.",
+    "description": "Options tags: bulk delete usage note",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "options_tag_confirm_bulk_delete": {
+    "message": "Delete $1 selected tags?$2",
+    "description": "Options tags: confirm bulk delete",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      },
+      "note": {
+        "content": "$2",
+        "example": ""
+      }
+    }
+  },
+  "options_tag_bulk_deleted": {
+    "message": "Deleted $1 tags.",
+    "description": "Options tags: bulk deleted toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "options_tag_bulk_delete_failed": {
+    "message": "Bulk delete failed.",
+    "description": "Options tags: bulk delete failed"
+  },
+  "options_tag_bulk_color_changed": {
+    "message": "Changed color on $1 tags.",
+    "description": "Options tags: bulk color changed toast",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "options_tag_bulk_color_failed": {
+    "message": "Bulk color change failed.",
+    "description": "Options tags: bulk color change failed"
+  },
+  "options_tag_name_required": {
+    "message": "Enter a tag name.",
+    "description": "Options tags: name required"
+  },
+  "options_tag_duplicate": {
+    "message": "A tag with that name already exists.",
+    "description": "Options tags: duplicate name"
+  },
+  "options_tag_created": {
+    "message": "Tag created.",
+    "description": "Options tags: created toast"
+  },
+  "options_tag_create_failed": {
+    "message": "Could not create tag.",
+    "description": "Options tags: create failed"
+  },
+  "options_tag_renamed": {
+    "message": "Tag renamed.",
+    "description": "Options tags: renamed toast"
+  },
+  "options_tag_rename_failed": {
+    "message": "Could not rename tag.",
+    "description": "Options tags: rename failed"
+  },
+  "options_tag_merge_target_required": {
+    "message": "Select a tag to merge into.",
+    "description": "Options tags: merge target required"
+  },
+  "options_tag_merged": {
+    "message": "Tags merged.",
+    "description": "Options tags: merged toast"
+  },
+  "options_tag_merge_failed": {
+    "message": "Could not merge tags.",
+    "description": "Options tags: merge failed"
+  },
+  "options_tag_confirm_delete": {
+    "message": "Delete “$1”?",
+    "description": "Options tags: confirm delete",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      }
+    }
+  },
+  "options_tag_confirm_delete_with_usage": {
+    "message": "Delete “$1”?\nIt will be removed from $2 highlights.",
+    "description": "Options tags: confirm delete with usage",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      },
+      "count": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "options_tag_deleted": {
+    "message": "Tag deleted.",
+    "description": "Options tags: deleted toast"
+  },
+  "options_tag_delete_failed": {
+    "message": "Could not delete tag.",
+    "description": "Options tags: delete failed"
+  },
+  "options_tag_color_changed": {
+    "message": "Tag color updated.",
+    "description": "Options tags: color changed toast"
+  },
+  "options_tag_color_change_failed": {
+    "message": "Could not change color.",
+    "description": "Options tags: color change failed"
+  },
+  "options_tag_color_aria": {
+    "message": "Color: $1",
+    "description": "Options tags: color swatch aria",
+    "placeholders": {
+      "color": {
+        "content": "$1",
+        "example": "#ffd34e"
+      }
+    }
+  },
+  "options_tag_change_color_aria": {
+    "message": "Change color for $1",
+    "description": "Options tags: change color aria",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      }
+    }
+  },
+  "options_tag_edit_name": {
+    "message": "Edit tag name",
+    "description": "Options tags: edit name aria"
+  },
+  "options_tag_rename_aria": {
+    "message": "Rename tag: $1",
+    "description": "Options tags: rename button aria",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      }
+    }
+  },
+  "options_tag_bulk_color_aria": {
+    "message": "Change color for selected tags",
+    "description": "Options tags: bulk color change aria"
+  },
+  "options_tag_merge_into": {
+    "message": "Merge into another tag",
+    "description": "Options tags: merge into another tag"
+  },
+  "options_tag_loading": {
+    "message": "Loading tags…",
+    "description": "Options tags: loading"
+  },
+  "options_tag_new": {
+    "message": "New tag",
+    "description": "Options tags: new tag label"
+  },
+  "options_tag_name_placeholder": {
+    "message": "Tag name",
+    "description": "Options tags: tag name placeholder"
+  },
+  "options_tag_search_placeholder": {
+    "message": "Search tags…",
+    "description": "Options tags: search placeholder"
+  },
+  "options_tag_count_all": {
+    "message": "$1 total",
+    "description": "Options tags: total count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "options_tag_count_filtered": {
+    "message": "Showing $1 of $2",
+    "description": "Options tags: filtered count",
+    "placeholders": {
+      "visible": {
+        "content": "$1",
+        "example": "5"
+      },
+      "total": {
+        "content": "$2",
+        "example": "10"
+      }
+    }
+  },
+  "options_tag_empty": {
+    "message": "No tags",
+    "description": "Options tags: empty list"
+  },
+  "options_tag_no_match": {
+    "message": "No matching tags",
+    "description": "Options tags: no search match"
+  },
+  "options_tag_select_row": {
+    "message": "Select $1",
+    "description": "Options tags: select row checkbox aria",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "research"
+      }
+    }
+  },
+  "ai_access_lock_tooltip_premium": {
+    "message": "Available with Premium",
+    "description": "AI button lock tooltip when Premium is required"
+  },
+  "ai_access_lock_tooltip_trial": {
+    "message": "Available with Trial or Premium",
+    "description": "AI button lock tooltip when Trial or Premium is required"
   }
 }

@@ -55,6 +55,11 @@ function formatTokenCount(value: number): string {
   return value.toLocaleString('ja-JP');
 }
 
+function formatUsageMonthLabel(usageMonth: string): string {
+  const [year, month] = usageMonth.split('-');
+  return t('options_usage_month_year', [year, month ?? '']);
+}
+
 @customElement('mw-options')
 export class MwOptions extends LitElement {
   @state() private activeSection: OptionsSection = 'general';
@@ -377,22 +382,20 @@ export class MwOptions extends LitElement {
   }
 
   private async handleResetUsage(): Promise<void> {
-    const monthLabel = this.usageMonth.replace('-', '年') + '月';
-    const confirmed = window.confirm(
-      `${monthLabel}の AI 使用量データをリセットしますか？\nこの操作は取り消せません。`,
-    );
+    const monthLabel = formatUsageMonthLabel(this.usageMonth);
+    const confirmed = window.confirm(t('options_usage_confirm_reset', [monthLabel]));
     if (!confirmed) {
       return;
     }
 
     await clearMonthlyUsage(this.usageMonth);
     await this.loadUsage();
-    toastFrom(this, '当月の使用量をリセットしました', 'success');
+    toastFrom(this, t('options_usage_reset_toast'), 'success');
   }
 
   private renderUsageSection() {
     if (this.usageLoading || this.usage === null) {
-      return html`<p class="usage-empty">使用量を読み込み中…</p>`;
+      return html`<p class="usage-empty">${t('options_usage_loading')}</p>`;
     }
 
     const usage = this.usage;
@@ -417,16 +420,21 @@ export class MwOptions extends LitElement {
 
     return html`
       <div class="usage-summary">
-        <p>対象月: <strong>${usage.month}</strong></p>
-        <p>リクエスト数: <strong>${String(usage.request_count)}</strong></p>
+        <p>${t('options_usage_target_month')} <strong>${usage.month}</strong></p>
+        <p>${t('options_usage_requests')} <strong>${String(usage.request_count)}</strong></p>
         <p>
-          トークン数: 入力 <strong>${formatTokenCount(usage.token_input)}</strong> / 出力
+          ${t('options_usage_tokens')} <strong>${formatTokenCount(usage.token_input)}</strong> /
+          ${t('options_usage_tokens_output')}
           <strong>${formatTokenCount(usage.token_output)}</strong>
         </p>
-        <p class="cost">概算コスト: ${formatUsdEstimate(estimatedUsd)}</p>
+        <p class="cost">${t('options_usage_estimated_cost')} ${formatUsdEstimate(estimatedUsd)}</p>
         <p class="hint">
-          ${GEMINI_FLASH_PRICING.model} 単価（入力 $${GEMINI_FLASH_PRICING.input_per_million_usd}/1M・出力
-          $${GEMINI_FLASH_PRICING.output_per_million_usd}/1M、確認日 ${GEMINI_FLASH_PRICING.last_verified}）に基づく概算です。
+          ${t('options_usage_pricing_note', [
+            GEMINI_FLASH_PRICING.model,
+            String(GEMINI_FLASH_PRICING.input_per_million_usd),
+            String(GEMINI_FLASH_PRICING.output_per_million_usd),
+            GEMINI_FLASH_PRICING.last_verified,
+          ])}
         </p>
       </div>
       ${hasUsage
@@ -434,10 +442,10 @@ export class MwOptions extends LitElement {
             <table class="usage-table">
               <thead>
                 <tr>
-                  <th scope="col">機能</th>
-                  <th scope="col">回数</th>
-                  <th scope="col">トークン (入/出)</th>
-                  <th scope="col">概算</th>
+                  <th scope="col">${t('options_usage_table_feature')}</th>
+                  <th scope="col">${t('options_usage_table_count')}</th>
+                  <th scope="col">${t('options_usage_table_tokens')}</th>
+                  <th scope="col">${t('options_usage_table_estimate')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -445,18 +453,18 @@ export class MwOptions extends LitElement {
               </tbody>
             </table>
           `
-        : html`<p class="usage-empty">今月はまだ AI 機能の利用記録がありません。</p>`}
+        : html`<p class="usage-empty">${t('options_usage_empty_month')}</p>`}
       <div class="usage-actions">
         <button
           type="button"
           class="btn btn--danger"
-          aria-label="当月データをリセット"
+          aria-label=${t('options_usage_reset_button')}
           ?disabled=${!hasUsage}
           @click=${() => {
             void this.handleResetUsage();
           }}
         >
-          当月データをリセット
+          ${t('options_usage_reset_button')}
         </button>
       </div>
     `;
@@ -468,56 +476,51 @@ export class MwOptions extends LitElement {
 
   private renderAiSection() {
     return html`
-      <h1>AI</h1>
-      <p class="section-lead">Gemini API キーとモデルの設定、および当月の利用量です。</p>
+      <h1>${t('options_section_ai')}</h1>
+      <p class="section-lead">${t('options_ai_section_lead')}</p>
       <mw-ai-settings></mw-ai-settings>
-      <h2 class="usage-heading">使用量</h2>
-      <p class="hint">ローカルに保存された当月の Gemini 利用量です。外部には送信されません。</p>
+      <h2 class="usage-heading">${t('options_usage_heading')}</h2>
+      <p class="hint">${t('options_usage_hint')}</p>
       ${this.renderUsageSection()}
     `;
   }
 
   private renderTagsSection() {
     return html`
-      <h1>タグ</h1>
-      <p class="section-lead">
-        タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。
-      </p>
+      <h1>${t('options_section_tags')}</h1>
+      <p class="section-lead">${t('options_tags_lead')}</p>
       <mw-tag-manager></mw-tag-manager>
     `;
   }
 
   private renderProjectsSection() {
     return html`
-      <h1>プロジェクト</h1>
-      <p class="section-lead">
-        プロジェクトの作成・編集・削除ができます。削除してもハイライト自体は残り、プロジェクト未所属になります。Free
-        プランでは最大 2 個まで作成できます。
-      </p>
+      <h1>${t('options_section_projects')}</h1>
+      <p class="section-lead">${t('options_projects_lead')}</p>
       <mw-project-manager></mw-project-manager>
     `;
   }
 
   private renderPremiumSection() {
     return html`
-      <h1>Premium</h1>
-      <p class="section-lead">ライセンスと Premium 機能の管理です。</p>
+      <h1>${t('options_section_premium')}</h1>
+      <p class="section-lead">${t('options_premium_lead')}</p>
       <mw-premium-section></mw-premium-section>
     `;
   }
 
   private renderDataSection() {
     return html`
-      <h1>データ</h1>
-      <p class="section-lead">ハイライトのエクスポート・インポートとバックアップです。</p>
+      <h1>${t('options_section_data')}</h1>
+      <p class="section-lead">${t('options_data_section_lead')}</p>
       <mw-data-section></mw-data-section>
     `;
   }
 
   private renderAboutSection() {
     return html`
-      <h1>About</h1>
-      <p class="section-lead">Markwell のバージョン情報とリンクです。</p>
+      <h1>${t('options_section_about')}</h1>
+      <p class="section-lead">${t('options_about_lead')}</p>
       <mw-about-section></mw-about-section>
     `;
   }
@@ -546,7 +549,7 @@ export class MwOptions extends LitElement {
   render() {
     return html`
       <div class="shell">
-        <nav class="sidebar" aria-label="設定セクション">
+        <nav class="sidebar" aria-label=${t('options_main_sidebar_aria')}>
           <div class="brand-row">
             <p class="brand">Markwell</p>
             <mw-tier-badge

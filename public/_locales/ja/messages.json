@@ -276,5 +276,1735 @@
   },
   "toast_deleted": {
     "message": "削除しました"
+  },
+  "side_panel_color_yellow": {
+    "message": "黄"
+  },
+  "side_panel_color_green": {
+    "message": "緑"
+  },
+  "side_panel_color_pink": {
+    "message": "ピンク"
+  },
+  "side_panel_color_blue": {
+    "message": "青"
+  },
+  "side_panel_color_orange": {
+    "message": "オレンジ"
+  },
+  "side_panel_empty_highlights_help": {
+    "message": "このプロジェクトにはハイライトがありません。popup からハイライトを右クリック → プロジェクトに追加 で入れられます"
+  },
+  "side_panel_error_name_required": {
+    "message": "名前を入力してください"
+  },
+  "side_panel_error_project_limit": {
+    "message": "プロジェクト数の上限に達しています"
+  },
+  "side_panel_error_create_failed": {
+    "message": "作成に失敗しました"
+  },
+  "side_panel_status_excluded": {
+    "message": "プロジェクトから除外しました（ハイライト自体は削除されません）"
+  },
+  "synthesis_status_saved": {
+    "message": "合成結果を保存しました"
+  },
+  "synthesis_status_regenerated": {
+    "message": "再生成しました"
+  },
+  "side_panel_no_highlights": {
+    "message": "ハイライトがありません"
+  },
+  "synthesis_error_prefix": {
+    "message": "**エラー:**"
+  },
+  "synthesis_error_server": {
+    "message": "Gemini サーバーエラーです。しばらく待ってから再試行してください。"
+  },
+  "synthesis_error_trial_required": {
+    "message": "トライアルまたは Premium で利用できます。"
+  },
+  "synthesis_error_api_key_not_set": {
+    "message": "API キーが未設定です。設定画面で Gemini API キーを登録してください。"
+  },
+  "synthesis_error_failed": {
+    "message": "合成に失敗しました。"
+  },
+  "side_panel_copy_failed": {
+    "message": "コピーに失敗しました"
+  },
+  "side_panel_feature_export_premium": {
+    "message": "Obsidian / Roam 形式エクスポート"
+  },
+  "side_panel_export_md_done": {
+    "message": "Markdown (.md) をダウンロードしました"
+  },
+  "side_panel_export_obsidian_done": {
+    "message": "Obsidian 形式をダウンロードしました"
+  },
+  "side_panel_export_roam_done": {
+    "message": "Roam Research 形式をダウンロードしました"
+  },
+  "side_panel_export_done": {
+    "message": "エクスポートしました"
+  },
+  "side_panel_export_failed": {
+    "message": "エクスポートに失敗しました"
+  },
+  "side_panel_export": {
+    "message": "エクスポート"
+  },
+  "side_panel_export_menu": {
+    "message": "エクスポート ▾"
+  },
+  "side_panel_export_obsidian_format": {
+    "message": "Obsidian 形式"
+  },
+  "side_panel_export_roam_format": {
+    "message": "Roam Research 形式"
+  },
+  "side_panel_result_synthesis": {
+    "message": "合成結果"
+  },
+  "side_panel_status_generating": {
+    "message": "生成中"
+  },
+  "side_panel_status_extracting": {
+    "message": "抽出中"
+  },
+  "side_panel_status_generating_ellipsis": {
+    "message": "生成中…"
+  },
+  "side_panel_status_extracting_ellipsis": {
+    "message": "抽出中…"
+  },
+  "side_panel_quotes_md_downloaded": {
+    "message": "引用 Markdown をダウンロードしました"
+  },
+  "content_download_md": {
+    "message": ".md ダウンロード"
+  },
+  "side_panel_ai_features": {
+    "message": "AI 機能"
+  },
+  "side_panel_synthesis_prompt_label": {
+    "message": "合成プロンプト"
+  },
+  "synthesis_regenerate": {
+    "message": "再生成"
+  },
+  "side_panel_ai_title_synthesis": {
+    "message": "ハイライト合成"
+  },
+  "side_panel_ai_title_qa": {
+    "message": "プロジェクト Q&A"
+  },
+  "side_panel_ai_title_synthesize": {
+    "message": "ハイライトを AI で合成"
+  },
+  "side_panel_ai_title_quote_extract": {
+    "message": "印象的な引用を AI で抽出"
+  },
+  "side_panel_ai_title_qa_ask": {
+    "message": "ハイライトについて質問"
+  },
+  "side_panel_qa_empty": {
+    "message": "プロジェクトのハイライトについて質問できます"
+  },
+  "side_panel_qa_responding": {
+    "message": "応答中…"
+  },
+  "side_panel_qa_placeholder": {
+    "message": "ハイライトについて質問…"
+  },
+  "side_panel_send": {
+    "message": "送信"
+  },
+  "side_panel_stop": {
+    "message": "停止"
+  },
+  "side_panel_loading": {
+    "message": "読み込み中…"
+  },
+  "side_panel_no_projects": {
+    "message": "プロジェクトがありません。上のセレクタから「+ 新規プロジェクト」を選んで作成してください。"
+  },
+  "side_panel_reorder": {
+    "message": "並び替え"
+  },
+  "side_panel_reorder_drag": {
+    "message": "ドラッグで並び替え"
+  },
+  "side_panel_move_up": {
+    "message": "上へ"
+  },
+  "side_panel_move_down": {
+    "message": "下へ"
+  },
+  "side_panel_color_sr": {
+    "message": "色"
+  },
+  "side_panel_exclude": {
+    "message": "除外"
+  },
+  "side_panel_project_label": {
+    "message": "プロジェクト"
+  },
+  "side_panel_no_project": {
+    "message": "プロジェクトなし"
+  },
+  "side_panel_new_project_option": {
+    "message": "+ 新規プロジェクト"
+  },
+  "side_panel_highlights_aria": {
+    "message": "ハイライト一覧"
+  },
+  "side_panel_highlights_title": {
+    "message": "ハイライト"
+  },
+  "side_panel_ai_panel": {
+    "message": "AI"
+  },
+  "side_panel_history_empty": {
+    "message": "このプロジェクトの保存履歴はありません。"
+  },
+  "side_panel_history_view_aria": {
+    "message": "合成履歴を表示: $date$",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "2026/05/19 12:00"
+      }
+    }
+  },
+  "side_panel_history_tokens": {
+    "message": "$model$ · 入力 $input$ / 出力 $output$",
+    "placeholders": {
+      "model": {
+        "content": "$1",
+        "example": "gemini-2.0-flash"
+      },
+      "input": {
+        "content": "$2",
+        "example": "100"
+      },
+      "output": {
+        "content": "$3",
+        "example": "200"
+      }
+    }
+  },
+  "side_panel_new_project_title": {
+    "message": "新規プロジェクト"
+  },
+  "side_panel_project_name_placeholder": {
+    "message": "プロジェクト名"
+  },
+  "side_panel_create": {
+    "message": "作成"
+  },
+  "content_feature_highlight_save": {
+    "message": "ハイライト保存"
+  },
+  "content_edit_color_aria": {
+    "message": "色を $color$ に変更",
+    "placeholders": {
+      "color": {
+        "content": "$1",
+        "example": "yellow"
+      }
+    }
+  },
+  "content_highlight_color_aria": {
+    "message": "$color$ でハイライト",
+    "placeholders": {
+      "color": {
+        "content": "$1",
+        "example": "yellow"
+      }
+    }
+  },
+  "note_dialog_placeholder": {
+    "message": "メモを入力…"
+  },
+  "popup_summary_copied": {
+    "message": "要約をコピーしました",
+    "description": "Page summary copied toast"
+  },
+  "popup_page_text_empty": {
+    "message": "ページ本文が空です",
+    "description": "Page text fetch empty"
+  },
+  "popup_page_text_unavailable": {
+    "message": "このページでは本文を取得できません",
+    "description": "Page text unavailable on page"
+  },
+  "popup_no_active_tab": {
+    "message": "アクティブなタブがありません",
+    "description": "No active browser tab"
+  },
+  "popup_page_text_fetch_failed": {
+    "message": "ページ本文の取得に失敗しました",
+    "description": "Page text fetch failed"
+  },
+  "popup_summary_truncated_toast": {
+    "message": "本文の先頭 8000 文字で要約しました",
+    "description": "Summary used truncated page text"
+  },
+  "popup_page_summary_title": {
+    "message": "ページ要約",
+    "description": "Page summary dialog title"
+  },
+  "popup_summarizing": {
+    "message": "要約中…",
+    "description": "Page summary in progress"
+  },
+  "popup_current_page_title": {
+    "message": "このページ",
+    "description": "Current page panel title"
+  },
+  "popup_highlights_count": {
+    "message": "ハイライト ($count$)",
+    "description": "Highlight list count heading",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_filtered_empty": {
+    "message": "選択した条件に一致するハイライトはありません",
+    "description": "No highlights match filters on current page"
+  },
+  "popup_page_summary_button_title": {
+    "message": "このページの本文を AI で要約",
+    "description": "Summarize page button tooltip"
+  },
+  "popup_page_summary_button_label": {
+    "message": "📝 ページを要約",
+    "description": "Summarize page button label"
+  },
+  "popup_summary_invalid_response": {
+    "message": "要約レスポンスが不正です",
+    "description": "Invalid summarize API response"
+  },
+  "popup_summary_request_failed": {
+    "message": "要約リクエストに失敗しました",
+    "description": "Summarize API request failed"
+  },
+  "popup_card_tag_already_exists": {
+    "message": "このタグは既に付いています",
+    "description": "Tag already on highlight"
+  },
+  "popup_card_tag_added": {
+    "message": "タグ「$name$」を追加しました",
+    "description": "Tag added toast",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "読書"
+      }
+    }
+  },
+  "popup_card_tag_add_failed": {
+    "message": "タグの追加に失敗しました",
+    "description": "Tag add failed toast"
+  },
+  "popup_card_tag_suggestions_label": {
+    "message": "タグ候補",
+    "description": "Tag autocomplete listbox label"
+  },
+  "popup_card_tag_add_placeholder": {
+    "message": "タグを追加…",
+    "description": "Tag input placeholder"
+  },
+  "popup_card_tag_no_suggestions": {
+    "message": "候補がありません",
+    "description": "No tag autocomplete matches"
+  },
+  "popup_card_markdown_copied": {
+    "message": "Markdown をコピーしました",
+    "description": "Markdown copy success toast"
+  },
+  "popup_card_highlight_not_found": {
+    "message": "ハイライトが見つかりません",
+    "description": "Jump target not found"
+  },
+  "popup_card_ai_tag_title": {
+    "message": "AI タグ",
+    "description": "AI-generated tag tooltip"
+  },
+  "popup_card_add_tag": {
+    "message": "タグを追加",
+    "description": "Add tag button label"
+  },
+  "popup_card_copy_hint_title": {
+    "message": "クリック: テキスト / 長押し・右クリック: Markdown",
+    "description": "Copy button interaction hint"
+  },
+  "popup_card_translate_target_title": {
+    "message": "翻訳先: $lang$",
+    "description": "Translate target language tooltip",
+    "placeholders": {
+      "lang": {
+        "content": "$1",
+        "example": "英語"
+      }
+    }
+  },
+  "popup_card_translating": {
+    "message": "翻訳中",
+    "description": "Translate in progress aria"
+  },
+  "popup_card_translating_ellipsis": {
+    "message": "翻訳中…",
+    "description": "Translate in progress label"
+  },
+  "popup_card_rephrase_title": {
+    "message": "選択テキストを言い換え",
+    "description": "Rephrase button tooltip"
+  },
+  "popup_card_rephrasing": {
+    "message": "言い換え中",
+    "description": "Rephrase in progress aria"
+  },
+  "popup_card_rephrasing_ellipsis": {
+    "message": "言い換え中…",
+    "description": "Rephrase in progress label"
+  },
+  "popup_card_fact_check_btn": {
+    "message": "🔎 ファクトチェック",
+    "description": "Fact check button label"
+  },
+  "popup_card_fact_checking": {
+    "message": "ファクトチェック中",
+    "description": "Fact check in progress aria"
+  },
+  "popup_card_fact_checking_ellipsis": {
+    "message": "確認中…",
+    "description": "Fact check in progress label"
+  },
+  "popup_card_fact_check_web_title": {
+    "message": "web 検索で事実関係を確認",
+    "description": "Fact check button tooltip"
+  },
+  "popup_card_related_title": {
+    "message": "意味的に近いハイライトを提案",
+    "description": "Related highlights button tooltip"
+  },
+  "popup_card_related_btn": {
+    "message": "🔗 関連",
+    "description": "Related highlights button label"
+  },
+  "popup_card_related_btn_locked": {
+    "message": "🔒 🔗 関連",
+    "description": "Locked related highlights button"
+  },
+  "popup_card_related_aria": {
+    "message": "関連ハイライト",
+    "description": "Related highlights button aria"
+  },
+  "popup_card_translation_label": {
+    "message": "翻訳（$lang$）",
+    "description": "Translation section heading",
+    "placeholders": {
+      "lang": {
+        "content": "$1",
+        "example": "英語"
+      }
+    }
+  },
+  "popup_card_rephrase_style_title": {
+    "message": "言い換えスタイル",
+    "description": "Rephrase style dialog title"
+  },
+  "popup_card_rephrase_result_title": {
+    "message": "言い換え（$style$）",
+    "description": "Rephrase result dialog title",
+    "placeholders": {
+      "style": {
+        "content": "$1",
+        "example": "丁寧"
+      }
+    }
+  },
+  "popup_card_fact_check_modal_title": {
+    "message": "🔎 ファクトチェック",
+    "description": "Fact check dialog title"
+  },
+  "popup_card_fact_check_web_checking": {
+    "message": "web 検索で確認中…",
+    "description": "Fact check dialog loading"
+  },
+  "popup_card_fact_check_sources": {
+    "message": "出典",
+    "description": "Fact check sources heading"
+  },
+  "popup_card_fact_check_copied": {
+    "message": "ファクトチェック結果をコピーしました",
+    "description": "Fact check copy success"
+  },
+  "popup_card_rephrase_copied": {
+    "message": "言い換えをコピーしました",
+    "description": "Rephrase copy success"
+  },
+  "popup_error_fact_check_premium": {
+    "message": "ファクトチェックは Premium で利用できます。",
+    "description": "Fact check premium required"
+  },
+  "popup_error_fact_check_failed": {
+    "message": "ファクトチェックに失敗しました",
+    "description": "Fact check generic error"
+  },
+  "popup_error_rephrase_failed": {
+    "message": "言い換えに失敗しました",
+    "description": "Rephrase generic error"
+  },
+  "popup_error_translate_failed": {
+    "message": "翻訳に失敗しました",
+    "description": "Translate generic error"
+  },
+  "popup_rephrase_style_polite": {
+    "message": "丁寧",
+    "description": "Polite rephrase style"
+  },
+  "popup_rephrase_style_concise": {
+    "message": "簡潔",
+    "description": "Concise rephrase style"
+  },
+  "popup_rephrase_style_academic": {
+    "message": "学術調",
+    "description": "Academic rephrase style"
+  },
+  "popup_rephrase_style_casual": {
+    "message": "カジュアル",
+    "description": "Casual rephrase style"
+  },
+  "popup_projects_empty": {
+    "message": "プロジェクトがありません",
+    "description": "Empty projects list"
+  },
+  "popup_project_open": {
+    "message": "開く",
+    "description": "Open project in side panel"
+  },
+  "popup_related_not_found": {
+    "message": "関連ハイライトが見つかりませんでした",
+    "description": "No related highlights found"
+  },
+  "popup_related_premium_required": {
+    "message": "関連ハイライトはトライアルまたは Premium で利用できます",
+    "description": "Related highlights tier gate"
+  },
+  "popup_related_load_failed": {
+    "message": "関連ハイライトの取得に失敗しました",
+    "description": "Related highlights fetch error"
+  },
+  "popup_related_section_label": {
+    "message": "関連ハイライト",
+    "description": "Related section aria label"
+  },
+  "popup_related_section_title": {
+    "message": "関連ハイライト",
+    "description": "Related section heading"
+  },
+  "popup_related_source_hint": {
+    "message": "「$preview$」に近い候補",
+    "description": "Related section source preview",
+    "placeholders": {
+      "preview": {
+        "content": "$1",
+        "example": "サンプル"
+      }
+    }
+  },
+  "popup_related_close": {
+    "message": "関連ハイライトを閉じる",
+    "description": "Close related section aria"
+  },
+  "popup_related_searching": {
+    "message": "関連を検索中…",
+    "description": "Related highlights loading"
+  },
+  "popup_related_none_displayable": {
+    "message": "表示できる関連ハイライトがありません",
+    "description": "No displayable related highlights"
+  },
+  "popup_footer_settings": {
+    "message": "設定",
+    "description": "Open settings footer button"
+  },
+  "popup_footer_side_panel": {
+    "message": "Side Panel を開く",
+    "description": "Open side panel footer button"
+  },
+  "popup_footer_help": {
+    "message": "ヘルプ",
+    "description": "Open help footer button"
+  },
+  "popup_all_search_title": {
+    "message": "全ページ横断検索",
+    "description": "All highlights search panel title"
+  },
+  "popup_all_filter_hint": {
+    "message": "検索・タグ・プロジェクト・日付のいずれかで絞り込んでください",
+    "description": "Prompt to apply a filter"
+  },
+  "popup_all_results_title": {
+    "message": "検索結果 ($count$)",
+    "description": "Search results heading",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popup_bulk_added_to_project": {
+    "message": "$count$ 件をプロジェクトに追加しました",
+    "description": "Bulk add to project success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_bulk_add_project_failed": {
+    "message": "プロジェクトへの追加に失敗しました",
+    "description": "Bulk add to project failure"
+  },
+  "popup_bulk_tags_added": {
+    "message": "$count$ 件にタグを追加しました",
+    "description": "Bulk add tags success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_bulk_add_tags_failed": {
+    "message": "タグの追加に失敗しました",
+    "description": "Bulk add tags failure"
+  },
+  "popup_confirm_delete_bulk": {
+    "message": "選択した $count$ 件のハイライトを削除しますか？この操作は取り消せません。",
+    "description": "Bulk delete confirmation",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_bulk_deleted": {
+    "message": "$count$ 件を削除しました",
+    "description": "Bulk delete success",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_bulk_delete_failed": {
+    "message": "削除に失敗しました",
+    "description": "Bulk delete failure"
+  },
+  "popup_selection_exit": {
+    "message": "選択を終了",
+    "description": "Exit selection mode"
+  },
+  "popup_selection_multi": {
+    "message": "複数選択",
+    "description": "Enter selection mode"
+  },
+  "popup_select_all_visible": {
+    "message": "表示分をすべて選択",
+    "description": "Select all visible highlights"
+  },
+  "popup_deselect_all_visible": {
+    "message": "表示分の選択を解除",
+    "description": "Deselect all visible highlights"
+  },
+  "popup_selection_count": {
+    "message": "$count$ 件選択中",
+    "description": "Selection count label",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_bulk_add_to_project": {
+    "message": "プロジェクトに追加",
+    "description": "Bulk add to project button"
+  },
+  "popup_bulk_add_tags": {
+    "message": "タグ追加",
+    "description": "Bulk add tags button"
+  },
+  "popup_bulk_apply": {
+    "message": "追加する",
+    "description": "Apply bulk action"
+  },
+  "popup_bulk_add_tags_confirm": {
+    "message": "タグを追加",
+    "description": "Confirm bulk tag add"
+  },
+  "popup_select_highlight": {
+    "message": "ハイライトを選択",
+    "description": "Select highlight checkbox aria"
+  },
+  "popup_date_today": {
+    "message": "今日",
+    "description": "Date filter preset today"
+  },
+  "popup_date_7d": {
+    "message": "直近 7 日",
+    "description": "Date filter preset 7 days"
+  },
+  "popup_date_30d": {
+    "message": "直近 30 日",
+    "description": "Date filter preset 30 days"
+  },
+  "popup_date_filter_label": {
+    "message": "日付フィルタ",
+    "description": "Date filter toggle label"
+  },
+  "popup_project_filter_label": {
+    "message": "📁 プロジェクト",
+    "description": "Project filter label"
+  },
+  "popup_project_unassigned": {
+    "message": "未所属",
+    "description": "Unassigned project filter option"
+  },
+  "popup_tags_empty": {
+    "message": "タグがありません",
+    "description": "No tags available"
+  },
+  "popup_custom_date_range": {
+    "message": "カスタム期間",
+    "description": "Custom date range label"
+  },
+  "popup_apply": {
+    "message": "適用",
+    "description": "Apply custom date range"
+  },
+  "popup_premium_unlock_hint": {
+    "message": "Premium で解放",
+    "description": "Premium feature lock hint"
+  },
+  "popup_tag_create_option": {
+    "message": "新規作成: \"$name$\"",
+    "description": "Create new tag autocomplete option",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "調査"
+      }
+    }
+  },
+  "popup_theme_dark": {
+    "message": "ダークモード",
+    "description": "Dark theme toggle label"
+  },
+  "popup_theme_light": {
+    "message": "ライトモード",
+    "description": "Light theme toggle label"
+  },
+  "popup_theme_auto": {
+    "message": "システムに合わせる",
+    "description": "System theme toggle label"
+  },
+  "popup_relative_just_now": {
+    "message": "たった今",
+    "description": "Relative time just now"
+  },
+  "popup_relative_minutes": {
+    "message": "$count$分前",
+    "description": "Relative time minutes ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_relative_hours": {
+    "message": "$count$時間前",
+    "description": "Relative time hours ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_relative_days": {
+    "message": "$count$日前",
+    "description": "Relative time days ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popup_relative_weeks": {
+    "message": "$count$週間前",
+    "description": "Relative time weeks ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "popup_relative_months": {
+    "message": "$count$ヶ月前",
+    "description": "Relative time months ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "popup_relative_years": {
+    "message": "$count$年前",
+    "description": "Relative time years ago",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popup_translate_lang_ja": {
+    "message": "日本語",
+    "description": "Japanese language label"
+  },
+  "popup_translate_lang_en": {
+    "message": "英語",
+    "description": "English language label"
+  },
+  "popup_translate_lang_zh": {
+    "message": "中国語（簡体字）",
+    "description": "Chinese language label"
+  },
+  "popup_translate_lang_ko": {
+    "message": "韓国語",
+    "description": "Korean language label"
+  },
+  "popup_translate_lang_fr": {
+    "message": "フランス語",
+    "description": "French language label"
+  },
+  "popup_translate_lang_de": {
+    "message": "ドイツ語",
+    "description": "German language label"
+  },
+  "options_action_rename": {
+    "message": "名前変更",
+    "description": "Options: rename action label"
+  },
+  "options_action_add": {
+    "message": "追加",
+    "description": "Options: add action label"
+  },
+  "options_action_applying": {
+    "message": "適用中…",
+    "description": "Options: applying in progress label"
+  },
+  "options_action_merge": {
+    "message": "統合する",
+    "description": "Options: merge tags action label"
+  },
+  "options_action_delete_confirm": {
+    "message": "削除する",
+    "description": "Options: confirm delete action label"
+  },
+  "options_action_deleting": {
+    "message": "削除中…",
+    "description": "Options: delete in progress label"
+  },
+  "options_action_edit_description": {
+    "message": "説明編集",
+    "description": "Options: edit description action"
+  },
+  "options_action_change_emoji": {
+    "message": "絵文字変更",
+    "description": "Options: change emoji action"
+  },
+  "options_action_change_color": {
+    "message": "色変更",
+    "description": "Options: change color action"
+  },
+  "options_action_bulk_change_color": {
+    "message": "一括色変更",
+    "description": "Options: bulk color change action"
+  },
+  "options_action_bulk_delete": {
+    "message": "一括削除",
+    "description": "Options: bulk delete action"
+  },
+  "options_action_click_to_rename": {
+    "message": "クリックして名前を変更",
+    "description": "Options: click to rename hint"
+  },
+  "options_action_select": {
+    "message": "選択",
+    "description": "Options: selection column header"
+  },
+  "options_save_failed": {
+    "message": "保存に失敗しました",
+    "description": "Options: save failed toast"
+  },
+  "options_common_name": {
+    "message": "名前",
+    "description": "Options: name field label"
+  },
+  "options_common_description": {
+    "message": "説明",
+    "description": "Options: description field label"
+  },
+  "options_common_color": {
+    "message": "色",
+    "description": "Options: color field label"
+  },
+  "options_common_emoji": {
+    "message": "絵文字",
+    "description": "Options: emoji field label"
+  },
+  "options_common_optional": {
+    "message": "任意",
+    "description": "Options: optional placeholder"
+  },
+  "options_common_action": {
+    "message": "アクション",
+    "description": "Options: actions table column"
+  },
+  "options_common_tag": {
+    "message": "タグ",
+    "description": "Options: tag table column"
+  },
+  "options_common_usage_count": {
+    "message": "使用回数",
+    "description": "Options: usage count column"
+  },
+  "options_common_highlights": {
+    "message": "ハイライト",
+    "description": "Options: highlights column"
+  },
+  "options_common_none_registered": {
+    "message": "登録なし",
+    "description": "Options: empty chip list"
+  },
+  "options_color_yellow": {
+    "message": "イエロー",
+    "description": "Options: yellow highlight color name"
+  },
+  "options_color_green": {
+    "message": "グリーン",
+    "description": "Options: green highlight color name"
+  },
+  "options_color_blue": {
+    "message": "ブルー",
+    "description": "Options: blue highlight color name"
+  },
+  "options_about_version": {
+    "message": "バージョン:",
+    "description": "Options about: version label"
+  },
+  "options_about_tagline": {
+    "message": "Markwell — ウェブハイライトと AI 支援のための Chrome 拡張機能です。",
+    "description": "Options about: tagline"
+  },
+  "options_about_repo": {
+    "message": "リポジトリ (GitHub)",
+    "description": "Options about: repository link"
+  },
+  "options_about_privacy": {
+    "message": "プライバシーポリシー",
+    "description": "Options about: privacy policy link"
+  },
+  "options_about_terms": {
+    "message": "利用規約",
+    "description": "Options about: terms link"
+  },
+  "options_about_oss": {
+    "message": "OSS ライセンス",
+    "description": "Options about: OSS licenses link"
+  },
+  "options_about_support": {
+    "message": "サポート問い合わせ ($1)",
+    "description": "Options about: support mailto link",
+    "placeholders": {
+      "email": { "content": "$1", "example": "support@example.com" }
+    }
+  },
+  "options_about_lead": {
+    "message": "Markwell のバージョン情報とリンクです。",
+    "description": "Options about section lead"
+  },
+  "options_ai_model_saved": {
+    "message": "モデルを保存しました",
+    "description": "Options AI: model saved toast"
+  },
+  "options_ai_model_save_failed": {
+    "message": "モデルの保存に失敗しました",
+    "description": "Options AI: model save failed toast"
+  },
+  "options_ai_auto_tag_enabled": {
+    "message": "AI 自動タグを有効化しました",
+    "description": "Options AI: auto tag enabled toast"
+  },
+  "options_ai_auto_tag_disabled": {
+    "message": "AI 自動タグを無効化しました",
+    "description": "Options AI: auto tag disabled toast"
+  },
+  "options_ai_settings_save_failed": {
+    "message": "設定の保存に失敗しました",
+    "description": "Options AI: settings save failed toast"
+  },
+  "options_ai_api_key_required": {
+    "message": "API キーを入力してください",
+    "description": "Options AI: API key required message"
+  },
+  "options_ai_api_key_saved": {
+    "message": "API キーを保存しました",
+    "description": "Options AI: API key saved toast"
+  },
+  "options_ai_key_test_failed": {
+    "message": "キーのテストに失敗しました",
+    "description": "Options AI: key test failed fallback"
+  },
+  "options_ai_confirm_delete_key": {
+    "message": "保存済みの API キーを削除しますか？",
+    "description": "Options AI: confirm delete API key"
+  },
+  "options_ai_api_key_deleted": {
+    "message": "API キーを削除しました",
+    "description": "Options AI: API key deleted toast"
+  },
+  "options_ai_api_key_delete_failed": {
+    "message": "API キーの削除に失敗しました",
+    "description": "Options AI: API key delete failed toast"
+  },
+  "options_ai_testing": {
+    "message": "テスト中…",
+    "description": "Options AI: testing status"
+  },
+  "options_ai_key_valid": {
+    "message": "✓ 有効",
+    "description": "Options AI: valid key status"
+  },
+  "options_ai_loading": {
+    "message": "AI 設定を読み込み中…",
+    "description": "Options AI: loading message"
+  },
+  "options_ai_privacy_note": {
+    "message": "このキーは Markwell サーバには一切送信されません。",
+    "description": "Options AI: privacy note"
+  },
+  "options_ai_get_key_link": {
+    "message": "Google AI Studio で API キーを取得",
+    "description": "Options AI: get API key link text"
+  },
+  "options_ai_placeholder_stored": {
+    "message": "保存済み（再入力で上書き）",
+    "description": "Options AI: stored key placeholder"
+  },
+  "options_ai_placeholder_enter_key": {
+    "message": "API キーを入力",
+    "description": "Options AI: enter key placeholder"
+  },
+  "options_ai_hide_key": {
+    "message": "API キーを隠す",
+    "description": "Options AI: hide API key aria"
+  },
+  "options_ai_show_key": {
+    "message": "API キーを表示",
+    "description": "Options AI: show API key aria"
+  },
+  "options_ai_delete_key": {
+    "message": "API キーを削除",
+    "description": "Options AI: delete API key button"
+  },
+  "options_ai_model_hint": {
+    "message": "翻訳・言い換え・合成などの AI 機能で使用する Gemini モデルです。",
+    "description": "Options AI: model selection hint"
+  },
+  "options_ai_auto_tag_label": {
+    "message": "AI 自動タグを有効化",
+    "description": "Options AI: auto tag checkbox label"
+  },
+  "options_ai_auto_tag_hint": {
+    "message": "ハイライト保存時に AI がタグ候補を付与します（trial / premium）。",
+    "description": "Options AI: auto tag hint"
+  },
+  "options_ai_section_lead": {
+    "message": "Gemini API キーとモデルの設定、および当月の利用量です。",
+    "description": "Options AI section lead text"
+  },
+  "options_blocked_domain_required": {
+    "message": "ドメインを入力してください",
+    "description": "Options blocked sites: domain required"
+  },
+  "options_blocked_domain_duplicate": {
+    "message": "同じドメインが既に登録されています",
+    "description": "Options blocked sites: duplicate domain"
+  },
+  "options_blocked_domain_added": {
+    "message": "ドメインを追加しました",
+    "description": "Options blocked sites: domain added toast"
+  },
+  "options_blocked_domain_removed": {
+    "message": "ドメインを削除しました",
+    "description": "Options blocked sites: domain removed toast"
+  },
+  "options_blocked_pattern_required": {
+    "message": "URL パターンを入力してください",
+    "description": "Options blocked sites: pattern required"
+  },
+  "options_blocked_pattern_invalid": {
+    "message": "正規表現の構文が不正です",
+    "description": "Options blocked sites: invalid regex"
+  },
+  "options_blocked_pattern_duplicate": {
+    "message": "同じパターンが既に登録されています",
+    "description": "Options blocked sites: duplicate pattern"
+  },
+  "options_blocked_pattern_added": {
+    "message": "URL パターンを追加しました",
+    "description": "Options blocked sites: pattern added toast"
+  },
+  "options_blocked_pattern_removed": {
+    "message": "URL パターンを削除しました",
+    "description": "Options blocked sites: pattern removed toast"
+  },
+  "options_blocked_remove_item": {
+    "message": "$1 を削除",
+    "description": "Options blocked sites: remove chip aria",
+    "placeholders": {
+      "item": { "content": "$1", "example": "example.com" }
+    }
+  },
+  "options_blocked_loading": {
+    "message": "ブロック設定を読み込み中…",
+    "description": "Options blocked sites: loading"
+  },
+  "options_blocked_domains_hint": {
+    "message": "Markwell の content script を無効にするドメインです。",
+    "description": "Options blocked sites: domains hint"
+  },
+  "options_blocked_patterns_hint": {
+    "message": "正規表現 (new RegExp) で URL 全体にマッチした場合にブロックします。",
+    "description": "Options blocked sites: patterns hint"
+  },
+  "options_data_export_downloaded": {
+    "message": "エクスポートをダウンロードしました",
+    "description": "Options data: export downloaded toast"
+  },
+  "options_data_export_failed": {
+    "message": "エクスポートに失敗しました",
+    "description": "Options data: export failed toast"
+  },
+  "options_data_json_read_failed": {
+    "message": "JSON ファイルの読み込みに失敗しました",
+    "description": "Options data: JSON read failed toast"
+  },
+  "options_data_confirm_replace": {
+    "message": "既存のハイライト・タグ・プロジェクト・合成をすべて削除し、インポートしたデータで置き換えます。この操作は取り消せません。続行しますか？",
+    "description": "Options data: confirm replace import"
+  },
+  "options_data_import_failed": {
+    "message": "インポートに失敗しました。データは変更されていません。",
+    "description": "Options data: import failed toast"
+  },
+  "options_data_import_result": {
+    "message": "インポート完了: ハイライト $1、タグ $2、プロジェクト $3、合成 $4",
+    "description": "Options data: import success summary",
+    "placeholders": {
+      "highlights": { "content": "$1", "example": "10" },
+      "tags": { "content": "$2", "example": "5" },
+      "projects": { "content": "$3", "example": "2" },
+      "syntheses": { "content": "$4", "example": "1" }
+    }
+  },
+  "options_data_delete_all_success": {
+    "message": "すべてのデータを削除しました。ライセンス情報は保持されています",
+    "description": "Options data: delete all success toast"
+  },
+  "options_data_delete_failed": {
+    "message": "データの削除に失敗しました",
+    "description": "Options data: delete failed toast"
+  },
+  "options_data_delete_all_title": {
+    "message": "全データを削除",
+    "description": "Options data: delete all dialog title"
+  },
+  "options_data_license_kept_bold": {
+    "message": "ライセンスは保持されます。",
+    "description": "Options data: license kept notice"
+  },
+  "options_data_type_delete_hint": {
+    "message": "続行するには「DELETE」と入力してください。",
+    "description": "Options data: type DELETE hint"
+  },
+  "options_data_export_title": {
+    "message": "エクスポート",
+    "description": "Options data: export section title"
+  },
+  "options_data_export_hint": {
+    "message": "ハイライト・タグ・プロジェクト・合成を JSON ファイルに保存します。設定や API キーは含まれません。",
+    "description": "Options data: export hint"
+  },
+  "options_data_exporting": {
+    "message": "エクスポート中…",
+    "description": "Options data: exporting label"
+  },
+  "options_data_export_button": {
+    "message": "エクスポート",
+    "description": "Options data: export button"
+  },
+  "options_data_import_title": {
+    "message": "インポート",
+    "description": "Options data: import section title"
+  },
+  "options_data_import_hint": {
+    "message": "JSON ファイルを読み込み、既存データにマージするか、すべて置き換えます。",
+    "description": "Options data: import hint"
+  },
+  "options_data_choose_file": {
+    "message": "ファイルを選択",
+    "description": "Options data: choose file button"
+  },
+  "options_data_file_selected": {
+    "message": "選択中: $1",
+    "description": "Options data: selected file name",
+    "placeholders": {
+      "filename": { "content": "$1", "example": "backup.json" }
+    }
+  },
+  "options_data_import_mode": {
+    "message": "インポートモード",
+    "description": "Options data: import mode radiogroup aria"
+  },
+  "options_data_mode_merge": {
+    "message": "マージ",
+    "description": "Options data: merge import mode"
+  },
+  "options_data_mode_replace": {
+    "message": "置換",
+    "description": "Options data: replace import mode"
+  },
+  "options_data_mode_hint": {
+    "message": "マージは同じ ID のデータを上書きします。置換は既存データをすべて削除してからインポートします。",
+    "description": "Options data: import mode hint"
+  },
+  "options_data_importing": {
+    "message": "インポート中…",
+    "description": "Options data: importing label"
+  },
+  "options_data_import_button": {
+    "message": "インポート",
+    "description": "Options data: import button"
+  },
+  "options_data_danger_title": {
+    "message": "危険な操作",
+    "description": "Options data: danger zone title"
+  },
+  "options_data_danger_hint": {
+    "message": "すべてのローカルデータを削除します。ライセンス情報のみ保持されます。事前にエクスポートすることをおすすめします。",
+    "description": "Options data: danger zone hint"
+  },
+  "options_data_section_lead": {
+    "message": "ハイライトのエクスポート・インポートとバックアップです。",
+    "description": "Options data section lead"
+  },
+  "options_general_loading": {
+    "message": "設定を読み込み中…",
+    "description": "Options general: loading"
+  },
+  "options_general_autosave_hint": {
+    "message": "変更は自動的に保存されます。",
+    "description": "Options general: autosave hint"
+  },
+  "options_general_default_color_hint": {
+    "message": "新規ハイライトの初期色です。",
+    "description": "Options general: default color hint"
+  },
+  "options_general_font_scale_hint": {
+    "message": "$1 〜 $2 の範囲で UI の文字サイズを調整します。",
+    "description": "Options general: font scale hint",
+    "placeholders": {
+      "min": { "content": "$1", "example": "0.85" },
+      "max": { "content": "$2", "example": "1.25" }
+    }
+  },
+  "options_general_theme_auto_hint": {
+    "message": "auto は OS の外観設定に合わせます。",
+    "description": "Options general: theme auto hint"
+  },
+  "options_general_translate_lang": {
+    "message": "ハイライト翻訳の既定言語",
+    "description": "Options general: translate language label"
+  },
+  "options_general_translate_hint": {
+    "message": "popup の「🌐 翻訳」で使用します。API キーが必要です。",
+    "description": "Options general: translate hint"
+  },
+  "options_main_sidebar_aria": {
+    "message": "設定セクション",
+    "description": "Options main: sidebar nav aria"
+  },
+  "options_usage_heading": {
+    "message": "使用量",
+    "description": "Options main: usage heading"
+  },
+  "options_usage_hint": {
+    "message": "ローカルに保存された当月の Gemini 利用量です。外部には送信されません。",
+    "description": "Options main: usage hint"
+  },
+  "options_usage_loading": {
+    "message": "使用量を読み込み中…",
+    "description": "Options main: usage loading"
+  },
+  "options_usage_confirm_reset": {
+    "message": "$1の AI 使用量データをリセットしますか？\nこの操作は取り消せません。",
+    "description": "Options main: confirm reset usage",
+    "placeholders": {
+      "month": { "content": "$1", "example": "2025年03月" }
+    }
+  },
+  "options_usage_reset_toast": {
+    "message": "当月の使用量をリセットしました",
+    "description": "Options main: usage reset toast"
+  },
+  "options_usage_month_year": {
+    "message": "$1年$2月",
+    "description": "Options main: year-month display",
+    "placeholders": {
+      "year": { "content": "$1", "example": "2025" },
+      "month": { "content": "$2", "example": "03" }
+    }
+  },
+  "options_usage_target_month": {
+    "message": "対象月:",
+    "description": "Options main: target month label"
+  },
+  "options_usage_requests": {
+    "message": "リクエスト数:",
+    "description": "Options main: request count label"
+  },
+  "options_usage_tokens": {
+    "message": "トークン数: 入力",
+    "description": "Options main: token count label prefix"
+  },
+  "options_usage_tokens_output": {
+    "message": "出力",
+    "description": "Options main: token output label"
+  },
+  "options_usage_estimated_cost": {
+    "message": "概算コスト:",
+    "description": "Options main: estimated cost label"
+  },
+  "options_usage_pricing_note": {
+    "message": "$1 単価（入力 $$$2/1M・出力 $$$3/1M、確認日 $4）に基づく概算です。",
+    "description": "Options main: pricing footnote",
+    "placeholders": {
+      "model": { "content": "$1", "example": "gemini-2.0-flash" },
+      "input_price": { "content": "$2", "example": "0.10" },
+      "output_price": { "content": "$3", "example": "0.40" },
+      "verified": { "content": "$4", "example": "2025-01-01" }
+    }
+  },
+  "options_usage_table_feature": {
+    "message": "機能",
+    "description": "Options main: usage table feature column"
+  },
+  "options_usage_table_count": {
+    "message": "回数",
+    "description": "Options main: usage table count column"
+  },
+  "options_usage_table_tokens": {
+    "message": "トークン (入/出)",
+    "description": "Options main: usage table tokens column"
+  },
+  "options_usage_table_estimate": {
+    "message": "概算",
+    "description": "Options main: usage table estimate column"
+  },
+  "options_usage_empty_month": {
+    "message": "今月はまだ AI 機能の利用記録がありません。",
+    "description": "Options main: no usage this month"
+  },
+  "options_usage_reset_button": {
+    "message": "当月データをリセット",
+    "description": "Options main: reset usage button"
+  },
+  "options_tags_lead": {
+    "message": "タグ名をクリックして名前変更、または「他のタグに統合」でマージできます（統合は確認後に実行）。",
+    "description": "Options tags section lead"
+  },
+  "options_projects_lead": {
+    "message": "プロジェクトの作成・編集・削除ができます。削除してもハイライト自体は残り、プロジェクト未所属になります。Free プランでは最大 2 個まで作成できます。",
+    "description": "Options projects section lead"
+  },
+  "options_premium_lead": {
+    "message": "ライセンスと Premium 機能の管理です。",
+    "description": "Options premium section lead"
+  },
+  "options_premium_loading": {
+    "message": "Premium 設定を読み込み中…",
+    "description": "Options premium: loading"
+  },
+  "options_premium_current_plan": {
+    "message": "現在のプラン",
+    "description": "Options premium: current plan label"
+  },
+  "options_premium_trial_section": {
+    "message": "Premium トライアル",
+    "description": "Options premium: trial section title"
+  },
+  "options_premium_trial_started": {
+    "message": "7 日間の Premium トライアルを開始しました",
+    "description": "Options premium: trial started toast"
+  },
+  "options_premium_license_applied": {
+    "message": "ライセンスキーを適用しました。Premium が有効になりました",
+    "description": "Options premium: license applied toast"
+  },
+  "options_premium_license_apply_failed": {
+    "message": "ライセンスキーの適用に失敗しました",
+    "description": "Options premium: license apply failed"
+  },
+  "options_premium_purchase_section": {
+    "message": "Premium を購入",
+    "description": "Options premium: purchase section title"
+  },
+  "options_premium_purchase_note": {
+    "message": "決済完了後、メールにライセンスキーが届きます。それをここに貼り付けてください。",
+    "description": "Options premium: purchase note"
+  },
+  "options_premium_purchase_button": {
+    "message": "$5 USD で Premium 購入",
+    "description": "Options premium: purchase button"
+  },
+  "options_premium_stripe_hint": {
+    "message": "Stripe の決済ページが新しいタブで開きます。",
+    "description": "Options premium: Stripe hint"
+  },
+  "options_premium_license_key": {
+    "message": "ライセンスキー",
+    "description": "Options premium: license key label"
+  },
+  "options_premium_license_stored_hint": {
+    "message": "保存済みのライセンスキーがあります。",
+    "description": "Options premium: stored license hint"
+  },
+  "options_project_tier_limit": {
+    "message": "$1/$2 プロジェクト（Free）",
+    "description": "Options projects: free tier limit label",
+    "placeholders": {
+      "current": { "content": "$1", "example": "1" },
+      "limit": { "content": "$2", "example": "2" }
+    }
+  },
+  "options_project_name_required": {
+    "message": "プロジェクト名を入力してください",
+    "description": "Options projects: name required"
+  },
+  "options_project_created": {
+    "message": "プロジェクトを作成しました",
+    "description": "Options projects: created toast"
+  },
+  "options_project_limit_error": {
+    "message": "Free プランではプロジェクトは最大 $1 個までです（現在 $2 個）",
+    "description": "Options projects: limit error",
+    "placeholders": {
+      "limit": { "content": "$1", "example": "2" },
+      "current": { "content": "$2", "example": "2" }
+    }
+  },
+  "options_project_create_failed": {
+    "message": "プロジェクトの作成に失敗しました",
+    "description": "Options projects: create failed"
+  },
+  "options_project_emoji_required": {
+    "message": "絵文字を入力してください",
+    "description": "Options projects: emoji required"
+  },
+  "options_project_updated": {
+    "message": "プロジェクトを更新しました",
+    "description": "Options projects: updated toast"
+  },
+  "options_project_update_failed": {
+    "message": "プロジェクトの更新に失敗しました",
+    "description": "Options projects: update failed"
+  },
+  "options_project_delete_highlight_note": {
+    "message": "\n含まれる $1 件のハイライトは削除されず、プロジェクト未所属になります。",
+    "description": "Options projects: delete highlight note",
+    "placeholders": {
+      "count": { "content": "$1", "example": "5" }
+    }
+  },
+  "options_project_confirm_delete": {
+    "message": "プロジェクト「$1」を削除しますか？$2",
+    "description": "Options projects: confirm delete",
+    "placeholders": {
+      "name": { "content": "$1", "example": "Research" },
+      "note": { "content": "$2", "example": "" }
+    }
+  },
+  "options_project_deleted": {
+    "message": "プロジェクトを削除しました",
+    "description": "Options projects: deleted toast"
+  },
+  "options_project_delete_failed": {
+    "message": "プロジェクトの削除に失敗しました",
+    "description": "Options projects: delete failed"
+  },
+  "options_project_edit_cover_emoji": {
+    "message": "カバー絵文字を編集",
+    "description": "Options projects: edit cover emoji aria"
+  },
+  "options_project_edit_name": {
+    "message": "プロジェクト名を編集",
+    "description": "Options projects: edit name aria"
+  },
+  "options_project_rename_aria": {
+    "message": "プロジェクト名を変更: $1",
+    "description": "Options projects: rename button aria",
+    "placeholders": {
+      "name": { "content": "$1", "example": "Research" }
+    }
+  },
+  "options_project_edit_description": {
+    "message": "説明を編集",
+    "description": "Options projects: edit description aria"
+  },
+  "options_project_no_description": {
+    "message": "（説明なし）",
+    "description": "Options projects: empty description"
+  },
+  "options_project_loading": {
+    "message": "プロジェクトを読み込み中…",
+    "description": "Options projects: loading"
+  },
+  "options_project_new": {
+    "message": "新規プロジェクト",
+    "description": "Options projects: new project label"
+  },
+  "options_project_search_placeholder": {
+    "message": "名前・説明で検索…",
+    "description": "Options projects: search placeholder"
+  },
+  "options_project_empty": {
+    "message": "プロジェクトがありません",
+    "description": "Options projects: empty list"
+  },
+  "options_project_no_match": {
+    "message": "一致するプロジェクトがありません",
+    "description": "Options projects: no search match"
+  },
+  "options_tag_bulk_delete_usage_note": {
+    "message": "\n$1 件のハイライトからタグが外れます。",
+    "description": "Options tags: bulk delete usage note",
+    "placeholders": {
+      "count": { "content": "$1", "example": "10" }
+    }
+  },
+  "options_tag_confirm_bulk_delete": {
+    "message": "選択した $1 件のタグを削除しますか？$2",
+    "description": "Options tags: confirm bulk delete",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" },
+      "note": { "content": "$2", "example": "" }
+    }
+  },
+  "options_tag_bulk_deleted": {
+    "message": "$1 件のタグを削除しました",
+    "description": "Options tags: bulk deleted toast",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "options_tag_bulk_delete_failed": {
+    "message": "一括削除に失敗しました",
+    "description": "Options tags: bulk delete failed"
+  },
+  "options_tag_bulk_color_changed": {
+    "message": "$1 件のタグ色を変更しました",
+    "description": "Options tags: bulk color changed toast",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "options_tag_bulk_color_failed": {
+    "message": "一括色変更に失敗しました",
+    "description": "Options tags: bulk color change failed"
+  },
+  "options_tag_name_required": {
+    "message": "タグ名を入力してください",
+    "description": "Options tags: name required"
+  },
+  "options_tag_duplicate": {
+    "message": "同名のタグが既に存在します",
+    "description": "Options tags: duplicate name"
+  },
+  "options_tag_created": {
+    "message": "タグを作成しました",
+    "description": "Options tags: created toast"
+  },
+  "options_tag_create_failed": {
+    "message": "タグの作成に失敗しました",
+    "description": "Options tags: create failed"
+  },
+  "options_tag_renamed": {
+    "message": "タグ名を変更しました",
+    "description": "Options tags: renamed toast"
+  },
+  "options_tag_rename_failed": {
+    "message": "名前の変更に失敗しました",
+    "description": "Options tags: rename failed"
+  },
+  "options_tag_merge_target_required": {
+    "message": "統合先のタグを選択してください",
+    "description": "Options tags: merge target required"
+  },
+  "options_tag_merged": {
+    "message": "タグを統合しました",
+    "description": "Options tags: merged toast"
+  },
+  "options_tag_merge_failed": {
+    "message": "タグの統合に失敗しました",
+    "description": "Options tags: merge failed"
+  },
+  "options_tag_confirm_delete": {
+    "message": "「$1」を削除しますか？",
+    "description": "Options tags: confirm delete",
+    "placeholders": {
+      "name": { "content": "$1", "example": "research" }
+    }
+  },
+  "options_tag_confirm_delete_with_usage": {
+    "message": "「$1」を削除しますか？\n$2 件のハイライトからこのタグが外れます。",
+    "description": "Options tags: confirm delete with usage",
+    "placeholders": {
+      "name": { "content": "$1", "example": "research" },
+      "count": { "content": "$2", "example": "5" }
+    }
+  },
+  "options_tag_deleted": {
+    "message": "タグを削除しました",
+    "description": "Options tags: deleted toast"
+  },
+  "options_tag_delete_failed": {
+    "message": "タグの削除に失敗しました",
+    "description": "Options tags: delete failed"
+  },
+  "options_tag_color_changed": {
+    "message": "タグの色を変更しました",
+    "description": "Options tags: color changed toast"
+  },
+  "options_tag_color_change_failed": {
+    "message": "色の変更に失敗しました",
+    "description": "Options tags: color change failed"
+  },
+  "options_tag_color_aria": {
+    "message": "色: $1",
+    "description": "Options tags: color swatch aria",
+    "placeholders": {
+      "color": { "content": "$1", "example": "#ffd34e" }
+    }
+  },
+  "options_tag_change_color_aria": {
+    "message": "$1 の色を変更",
+    "description": "Options tags: change color aria",
+    "placeholders": {
+      "name": { "content": "$1", "example": "research" }
+    }
+  },
+  "options_tag_edit_name": {
+    "message": "タグ名を編集",
+    "description": "Options tags: edit name aria"
+  },
+  "options_tag_rename_aria": {
+    "message": "タグ名を変更: $1",
+    "description": "Options tags: rename button aria",
+    "placeholders": {
+      "name": { "content": "$1", "example": "research" }
+    }
+  },
+  "options_tag_bulk_color_aria": {
+    "message": "選択したタグの色を一括変更",
+    "description": "Options tags: bulk color change aria"
+  },
+  "options_tag_merge_into": {
+    "message": "他のタグに統合",
+    "description": "Options tags: merge into another tag"
+  },
+  "options_tag_loading": {
+    "message": "タグを読み込み中…",
+    "description": "Options tags: loading"
+  },
+  "options_tag_new": {
+    "message": "新規タグ",
+    "description": "Options tags: new tag label"
+  },
+  "options_tag_name_placeholder": {
+    "message": "タグ名",
+    "description": "Options tags: tag name placeholder"
+  },
+  "options_tag_search_placeholder": {
+    "message": "タグ名で検索…",
+    "description": "Options tags: search placeholder"
+  },
+  "options_tag_count_all": {
+    "message": "全 $1 件",
+    "description": "Options tags: total count",
+    "placeholders": {
+      "count": { "content": "$1", "example": "10" }
+    }
+  },
+  "options_tag_count_filtered": {
+    "message": "表示 $1 / 全 $2 件",
+    "description": "Options tags: filtered count",
+    "placeholders": {
+      "visible": { "content": "$1", "example": "5" },
+      "total": { "content": "$2", "example": "10" }
+    }
+  },
+  "options_tag_empty": {
+    "message": "タグがありません",
+    "description": "Options tags: empty list"
+  },
+  "options_tag_no_match": {
+    "message": "一致するタグがありません",
+    "description": "Options tags: no search match"
+  },
+  "options_tag_select_row": {
+    "message": "$1 を選択",
+    "description": "Options tags: select row checkbox aria",
+    "placeholders": {
+      "name": { "content": "$1", "example": "research" }
+    }
+  },
+  "ai_access_lock_tooltip_premium": {
+    "message": "Premium で利用できます",
+    "description": "AI button lock tooltip when Premium is required"
+  },
+  "ai_access_lock_tooltip_trial": {
+    "message": "トライアルまたは Premium で利用できます",
+    "description": "AI button lock tooltip when Trial or Premium is required"
   }
 }

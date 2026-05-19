@@ -10,6 +10,7 @@ import {
   MARKWELL_TERMS_URL,
 } from '../shared/constants/about.js';
 import { APP_VERSION } from '../shared/constants/version.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 @customElement('mw-about-section')
@@ -79,8 +80,8 @@ export class MwAboutSection extends LitElement {
   render() {
     return html`
       <div class="meta">
-        <p class="version">バージョン: <strong>${APP_VERSION}</strong></p>
-        <p class="tagline">Markwell — ウェブハイライトと AI 支援のための Chrome 拡張機能です。</p>
+        <p class="version">${t('options_about_version')} <strong>${APP_VERSION}</strong></p>
+        <p class="tagline">${t('options_about_tagline')}</p>
       </div>
 
       <ul class="links">
@@ -93,7 +94,7 @@ export class MwAboutSection extends LitElement {
               this.openExternal(MARKWELL_REPOSITORY_URL);
             }}
           >
-            リポジトリ (GitHub)
+            ${t('options_about_repo')}
           </a>
         </li>
         <li>
@@ -105,7 +106,7 @@ export class MwAboutSection extends LitElement {
               this.openExternal(MARKWELL_PRIVACY_POLICY_URL);
             }}
           >
-            プライバシーポリシー
+            ${t('options_about_privacy')}
           </a>
         </li>
         <li>
@@ -117,7 +118,7 @@ export class MwAboutSection extends LitElement {
               this.openExternal(MARKWELL_TERMS_URL);
             }}
           >
-            利用規約
+            ${t('options_about_terms')}
           </a>
         </li>
         <li>
@@ -129,11 +130,11 @@ export class MwAboutSection extends LitElement {
               this.openExternal(MARKWELL_OSS_LICENSES_URL);
             }}
           >
-            OSS ライセンス
+            ${t('options_about_oss')}
           </a>
         </li>
         <li>
-          <a href=${MARKWELL_SUPPORT_MAILTO}>サポート問い合わせ (${MARKWELL_SUPPORT_EMAIL})</a>
+          <a href=${MARKWELL_SUPPORT_MAILTO}>${t('options_about_support', [MARKWELL_SUPPORT_EMAIL])}</a>
         </li>
       </ul>
     `;

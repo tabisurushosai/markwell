@@ -16,12 +16,12 @@ import { toastFrom } from '../shared/components/toast.js';
 import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
-const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; label: string }> = [
-  { id: 'yellow', hex: '#ffd34e', label: 'イエロー' },
-  { id: 'green', hex: '#7dd87d', label: 'グリーン' },
-  { id: 'pink', hex: '#ff8ac2', label: 'ピンク' },
-  { id: 'blue', hex: '#7eb6ff', label: 'ブルー' },
-  { id: 'orange', hex: '#ffb347', label: 'オレンジ' },
+const COLOR_OPTIONS: ReadonlyArray<{ id: HighlightColor; hex: string; labelKey: string }> = [
+  { id: 'yellow', hex: '#ffd34e', labelKey: 'options_color_yellow' },
+  { id: 'green', hex: '#7dd87d', labelKey: 'options_color_green' },
+  { id: 'pink', hex: '#ff8ac2', labelKey: 'side_panel_color_pink' },
+  { id: 'blue', hex: '#7eb6ff', labelKey: 'options_color_blue' },
+  { id: 'orange', hex: '#ffb347', labelKey: 'side_panel_color_orange' },
 ];
 
 const DENSITY_OPTIONS: ReadonlyArray<{ id: Settings['density']; label: string }> = [
@@ -224,13 +224,13 @@ export class MwGeneralSettings extends LitElement {
       const next = await setSettings(patch);
       this.applyLocalState(next);
       applyUiPreferences(next);
-      toastFrom(this, options.message ?? '保存しました', 'success');
+      toastFrom(this, options.message ?? t('toast_saved'), 'success');
       return true;
     } catch (error) {
       options.onError?.();
       toastFrom(
         this,
-        error instanceof Error ? error.message : '保存に失敗しました',
+        error instanceof Error ? error.message : t('options_save_failed'),
         'error',
       );
       return false;
@@ -282,12 +282,12 @@ export class MwGeneralSettings extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="loading">設定を読み込み中…</p>`;
+      return html`<p class="loading">${t('options_general_loading')}</p>`;
     }
 
     return html`
       <h1>${t('options_section_general')}</h1>
-      <p class="hint" style="margin: 0 0 24px;">変更は自動的に保存されます。</p>
+      <p class="hint" style="margin: 0 0 24px;">${t('options_general_autosave_hint')}</p>
 
       <div class="field">
         <span class="field-label">${t('option_default_color')}</span>
@@ -298,8 +298,8 @@ export class MwGeneralSettings extends LitElement {
                 type="button"
                 class="color-btn ${this.defaultColor === option.id ? 'color-btn--selected' : ''}"
                 style="background: ${option.hex}"
-                title=${option.label}
-                aria-label=${option.label}
+                title=${t(option.labelKey)}
+                aria-label=${t(option.labelKey)}
                 aria-pressed=${this.defaultColor === option.id}
                 @click=${() => {
                   void this.handleDefaultColor(option.id);
@@ -308,7 +308,7 @@ export class MwGeneralSettings extends LitElement {
             `,
           )}
         </div>
-        <p class="hint">新規ハイライトの初期色です。</p>
+        <p class="hint">${t('options_general_default_color_hint')}</p>
       </div>
 
       <div class="field">
@@ -328,7 +328,7 @@ export class MwGeneralSettings extends LitElement {
           />
           <span class="slider-value">${this.fontScale.toFixed(2)}</span>
         </div>
-        <p class="hint">${String(FONT_SCALE_MIN)} 〜 ${String(FONT_SCALE_MAX)} の範囲で UI の文字サイズを調整します。</p>
+        <p class="hint">${t('options_general_font_scale_hint', [String(FONT_SCALE_MIN), String(FONT_SCALE_MAX)])}</p>
       </div>
 
       <div class="field">
@@ -371,11 +371,11 @@ export class MwGeneralSettings extends LitElement {
             `,
           )}
         </div>
-        <p class="hint">auto は OS の外観設定に合わせます。</p>
+        <p class="hint">${t('options_general_theme_auto_hint')}</p>
       </div>
 
       <div class="field">
-        <label class="field-label" for="translate-lang">ハイライト翻訳の既定言語</label>
+        <label class="field-label" for="translate-lang">${t('options_general_translate_lang')}</label>
         <select
           id="translate-lang"
           .value=${this.translateTargetLang}
@@ -389,7 +389,7 @@ export class MwGeneralSettings extends LitElement {
             `,
           )}
         </select>
-        <p class="hint">popup の「🌐 翻訳」で使用します。API キーが必要です。</p>
+        <p class="hint">${t('options_general_translate_hint')}</p>
       </div>
 
       <mw-blocked-sites></mw-blocked-sites>

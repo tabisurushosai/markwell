@@ -225,13 +225,13 @@ export class MwPremiumSection extends LitElement {
       this.trialUsed = true;
       this.currentTier = await getCurrentTier();
       this.applyTrialCountdown('trial', next.trial_end);
-      toastFrom(this, '7 日間の Premium トライアルを開始しました', 'success');
+      toastFrom(this, t('options_premium_trial_started'), 'success');
     } catch (error) {
       if (error instanceof TrialAlreadyUsedError) {
         this.trialUsed = true;
-        toastFrom(this, 'トライアルは 1 回のみ', 'warning');
+        toastFrom(this, t('onboarding_trial_once'), 'warning');
       } else {
-        toastFrom(this, 'トライアルの開始に失敗しました', 'error');
+        toastFrom(this, t('onboarding_trial_failed'), 'error');
       }
     } finally {
       this.startingTrial = false;
@@ -249,7 +249,7 @@ export class MwPremiumSection extends LitElement {
       this.storedLicenseKey = next.license_key ?? '';
       this.licenseKeyDraft = this.storedLicenseKey;
       this.currentTier = await getCurrentTier();
-      toastFrom(this, 'ライセンスキーを適用しました。Premium が有効になりました', 'success');
+      toastFrom(this, t('options_premium_license_applied'), 'success');
     } catch (error) {
       if (error instanceof LicenseRefundedError) {
         this.currentTier = await getCurrentTier();
@@ -260,7 +260,7 @@ export class MwPremiumSection extends LitElement {
         toastFrom(this, t('error_license_invalid'), 'error');
         return;
       }
-      const message = error instanceof Error ? error.message : 'ライセンスキーの適用に失敗しました';
+      const message = error instanceof Error ? error.message : t('options_premium_license_apply_failed');
       toastFrom(this, message, 'error');
     } finally {
       this.applying = false;
@@ -269,14 +269,14 @@ export class MwPremiumSection extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="hint">Premium 設定を読み込み中…</p>`;
+      return html`<p class="hint">${t('options_premium_loading')}</p>`;
     }
 
     const canApply = this.licenseKeyDraft.trim() !== '' && !this.applying;
 
     return html`
       <div class="status-card">
-        <p class="status-label">現在のプラン</p>
+        <p class="status-label">${t('options_premium_current_plan')}</p>
         <p class="status-value">${TIER_LABELS[this.currentTier]}</p>
         ${this.trialRemainingLabel !== ''
           ? html`<p class="trial-countdown ${this.trialUrgent ? 'trial-countdown--urgent' : ''}">
@@ -286,42 +286,40 @@ export class MwPremiumSection extends LitElement {
       </div>
 
       <section class="section" aria-labelledby="trial-title">
-        <span id="trial-title" class="section-title">Premium トライアル</span>
-        <p class="hint">7 日間、Premium 機能を無料でお試しいただけます。メール登録は不要です。</p>
+        <span id="trial-title" class="section-title">${t('options_premium_trial_section')}</span>
+        <p class="hint">${t('onboarding_step2_body')}</p>
         <button
           type="button"
           class="btn btn--primary"
-          aria-label=${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
+          aria-label=${this.startingTrial ? t('onboarding_starting_trial') : t('onboarding_start_trial')}
           ?disabled=${this.trialUsed || this.startingTrial || this.currentTier === 'premium'}
           @click=${() => {
             void this.handleStartTrial();
           }}
         >
-          ${this.startingTrial ? '開始中…' : '無料で 7 日間 Premium を試す'}
+          ${this.startingTrial ? t('onboarding_starting_trial') : t('onboarding_start_trial')}
         </button>
         ${this.trialUsed
-          ? html`<p class="trial-note">トライアルは 1 回のみ</p>`
+          ? html`<p class="trial-note">${t('onboarding_trial_once')}</p>`
           : nothing}
       </section>
 
       <section class="section" aria-labelledby="purchase-title">
-        <span id="purchase-title" class="section-title">Premium を購入</span>
-        <p class="purchase-note">
-          決済完了後、メールにライセンスキーが届きます。それをここに貼り付けてください。
-        </p>
+        <span id="purchase-title" class="section-title">${t('options_premium_purchase_section')}</span>
+        <p class="purchase-note">${t('options_premium_purchase_note')}</p>
         <button
           type="button"
           class="btn btn--primary"
-          aria-label="$5 USD で Premium 購入"
+          aria-label=${t('options_premium_purchase_button')}
           @click=${() => { this.handlePurchase(); }}
         >
-          $5 USD で Premium 購入
+          ${t('options_premium_purchase_button')}
         </button>
-        <p class="hint">Stripe の決済ページが新しいタブで開きます。</p>
+        <p class="hint">${t('options_premium_stripe_hint')}</p>
       </section>
 
       <section class="section" aria-labelledby="license-key-title">
-        <label id="license-key-title" class="section-title" for="license-key-input">ライセンスキー</label>
+        <label id="license-key-title" class="section-title" for="license-key-input">${t('options_premium_license_key')}</label>
         <div class="license-row">
           <input
             id="license-key-input"
@@ -346,17 +344,17 @@ export class MwPremiumSection extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label=${this.applying ? '適用中…' : '適用'}
+            aria-label=${this.applying ? t('options_action_applying') : t('popup_apply')}
             ?disabled=${!canApply}
             @click=${() => {
               void this.handleApplyLicense();
             }}
           >
-            ${this.applying ? '適用中…' : '適用'}
+            ${this.applying ? t('options_action_applying') : t('popup_apply')}
           </button>
         </div>
         ${this.storedLicenseKey !== ''
-          ? html`<p class="hint">保存済みのライセンスキーがあります。</p>`
+          ? html`<p class="hint">${t('options_premium_license_stored_hint')}</p>`
           : nothing}
       </section>
 

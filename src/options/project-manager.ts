@@ -16,6 +16,7 @@ import {
   formatProjectCoverEmoji,
 } from '../shared/utils/project-emoji.js';
 import { toastFrom, type ToastKind } from '../shared/components/toast.js';
+import { t } from '../shared/utils/i18n.js';
 import { optionsAccessibilityStyles } from './styles.js';
 
 const DEFAULT_COVER_EMOJI = FALLBACK_PROJECT_EMOJI;
@@ -314,7 +315,7 @@ export class MwProjectManager extends LitElement {
     if (this.currentTier !== 'free') {
       return '';
     }
-    return `${String(this.projectRows.length)}/${String(FREE_PROJECT_LIMIT)} プロジェクト（Free）`;
+    return t('options_project_tier_limit', [String(this.projectRows.length), String(FREE_PROJECT_LIMIT)]);
   }
 
   private showStatus(message: string, isError = false): void {
@@ -352,7 +353,7 @@ export class MwProjectManager extends LitElement {
   private async handleCreate(): Promise<void> {
     const name = this.newProjectName.trim();
     if (name === '') {
-      this.showStatus('プロジェクト名を入力してください', true);
+      this.showStatus(t('options_project_name_required'), true);
       return;
     }
 
@@ -363,17 +364,17 @@ export class MwProjectManager extends LitElement {
       this.newProjectDescription = '';
       this.newProjectEmoji = DEFAULT_COVER_EMOJI;
       await this.reload();
-      this.showStatus('プロジェクトを作成しました');
+      this.showStatus(t('options_project_created'));
     } catch (error) {
       if (error instanceof ProjectLimitError) {
         this.showStatus(
-          `Free プランではプロジェクトは最大 ${String(error.limit)} 個までです（現在 ${String(error.current)} 個）`,
+          t('options_project_limit_error', [String(error.limit), String(error.current)]),
           true,
         );
         return;
       }
       this.showStatus(
-        error instanceof Error ? error.message : 'プロジェクトの作成に失敗しました',
+        error instanceof Error ? error.message : t('options_project_create_failed'),
         true,
       );
     }
@@ -389,7 +390,7 @@ export class MwProjectManager extends LitElement {
       if (field === 'name') {
         const name = this.editingName.trim();
         if (name === '') {
-          this.showStatus('プロジェクト名を入力してください', true);
+          this.showStatus(t('options_project_name_required'), true);
           return;
         }
         await updateProject(projectId, { name });
@@ -398,7 +399,7 @@ export class MwProjectManager extends LitElement {
       } else {
         const emoji = this.editingCoverEmoji.trim();
         if (emoji === '') {
-          this.showStatus('絵文字を入力してください', true);
+          this.showStatus(t('options_project_emoji_required'), true);
           return;
         }
         await updateProject(projectId, { cover_emoji: emoji });
@@ -406,10 +407,10 @@ export class MwProjectManager extends LitElement {
 
       this.cancelEdit();
       await this.reload();
-      this.showStatus('プロジェクトを更新しました');
+      this.showStatus(t('options_project_updated'));
     } catch (error) {
       this.showStatus(
-        error instanceof Error ? error.message : 'プロジェクトの更新に失敗しました',
+        error instanceof Error ? error.message : t('options_project_update_failed'),
         true,
       );
     }
@@ -419,10 +420,10 @@ export class MwProjectManager extends LitElement {
     const { project, highlightCount } = row;
     const highlightNote =
       highlightCount > 0
-        ? `\n含まれる ${String(highlightCount)} 件のハイライトは削除されず、プロジェクト未所属になります。`
+        ? t('options_project_delete_highlight_note', [String(highlightCount)])
         : '';
     const confirmed = window.confirm(
-      `プロジェクト「${project.name}」を削除しますか？${highlightNote}`,
+      t('options_project_confirm_delete', [project.name, highlightNote]),
     );
     if (!confirmed) {
       return;
@@ -434,10 +435,10 @@ export class MwProjectManager extends LitElement {
         this.cancelEdit();
       }
       await this.reload();
-      this.showStatus('プロジェクトを削除しました');
+      this.showStatus(t('options_project_deleted'));
     } catch (error) {
       this.showStatus(
-        error instanceof Error ? error.message : 'プロジェクトの削除に失敗しました',
+        error instanceof Error ? error.message : t('options_project_delete_failed'),
         true,
       );
     }
@@ -450,7 +451,7 @@ export class MwProjectManager extends LitElement {
         <input
           class="edit-emoji"
           type="text"
-          aria-label="カバー絵文字を編集"
+          aria-label=${t('options_project_edit_cover_emoji')}
           .value=${this.editingCoverEmoji}
           @input=${(event: Event) => {
             const input = event.target;
@@ -481,7 +482,7 @@ export class MwProjectManager extends LitElement {
         <input
           class="edit-input"
           type="text"
-          aria-label="プロジェクト名を編集"
+          aria-label=${t('options_project_edit_name')}
           .value=${this.editingName}
           @input=${(event: Event) => {
             const input = event.target;
@@ -498,8 +499,8 @@ export class MwProjectManager extends LitElement {
       <button
         type="button"
         class="project-name-btn"
-        aria-label=${`プロジェクト名を変更: ${project.name}`}
-        title="クリックして名前を変更"
+        aria-label=${t('options_project_rename_aria', [project.name])}
+        title=${t('options_action_click_to_rename')}
         @click=${() => { this.startEdit(project, 'name'); }}
       >
         ${project.name}
@@ -513,7 +514,7 @@ export class MwProjectManager extends LitElement {
       return html`
         <textarea
           class="edit-textarea"
-          aria-label="説明を編集"
+          aria-label=${t('options_project_edit_description')}
           .value=${this.editingDescription}
           @input=${(event: Event) => {
             const input = event.target;
@@ -532,7 +533,7 @@ export class MwProjectManager extends LitElement {
     }
 
     if (project.description.trim() === '') {
-      return html`<p class="description-text description-empty">（説明なし）</p>`;
+      return html`<p class="description-text description-empty">${t('options_project_no_description')}</p>`;
     }
 
     return html`<p class="description-text">${project.description}</p>`;
@@ -547,13 +548,13 @@ export class MwProjectManager extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="保存"
+            aria-label=${t('note_dialog_save')}
             @click=${() => void this.handleSaveEdit(project.id)}
           >
-            保存
+            ${t('note_dialog_save')}
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelEdit(); }}>
-            キャンセル
+          <button type="button" class="btn" aria-label=${t('note_dialog_cancel')} @click=${() => { this.cancelEdit(); }}>
+            ${t('note_dialog_cancel')}
           </button>
         </div>
       `;
@@ -561,32 +562,32 @@ export class MwProjectManager extends LitElement {
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" aria-label="名前変更" @click=${() => { this.startEdit(project, 'name'); }}>
-          名前変更
+        <button type="button" class="btn" aria-label=${t('options_action_rename')} @click=${() => { this.startEdit(project, 'name'); }}>
+          ${t('options_action_rename')}
         </button>
         <button
           type="button"
           class="btn"
-          aria-label="説明編集"
+          aria-label=${t('options_action_edit_description')}
           @click=${() => { this.startEdit(project, 'description'); }}
         >
-          説明編集
+          ${t('options_action_edit_description')}
         </button>
         <button
           type="button"
           class="btn"
-          aria-label="絵文字変更"
+          aria-label=${t('options_action_change_emoji')}
           @click=${() => { this.startEdit(project, 'cover_emoji'); }}
         >
-          絵文字変更
+          ${t('options_action_change_emoji')}
         </button>
         <button
           type="button"
           class="btn btn--danger"
-          aria-label="削除"
+          aria-label=${t('card_action_delete')}
           @click=${() => void this.handleDelete(row)}
         >
-          削除
+          ${t('card_action_delete')}
         </button>
       </div>
     `;
@@ -594,7 +595,7 @@ export class MwProjectManager extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="empty">プロジェクトを読み込み中…</p>`;
+      return html`<p class="empty">${t('options_project_loading')}</p>`;
     }
 
     const rows = this.filteredRows;
@@ -604,11 +605,11 @@ export class MwProjectManager extends LitElement {
       ${tierLabel !== '' ? html`<p class="meta">${tierLabel}</p>` : nothing}
       <div class="create-form">
         <div class="field">
-          <label for="new-project-name">新規プロジェクト</label>
+          <label for="new-project-name">${t('options_project_new')}</label>
           <input
             id="new-project-name"
             type="text"
-            placeholder="名前"
+            placeholder=${t('options_common_name')}
             .value=${this.newProjectName}
             @input=${(event: Event) => {
               const input = event.target;
@@ -625,10 +626,10 @@ export class MwProjectManager extends LitElement {
           />
         </div>
         <div class="field">
-          <label for="new-project-description">説明</label>
+          <label for="new-project-description">${t('options_common_description')}</label>
           <textarea
             id="new-project-description"
-            placeholder="任意"
+            placeholder=${t('options_common_optional')}
             .value=${this.newProjectDescription}
             @input=${(event: Event) => {
               const input = event.target;
@@ -639,7 +640,7 @@ export class MwProjectManager extends LitElement {
           ></textarea>
         </div>
         <div class="field field--emoji">
-          <label for="new-project-emoji">絵文字</label>
+          <label for="new-project-emoji">${t('options_common_emoji')}</label>
           <input
             id="new-project-emoji"
             type="text"
@@ -655,10 +656,10 @@ export class MwProjectManager extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
-          aria-label="作成"
+          aria-label=${t('side_panel_create')}
           @click=${() => void this.handleCreate()}
         >
-          作成
+          ${t('side_panel_create')}
         </button>
       </div>
 
@@ -666,7 +667,7 @@ export class MwProjectManager extends LitElement {
         <input
           class="search"
           type="search"
-          placeholder="名前・説明で検索…"
+          placeholder=${t('options_project_search_placeholder')}
           .value=${this.filterQuery}
           @input=${(event: Event) => {
             const input = event.target;
@@ -678,17 +679,17 @@ export class MwProjectManager extends LitElement {
       </div>
 
       ${rows.length === 0
-        ? html`<p class="empty">${this.projectRows.length === 0 ? 'プロジェクトがありません' : '一致するプロジェクトがありません'}</p>`
+        ? html`<p class="empty">${this.projectRows.length === 0 ? t('options_project_empty') : t('options_project_no_match')}</p>`
         : html`
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">絵文字</th>
-                    <th scope="col">名前</th>
-                    <th scope="col">説明</th>
-                    <th scope="col">ハイライト</th>
-                    <th scope="col">アクション</th>
+                    <th scope="col">${t('options_common_emoji')}</th>
+                    <th scope="col">${t('options_common_name')}</th>
+                    <th scope="col">${t('options_common_description')}</th>
+                    <th scope="col">${t('options_common_highlights')}</th>
+                    <th scope="col">${t('options_common_action')}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -412,10 +412,10 @@ export class MwTagManager extends LitElement {
     const totalUsage = selectedRows.reduce((sum, row) => sum + row.usageCount, 0);
     const usageNote =
       totalUsage > 0
-        ? `\n${String(totalUsage)} 件のハイライトからタグが外れます。`
+        ? t('options_tag_bulk_delete_usage_note', [String(totalUsage)])
         : '';
     const confirmed = window.confirm(
-      `選択した ${String(selectedRows.length)} 件のタグを削除しますか？${usageNote}`,
+      t('options_tag_confirm_bulk_delete', [String(selectedRows.length), usageNote]),
     );
     if (!confirmed) {
       return;
@@ -429,9 +429,9 @@ export class MwTagManager extends LitElement {
       this.cancelEdit();
       this.cancelMerge();
       await this.reload();
-      this.showStatus(`${String(count)} 件のタグを削除しました`);
+      this.showStatus(t('options_tag_bulk_deleted', [String(count)]));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : '一括削除に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_bulk_delete_failed'), true);
     } finally {
       this.bulkWorking = false;
     }
@@ -461,9 +461,9 @@ export class MwTagManager extends LitElement {
       this.clearSelection();
       this.selectionMode = false;
       await this.reload();
-      this.showStatus(`${String(count)} 件のタグ色を変更しました`);
+      this.showStatus(t('options_tag_bulk_color_changed', [String(count)]));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : '一括色変更に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_bulk_color_failed'), true);
     } finally {
       this.bulkWorking = false;
     }
@@ -487,23 +487,23 @@ export class MwTagManager extends LitElement {
   private async handleCreate(): Promise<void> {
     const name = this.newTagName.trim();
     if (name === '') {
-      this.showStatus('タグ名を入力してください', true);
+      this.showStatus(t('options_tag_name_required'), true);
       return;
     }
 
     try {
       const existing = this.tagRows.find((row) => row.tag.name === name);
       if (existing !== undefined) {
-        this.showStatus('同名のタグが既に存在します', true);
+        this.showStatus(t('options_tag_duplicate'), true);
         return;
       }
 
       await createTag(name, this.newTagColor);
       this.newTagName = '';
       await this.reload();
-      this.showStatus('タグを作成しました');
+      this.showStatus(t('options_tag_created'));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : 'タグの作成に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_create_failed'), true);
     }
   }
 
@@ -520,7 +520,7 @@ export class MwTagManager extends LitElement {
     const newName = this.editingName.trim();
     const current = this.tagRows.find((row) => row.tag.id === tagId)?.tag.name ?? '';
     if (newName === '') {
-      this.showStatus('タグ名を入力してください', true);
+      this.showStatus(t('options_tag_name_required'), true);
       return;
     }
     if (newName === current) {
@@ -532,9 +532,9 @@ export class MwTagManager extends LitElement {
       await renameTag(tagId, newName);
       this.cancelEdit();
       await this.reload();
-      this.showStatus('タグ名を変更しました');
+      this.showStatus(t('options_tag_renamed'));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : '名前の変更に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_rename_failed'), true);
     }
   }
 
@@ -558,7 +558,7 @@ export class MwTagManager extends LitElement {
 
   private async handleMerge(sourceId: string): Promise<void> {
     if (this.mergeTargetId === '') {
-      this.showStatus('統合先のタグを選択してください', true);
+      this.showStatus(t('options_tag_merge_target_required'), true);
       return;
     }
 
@@ -579,17 +579,17 @@ export class MwTagManager extends LitElement {
       await mergeTag(sourceId, this.mergeTargetId);
       this.cancelMerge();
       await this.reload();
-      this.showStatus('タグを統合しました');
+      this.showStatus(t('options_tag_merged'));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : 'タグの統合に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_merge_failed'), true);
     }
   }
 
   private async handleDelete(tag: Tag, usageCount: number): Promise<void> {
     const confirmed = window.confirm(
       usageCount > 0
-        ? `「${tag.name}」を削除しますか？\n${String(usageCount)} 件のハイライトからこのタグが外れます。`
-        : `「${tag.name}」を削除しますか？`,
+        ? t('options_tag_confirm_delete_with_usage', [tag.name, String(usageCount)])
+        : t('options_tag_confirm_delete', [tag.name]),
     );
     if (!confirmed) {
       return;
@@ -604,9 +604,9 @@ export class MwTagManager extends LitElement {
         this.cancelMerge();
       }
       await this.reload();
-      this.showStatus('タグを削除しました');
+      this.showStatus(t('options_tag_deleted'));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : 'タグの削除に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_delete_failed'), true);
     }
   }
 
@@ -632,9 +632,9 @@ export class MwTagManager extends LitElement {
     try {
       await updateTagColor(tagId, color);
       await this.reload();
-      this.showStatus('タグの色を変更しました');
+      this.showStatus(t('options_tag_color_changed'));
     } catch (error) {
-      this.showStatus(error instanceof Error ? error.message : '色の変更に失敗しました', true);
+      this.showStatus(error instanceof Error ? error.message : t('options_tag_color_change_failed'), true);
     }
   }
 
@@ -646,22 +646,22 @@ export class MwTagManager extends LitElement {
           class="color-swatch"
           style="background: ${tag.color}"
           title=${tag.color}
-          aria-label=${`色: ${tag.color}`}
+          aria-label=${t('options_tag_color_aria', [tag.color])}
         ></span>
         <button
           type="button"
           class="btn"
-          aria-label="色変更"
+          aria-label=${t('options_action_change_color')}
           @click=${() => { this.openColorPicker(tag.id); }}
         >
-          色変更
+          ${t('options_action_change_color')}
         </button>
         <input
           id=${`tag-color-${tag.id}`}
           class="color-picker-hidden"
           type="color"
           .value=${tag.color}
-          aria-label=${`${tag.name} の色を変更`}
+          aria-label=${t('options_tag_change_color_aria', [tag.name])}
           @change=${(event: Event) => {
             void this.handleColorChange(tag.id, event);
           }}
@@ -677,7 +677,7 @@ export class MwTagManager extends LitElement {
         <input
           class="rename-input"
           type="text"
-          aria-label="タグ名を編集"
+          aria-label=${t('options_tag_edit_name')}
           .value=${this.editingName}
           @input=${(event: Event) => {
             const input = event.target;
@@ -694,8 +694,8 @@ export class MwTagManager extends LitElement {
       <button
         type="button"
         class="tag-name-btn"
-        aria-label=${`タグ名を変更: ${tag.name}`}
-        title="クリックして名前を変更"
+        aria-label=${t('options_tag_rename_aria', [tag.name])}
+        title=${t('options_action_click_to_rename')}
         @click=${() => { this.startRename(tag); }}
       >
         ${tag.name}
@@ -710,23 +710,23 @@ export class MwTagManager extends LitElement {
 
     return html`
       <div class="bulk-bar">
-        <span class="bulk-meta">${String(this.selectedCount)} 件選択中</span>
+        <span class="bulk-meta">${t('options_tag_selected_count', [String(this.selectedCount)])}</span>
         <button
           type="button"
           class="btn"
-          aria-label="一括色変更"
+          aria-label=${t('options_action_bulk_change_color')}
           ?disabled=${this.bulkWorking}
           @click=${() => {
             this.openBulkColorPicker();
           }}
         >
-          一括色変更
+          ${t('options_action_bulk_change_color')}
         </button>
         <input
           id="bulk-tag-color"
           class="color-picker-hidden"
           type="color"
-          aria-label="選択したタグの色を一括変更"
+          aria-label=${t('options_tag_bulk_color_aria')}
           .value=${DEFAULT_TAG_COLOR}
           @change=${(event: Event) => {
             void this.handleBulkColorChange(event);
@@ -735,13 +735,13 @@ export class MwTagManager extends LitElement {
         <button
           type="button"
           class="btn btn--danger"
-          aria-label="一括削除"
+          aria-label=${t('options_action_bulk_delete')}
           ?disabled=${this.bulkWorking}
           @click=${() => {
             void this.handleBulkDelete();
           }}
         >
-          一括削除
+          ${t('options_action_bulk_delete')}
         </button>
       </div>
     `;
@@ -756,13 +756,13 @@ export class MwTagManager extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="保存"
+            aria-label=${t('note_dialog_save')}
             @click=${() => void this.handleRename(tag.id)}
           >
-            保存
+            ${t('note_dialog_save')}
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelEdit(); }}>
-            キャンセル
+          <button type="button" class="btn" aria-label=${t('note_dialog_cancel')} @click=${() => { this.cancelEdit(); }}>
+            ${t('note_dialog_cancel')}
           </button>
         </div>
       `;
@@ -772,11 +772,11 @@ export class MwTagManager extends LitElement {
       const targets = this.tagRows.filter((entry) => entry.tag.id !== tag.id);
       return html`
         <div class="inline-form">
-          <label class="sr-only" for=${`merge-target-${tag.id}`}>他のタグに統合</label>
+          <label class="sr-only" for=${`merge-target-${tag.id}`}>${t('options_tag_merge_into')}</label>
           <select
             id=${`merge-target-${tag.id}`}
             class="merge-select"
-            aria-label="他のタグに統合"
+            aria-label=${t('options_tag_merge_into')}
             .value=${this.mergeTargetId}
             @change=${(event: Event) => {
               const select = event.target;
@@ -785,7 +785,7 @@ export class MwTagManager extends LitElement {
               }
             }}
           >
-            <option value="">他のタグに統合</option>
+            <option value="">${t('options_tag_merge_into')}</option>
             ${targets.map(
               (entry) => html`
                 <option value=${entry.tag.id}>${entry.tag.name}</option>
@@ -795,14 +795,14 @@ export class MwTagManager extends LitElement {
           <button
             type="button"
             class="btn btn--primary"
-            aria-label="統合する"
+            aria-label=${t('options_action_merge')}
             ?disabled=${this.mergeTargetId === ''}
             @click=${() => void this.handleMerge(tag.id)}
           >
-            統合する
+            ${t('options_action_merge')}
           </button>
-          <button type="button" class="btn" aria-label="キャンセル" @click=${() => { this.cancelMerge(); }}>
-            キャンセル
+          <button type="button" class="btn" aria-label=${t('note_dialog_cancel')} @click=${() => { this.cancelMerge(); }}>
+            ${t('note_dialog_cancel')}
           </button>
         </div>
       `;
@@ -810,25 +810,25 @@ export class MwTagManager extends LitElement {
 
     return html`
       <div class="actions">
-        <button type="button" class="btn" aria-label="名前変更" @click=${() => { this.startRename(tag); }}>
-          名前変更
+        <button type="button" class="btn" aria-label=${t('options_action_rename')} @click=${() => { this.startRename(tag); }}>
+          ${t('options_action_rename')}
         </button>
         <button
           type="button"
           class="btn"
-          aria-label="他のタグに統合"
+          aria-label=${t('options_tag_merge_into')}
           ?disabled=${this.tagRows.length < 2}
           @click=${() => { this.startMerge(tag.id); }}
         >
-          他のタグに統合
+          ${t('options_tag_merge_into')}
         </button>
         <button
           type="button"
           class="btn btn--danger"
-          aria-label="削除"
+          aria-label=${t('card_action_delete')}
           @click=${() => void this.handleDelete(tag, usageCount)}
         >
-          削除
+          ${t('card_action_delete')}
         </button>
       </div>
     `;
@@ -836,7 +836,7 @@ export class MwTagManager extends LitElement {
 
   render() {
     if (this.loading) {
-      return html`<p class="empty">タグを読み込み中…</p>`;
+      return html`<p class="empty">${t('options_tag_loading')}</p>`;
     }
 
     const rows = this.filteredRows;
@@ -844,11 +844,11 @@ export class MwTagManager extends LitElement {
     return html`
       <div class="create-form">
         <div class="field">
-          <label for="new-tag-name">新規タグ</label>
+          <label for="new-tag-name">${t('options_tag_new')}</label>
           <input
             id="new-tag-name"
             type="text"
-            placeholder="タグ名"
+            placeholder=${t('options_tag_name_placeholder')}
             .value=${this.newTagName}
             @input=${(event: Event) => {
               const input = event.target;
@@ -865,7 +865,7 @@ export class MwTagManager extends LitElement {
           />
         </div>
         <div class="field">
-          <label for="new-tag-color">色</label>
+          <label for="new-tag-color">${t('options_common_color')}</label>
           <input
             id="new-tag-color"
             type="color"
@@ -881,10 +881,10 @@ export class MwTagManager extends LitElement {
         <button
           type="button"
           class="btn btn--primary"
-          aria-label="作成"
+          aria-label=${t('side_panel_create')}
           @click=${() => void this.handleCreate()}
         >
-          作成
+          ${t('side_panel_create')}
         </button>
       </div>
 
@@ -892,7 +892,7 @@ export class MwTagManager extends LitElement {
         <input
           class="search"
           type="search"
-          placeholder="タグ名で検索…"
+          placeholder=${t('options_tag_search_placeholder')}
           .value=${this.filterQuery}
           @input=${(event: Event) => {
             const input = event.target;
@@ -907,12 +907,12 @@ export class MwTagManager extends LitElement {
               <button
                 type="button"
                 class="btn ${this.selectionMode ? 'btn--active' : ''}"
-                aria-label=${this.selectionMode ? '選択を終了' : '複数選択'}
+                aria-label=${this.selectionMode ? t('popup_selection_exit') : t('popup_selection_multi')}
                 @click=${() => {
                   this.toggleSelectionMode();
                 }}
               >
-                ${this.selectionMode ? '選択を終了' : '複数選択'}
+                ${this.selectionMode ? t('popup_selection_exit') : t('popup_selection_multi')}
               </button>
               ${this.selectionMode
                 ? html`
@@ -920,14 +920,14 @@ export class MwTagManager extends LitElement {
                       type="button"
                       class="btn"
                       aria-label=${this.allVisibleSelected
-                        ? '表示分の選択を解除'
-                        : '表示分をすべて選択'}
+                        ? t('popup_deselect_all_visible')
+                        : t('popup_select_all_visible')}
                       ?disabled=${rows.length === 0}
                       @click=${() => {
                         this.toggleSelectAllVisible();
                       }}
                     >
-                      ${this.allVisibleSelected ? '表示分の選択を解除' : '表示分をすべて選択'}
+                      ${this.allVisibleSelected ? t('popup_deselect_all_visible') : t('popup_select_all_visible')}
                     </button>
                   `
                 : nothing}
@@ -939,24 +939,24 @@ export class MwTagManager extends LitElement {
 
       <p class="meta">
         ${this.filterQuery.trim() === ''
-          ? `全 ${String(this.tagRows.length)} 件`
-          : `表示 ${String(rows.length)} / 全 ${String(this.tagRows.length)} 件`}
+          ? t('options_tag_count_all', [String(this.tagRows.length)])
+          : t('options_tag_count_filtered', [String(rows.length), String(this.tagRows.length)])}
       </p>
 
       ${rows.length === 0
-        ? html`<p class="empty">${this.tagRows.length === 0 ? 'タグがありません' : '一致するタグがありません'}</p>`
+        ? html`<p class="empty">${this.tagRows.length === 0 ? t('options_tag_empty') : t('options_tag_no_match')}</p>`
         : html`
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     ${this.selectionMode
-                      ? html`<th scope="col" class="select-col"><span class="sr-only">選択</span></th>`
+                      ? html`<th scope="col" class="select-col"><span class="sr-only">${t('options_action_select')}</span></th>`
                       : nothing}
-                    <th scope="col">タグ</th>
-                    <th scope="col">色</th>
-                    <th scope="col">使用回数</th>
-                    <th scope="col">アクション</th>
+                    <th scope="col">${t('options_common_tag')}</th>
+                    <th scope="col">${t('options_common_color')}</th>
+                    <th scope="col">${t('options_common_usage_count')}</th>
+                    <th scope="col">${t('options_common_action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -970,7 +970,7 @@ export class MwTagManager extends LitElement {
                                   class="row-checkbox"
                                   type="checkbox"
                                   .checked=${this.isSelected(row.tag.id)}
-                                  aria-label=${`${row.tag.name} を選択`}
+                                  aria-label=${t('options_tag_select_row', [row.tag.name])}
                                   @change=${() => {
                                     this.toggleTagSelection(row.tag.id);
                                   }}
