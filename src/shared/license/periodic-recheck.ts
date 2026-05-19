@@ -3,9 +3,8 @@ import {
   LicenseRefundedError,
   verifyLicense,
 } from './verify.js';
+import { isWithinLicenseRecheckGrace } from './recheck-grace.js';
 import { getLicenseStatus, setLicenseStatus } from '../storage/license.js';
-
-export const LICENSE_RECHECK_GRACE_MS = 24 * 60 * 60 * 1000;
 
 export type LicenseRecheckResult =
   | 'skipped'
@@ -48,6 +47,11 @@ export async function runPeriodicLicenseRecheck(): Promise<LicenseRecheckResult>
     if (error instanceof InvalidLicenseKeyError) {
       await revokePremiumForInvalidLicense();
       return 'revoked';
+    }
+
+    const after = await getLicenseStatus();
+    if (after.tier === 'premium' && isWithinLicenseRecheckGrace(after)) {
+      return 'network_failure';
     }
     return 'network_failure';
   }

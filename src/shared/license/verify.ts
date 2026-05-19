@@ -1,6 +1,7 @@
 import { getLicenseStatus, setLicenseStatus } from '../storage/license.js';
 import { LICENSE_VERIFY_URL } from './config.js';
 import { getOrCreateDeviceId } from './device-id.js';
+import { isWithinLicenseRecheckGrace } from './recheck-grace.js';
 
 type VerifyResponse = {
   valid: boolean;
@@ -42,9 +43,12 @@ export async function verifyLicense(
       body: JSON.stringify({ license_key, device_id }),
     });
   } catch {
-    await setLicenseStatus({
-      verify_failure_count: current.verify_failure_count + 1,
-    });
+    const inGrace = current.tier === 'premium' && isWithinLicenseRecheckGrace(current);
+    if (!inGrace) {
+      await setLicenseStatus({
+        verify_failure_count: current.verify_failure_count + 1,
+      });
+    }
     throw new Error('ライセンスキーの検証に失敗しました');
   }
 
@@ -56,14 +60,17 @@ export async function verifyLicense(
   }
 
   if (!response.ok) {
-    await setLicenseStatus({
-      verify_failure_count: current.verify_failure_count + 1,
-    });
+    const inGrace = current.tier === 'premium' && isWithinLicenseRecheckGrace(current);
+    if (!inGrace) {
+      await setLicenseStatus({
+        verify_failure_count: current.verify_failure_count + 1,
+      });
+    }
     throw new Error('ライセンスキーの検証に失敗しました');
   }
 
   const payload = (await response.json()) as VerifyResponse;
-  if (payload.valid !== true || payload.tier !== 'premium') {
+  if (!payload.valid || payload.tier !== 'premium') {
     if (payload.reason === 'refunded') {
       await setLicenseStatus({
         tier: 'free',
