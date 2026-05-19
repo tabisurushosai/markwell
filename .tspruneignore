@@ -79,3 +79,4 @@ src/popup/utils/page-summary-client.ts:13 - PageSummaryBackgroundResult (used in
 src/popup/utils/tag-autocomplete.ts:8 - normalizeTagQuery (used in module)
 src/popup/utils/theme.ts:4 - ResolvedTheme (used in module)
 src/shared/ai/translation.ts:16 - getTranslateLanguageLabel (used in module)
+src/shared/license/premium-features.ts:5 - PremiumCatalogItem (used in module)
