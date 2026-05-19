@@ -1000,10 +1000,6 @@ export class MarkwellHighlightCard extends LitElement {
     this.factChecking = false;
   }
 
-  private closeFactCheckPremiumModal(): void {
-    this.factCheckPremiumModalOpen = false;
-  }
-
   private formatFactCheckError(error: unknown): string {
     if (error instanceof Error) {
       if (error.message === 'API key not set') {
@@ -1290,7 +1286,7 @@ export class MarkwellHighlightCard extends LitElement {
               aria-label=${t('card_action_delete')}
               @click=${(event: Event) => {
                 event.stopPropagation();
-                void this.handleDelete();
+                this.handleDelete();
               }}
             >
               ${t('card_action_delete')}
@@ -1412,7 +1408,7 @@ export class MarkwellHighlightCard extends LitElement {
           role="dialog"
           aria-modal="true"
           aria-labelledby="rephrase-style-title"
-          @click=${(event: Event) => event.stopPropagation()}
+          @click=${(event: Event) => { event.stopPropagation(); }}
         >
           <h3 id="rephrase-style-title" class="dialog-title">言い換えスタイル</h3>
           <div class="style-list" role="listbox">
@@ -1422,12 +1418,12 @@ export class MarkwellHighlightCard extends LitElement {
                   type="button"
                   class="style-btn"
                   role="option"
-                  aria-label=${getRephraseStyleLabel(style)}
+                  aria-label=${getRephraseStyleLabel(style.id)}
                   @click=${() => {
-                    void this.handleRephraseStyleSelect(style);
+                    void this.handleRephraseStyleSelect(style.id);
                   }}
                 >
-                  ${getRephraseStyleLabel(style)}
+                  ${getRephraseStyleLabel(style.id)}
                 </button>
               `,
             )}
@@ -1471,7 +1467,7 @@ export class MarkwellHighlightCard extends LitElement {
           role="dialog"
           aria-modal="true"
           aria-labelledby="rephrase-result-title"
-          @click=${(event: Event) => event.stopPropagation()}
+          @click=${(event: Event) => { event.stopPropagation(); }}
         >
           <h3 id="rephrase-result-title" class="dialog-title">
             言い換え（${styleLabel}）
@@ -1529,7 +1525,7 @@ export class MarkwellHighlightCard extends LitElement {
           role="dialog"
           aria-modal="true"
           aria-labelledby="fact-check-title"
-          @click=${(event: Event) => event.stopPropagation()}
+          @click=${(event: Event) => { event.stopPropagation(); }}
         >
           <h3 id="fact-check-title" class="dialog-title">🔎 ファクトチェック</h3>
           <div class="dialog-body" aria-live="polite">
@@ -1551,7 +1547,7 @@ export class MarkwellHighlightCard extends LitElement {
                             href=${source.uri}
                             target="_blank"
                             rel="noopener noreferrer"
-                            @click=${(event: Event) => event.stopPropagation()}
+                            @click=${(event: Event) => { event.stopPropagation(); }}
                           >
                             ${source.title}
                           </a>

@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { getSettings, setSettings } from '../shared/storage/settings.js';
@@ -265,7 +265,7 @@ export class MwBlockedSites extends LitElement {
                 class="chip-remove"
                 aria-label="${item} を削除"
                 @click=${() => {
-                  void onRemove(item);
+                  onRemove(item);
                 }}
               >
                 ×

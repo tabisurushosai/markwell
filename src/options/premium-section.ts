@@ -313,7 +313,7 @@ export class MwPremiumSection extends LitElement {
           type="button"
           class="btn btn--primary"
           aria-label="$5 USD で Premium 購入"
-          @click=${() => this.handlePurchase()}
+          @click=${() => { this.handlePurchase(); }}
         >
           $5 USD で Premium 購入
         </button>

@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import { TRANSLATE_LANGUAGE_LABELS } from '../shared/ai/translation.js';

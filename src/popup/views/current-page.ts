@@ -335,7 +335,7 @@ export class MarkwellCurrentPageView extends LitElement {
           role="dialog"
           aria-modal="true"
           aria-labelledby="page-summary-title"
-          @click=${(event: Event) => event.stopPropagation()}
+          @click=${(event: Event) => { event.stopPropagation(); }}
         >
           <h3 id="page-summary-title" class="dialog-title">ページ要約</h3>
           <div class="dialog-body">${this.summaryText}</div>
@@ -366,50 +366,6 @@ export class MarkwellCurrentPageView extends LitElement {
     `;
   }
 
-  private renderPremiumModal() {
-    if (!this.premiumModalOpen) {
-      return nothing;
-    }
-
-    return html`
-      <div
-        class="dialog-backdrop"
-        role="presentation"
-        @click=${(event: Event) => {
-          if (event.target === event.currentTarget) {
-            this.closePremiumModal();
-          }
-        }}
-      >
-        <div
-          class="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="page-summary-premium-title"
-          @click=${(event: Event) => {
-            event.stopPropagation();
-          }}
-        >
-          <h3 id="page-summary-premium-title" class="dialog-title">Premium で解放</h3>
-          <p class="dialog-message">
-            ページ要約は Premium（またはトライアル）で利用できます。
-          </p>
-          <div class="dialog-actions">
-            <button
-              type="button"
-              class="dialog-btn dialog-btn--primary"
-              aria-label="閉じる"
-              @click=${() => {
-                this.closePremiumModal();
-              }}
-            >
-              閉じる
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   private renderHighlightsBody() {
     if (this.loading) {

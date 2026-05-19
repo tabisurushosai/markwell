@@ -48,10 +48,10 @@ import './views/current-page.js';
 
 type TabId = 'page' | 'all' | 'projects';
 
-const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
-  { id: 'page', label: '現在のページ' },
-  { id: 'all', label: 'すべて' },
-  { id: 'projects', label: 'プロジェクト' },
+const TABS: ReadonlyArray<{ id: TabId; labelKey: string }> = [
+  { id: 'page', labelKey: 'popup_tab_current' },
+  { id: 'all', labelKey: 'popup_tab_all' },
+  { id: 'projects', labelKey: 'popup_tab_projects' },
 ];
 
 const TAB_IDS: TabId[] = ['page', 'all', 'projects'];
@@ -259,7 +259,7 @@ export class MarkwellPopupRoot extends LitElement {
         return;
       }
       event.preventDefault();
-      void card.deleteWithConfirm();
+      card.deleteWithConfirm();
     }
   };
 

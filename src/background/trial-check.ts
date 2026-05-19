@@ -29,6 +29,7 @@ export async function runTrialExpiryCheck(now = Date.now()): Promise<boolean> {
 
   await chrome.notifications.create(TRIAL_EXPIRED_NOTIFICATION_ID, {
     type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
     title: 'Markwell',
     message: TRIAL_EXPIRED_NOTIFICATION_MESSAGE,
   });

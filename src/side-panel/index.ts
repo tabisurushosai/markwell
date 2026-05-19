@@ -190,6 +190,8 @@ export class MarkwellSidePanelRoot extends LitElement {
 
   private quoteAbortController: AbortController | null = null;
 
+  private statusTimer?: ReturnType<typeof window.setTimeout>;
+
   static styles = sidePanelStyles;
 
   connectedCallback(): void {
@@ -272,7 +274,7 @@ export class MarkwellSidePanelRoot extends LitElement {
       return;
     }
     const project = await getProject(this.selectedProjectId);
-    if (project === undefined) {
+    if (project === null) {
       this.highlights = [];
       return;
     }
@@ -808,18 +810,6 @@ export class MarkwellSidePanelRoot extends LitElement {
     return html`<span class="premium-badge">🔒 Premium</span>`;
   }
 
-  private toggleExportMenu(): void {
-    this.toggleResultExportMenu();
-  }
-
-  private handleExportFormatClick(format: SynthesisExportFormat): void {
-    this.handleExportFormat(
-      format,
-      this.synthesisMarkdown,
-      this.synthesisExportCreatedAt,
-      this.lastSynthesisModel,
-    );
-  }
 
   private renderExportMenu(
     markdown: string,
@@ -855,7 +845,7 @@ export class MarkwellSidePanelRoot extends LitElement {
         </button>
         ${isOpen
           ? html`
-              <div class="export-menu" role="menu" @click=${(event: Event) => event.stopPropagation()}>
+              <div class="export-menu" role="menu" @click=${(event: Event) => { event.stopPropagation(); }}>
                 ${formats.map(
                   ({ format, label }) => html`
                     <button

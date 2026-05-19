@@ -88,8 +88,8 @@ export function streamProjectQaReply(
     assertAiAccess(tier, 'qa');
     yield* callGeminiChat(systemInstruction, turns, {
       stream: true,
-      signal: opts.signal,
       feature: 'qa',
+      ...(opts.signal !== undefined ? { signal: opts.signal } : {}),
     });
   })();
 }

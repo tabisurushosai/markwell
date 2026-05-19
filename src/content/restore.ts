@@ -97,7 +97,7 @@ function requestIdleCallbackCompat(
       didTimeout: true,
       timeRemaining: () => 0,
     });
-  }, 1) as unknown as number;
+  }, 1);
 }
 
 function restoreHighlightsIdle(highlights: Highlight[]): Promise<void> {

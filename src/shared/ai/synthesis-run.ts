@@ -11,8 +11,8 @@ export function streamProjectSynthesis(
     assertAiAccess(tier, 'synthesis');
     yield* callGemini(prompt, {
       stream: true,
-      signal: opts.signal,
       feature: 'synthesis',
+      ...(opts.signal !== undefined ? { signal: opts.signal } : {}),
     });
   })();
 }

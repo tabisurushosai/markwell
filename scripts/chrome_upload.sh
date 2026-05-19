@@ -8,11 +8,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG_DIR="${HOME}/.config/markwell"
 ENV_FILE="${CONFIG_DIR}/cws.env"
-MODE="${1:-}"
+MODE="${1:-draft}"
 
-if [[ "$MODE" != "" && "$MODE" != "publish" ]]; then
-  echo "Usage: $0 [publish]" >&2
-  echo "  (no args)  upload as draft" >&2
+if [[ "$MODE" != "draft" && "$MODE" != "publish" ]]; then
+  echo "Usage: $0 [draft|publish]" >&2
+  echo "  draft      upload as draft (default)" >&2
   echo "  publish    upload and auto-publish" >&2
   exit 1
 fi
@@ -97,7 +97,7 @@ if [[ "$MODE" == "publish" ]]; then
   echo "Mode: upload + auto-publish"
   UPLOAD_CMD+=(--auto-publish)
 else
-  echo "Mode: upload as draft (pass 'publish' to auto-publish)"
+  echo "Mode: upload as draft"
 fi
 
 "${UPLOAD_CMD[@]}"

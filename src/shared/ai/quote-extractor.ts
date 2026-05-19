@@ -63,8 +63,8 @@ export function streamQuoteExtraction(
     assertAiAccess(tier, 'quote_extract');
     yield* callGemini(prompt, {
       stream: true,
-      signal: opts.signal,
       feature: 'quote_extractor',
+      ...(opts.signal !== undefined ? { signal: opts.signal } : {}),
     });
   })();
 }

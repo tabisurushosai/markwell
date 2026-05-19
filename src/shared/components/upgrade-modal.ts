@@ -232,7 +232,7 @@ export class MwUpgradeModal extends LitElement {
   private renderActions() {
     if (!this.trialUsed) {
       return html`
-        <button type="button" class="btn-secondary" @click=${() => this.handleClose()}>
+        <button type="button" class="btn-secondary" @click=${() => { this.handleClose(); }}>
           閉じる
         </button>
         <button
@@ -245,17 +245,17 @@ export class MwUpgradeModal extends LitElement {
         >
           ${this.startingTrial ? '開始中…' : t('upgrade_start_trial')}
         </button>
-        <button type="button" class="btn-primary" @click=${() => this.handlePurchase()}>
+        <button type="button" class="btn-primary" @click=${() => { this.handlePurchase(); }}>
           ${t('upgrade_purchase')}
         </button>
       `;
     }
 
     return html`
-      <button type="button" class="btn-secondary" @click=${() => this.handleClose()}>
+      <button type="button" class="btn-secondary" @click=${() => { this.handleClose(); }}>
         閉じる
       </button>
-      <button type="button" class="btn-primary" @click=${() => this.handlePurchase()}>
+      <button type="button" class="btn-primary" @click=${() => { this.handlePurchase(); }}>
         $5 で Premium
       </button>
     `;

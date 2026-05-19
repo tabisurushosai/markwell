@@ -625,8 +625,8 @@ export function callGemini(
     return streamGeminiChunks(prompt, opts.feature, opts.signal);
   }
   return callGeminiNonStream(prompt, opts.feature, opts.signal, {
-    apiKey: opts.apiKey,
-    model: opts.model,
+    ...(opts.apiKey !== undefined ? { apiKey: opts.apiKey } : {}),
+    ...(opts.model !== undefined ? { model: opts.model } : {}),
   });
 }
 

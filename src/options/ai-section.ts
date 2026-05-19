@@ -301,10 +301,11 @@ export class MwAiSettings extends LitElement {
 
     this.testStatus = { kind: 'testing' };
     try {
+      const apiKey = this.resolveApiKeyForRequest();
       await callGemini('test', {
         feature: 'translation',
         model: this.selectedModel,
-        apiKey: this.resolveApiKeyForRequest(),
+        ...(apiKey !== undefined ? { apiKey } : {}),
       });
       if (draft !== '') {
         await setApiKey(draft);
