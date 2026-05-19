@@ -192,7 +192,7 @@ export async function exportAll(): Promise<ExportPayload> {
   return {
     schema_version: schemaVersion,
     exported_at: Date.now(),
-    highlights,
+    highlights: highlights.map((item) => HighlightSchema.parse(item)),
     tags,
     projects,
     syntheses,
@@ -211,7 +211,9 @@ export async function importAll(json: unknown, mode: 'merge' | 'replace'): Promi
 
     await writePortableEntities(payload);
 
-    const allHighlights = await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema);
+    const allHighlights = (await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema)).map(
+      (item) => HighlightSchema.parse(item),
+    );
     await rebuildHighlightIndexes(allHighlights);
 
     const allSyntheses = await kvListByPrefix(SYNTHESIS_KEY_PREFIX, SynthesisSchema);

@@ -1,33 +1,8 @@
 import { z } from 'zod';
 
-import { HighlightColorSchema, type HighlightColor } from './highlight.js';
+import { HighlightColorSchema } from './highlight.js';
 
 export type ThemePreference = 'auto' | 'dark' | 'light';
-
-export type Settings = {
-  default_color: HighlightColor;
-  theme: ThemePreference;
-  font_scale: number;
-  density: 'compact' | 'normal' | 'comfortable';
-  blocked_domains: string[];
-  blocked_url_patterns: string[];
-  ai: {
-    provider: 'gemini';
-    api_key_encrypted: string;
-    model: string;
-    /** ハイライト保存時に AI 自動タグ付け（trial / premium） */
-    auto_tag_on_save: boolean;
-  };
-  shortcuts: {
-    quick_highlight: string;
-    open_synthesis: string;
-  };
-  /** ハイライト翻訳の既定ターゲット言語（ISO 639-1 など） */
-  translate_target_lang: string;
-  /** Stripe Payment Link（未設定時は license/config の既定値） */
-  stripe_payment_link: string;
-  onboarding_seen: boolean;
-};
 
 export const SettingsSchema = z.object({
   default_color: HighlightColorSchema,
@@ -50,3 +25,5 @@ export const SettingsSchema = z.object({
   stripe_payment_link: z.string().default(''),
   onboarding_seen: z.boolean(),
 });
+
+export type Settings = z.output<typeof SettingsSchema>;

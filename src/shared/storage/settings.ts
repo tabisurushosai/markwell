@@ -97,16 +97,21 @@ async function decryptCiphertext(encrypted: string): Promise<string> {
 }
 
 function mergeSettings(base: Settings, patch: Partial<Settings>): Settings {
+  const aiPatch = patch.ai ?? {};
+  const shortcutsPatch = patch.shortcuts ?? {};
+  const { ai: _omitAi, shortcuts: _omitShortcuts, ...rest } = patch;
+  void _omitAi;
+  void _omitShortcuts;
   return {
     ...base,
-    ...patch,
+    ...rest,
     ai: {
       ...base.ai,
-      ...patch.ai,
+      ...aiPatch,
     },
     shortcuts: {
       ...base.shortcuts,
-      ...patch.shortcuts,
+      ...shortcutsPatch,
     },
   };
 }
@@ -116,7 +121,7 @@ export async function getSettings(): Promise<Settings> {
   if (stored === null) {
     return { ...DEFAULT_SETTINGS };
   }
-  return mergeSettings(DEFAULT_SETTINGS, stored);
+  return SettingsSchema.parse(stored);
 }
 
 export async function setSettings(patch: Partial<Settings>): Promise<Settings> {

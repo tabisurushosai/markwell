@@ -125,7 +125,11 @@ export async function createHighlight(
 }
 
 export async function getHighlight(id: string): Promise<Highlight | null> {
-  return kvGet(highlightKey(id), HighlightSchema);
+  const stored = await kvGet(highlightKey(id), HighlightSchema);
+  if (stored === null) {
+    return null;
+  }
+  return HighlightSchema.parse(stored);
 }
 
 export async function updateHighlight(id: string, patch: Partial<Highlight>): Promise<Highlight> {
@@ -186,7 +190,9 @@ export async function listHighlights(
 
   const highlights =
     candidateIds === null
-      ? await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema)
+      ? (await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema)).map((item) =>
+          HighlightSchema.parse(item),
+        )
       : (
           await Promise.all(
             [...candidateIds].map(async (id) => getHighlight(id)),
@@ -206,7 +212,7 @@ export async function listHighlights(
 
 export async function countHighlights(): Promise<number> {
   const highlights = await kvListByPrefix(HIGHLIGHT_KEY_PREFIX, HighlightSchema);
-  return highlights.length;
+  return highlights.map((item) => HighlightSchema.parse(item)).length;
 }
 
 export async function assertHighlightLimit(tier: LicenseTier): Promise<void> {
