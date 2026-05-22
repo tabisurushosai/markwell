@@ -17,8 +17,9 @@ describe('about constants', () => {
     expect(APP_VERSION).not.toBe('');
   });
 
-  it('exposes placeholder repository and legal links', () => {
+  it('exposes repository and legal links', () => {
     expect(MARKWELL_REPOSITORY_URL).toMatch(/^https:\/\/github\.com\//);
+    expect(MARKWELL_REPOSITORY_URL).toBe('https://github.com/tabisurushosai/markwell');
     expect(MARKWELL_PRIVACY_POLICY_URL).toContain(MARKWELL_REPOSITORY_URL);
     expect(MARKWELL_TERMS_URL).toContain(MARKWELL_REPOSITORY_URL);
     expect(MARKWELL_OSS_LICENSES_URL).toContain(MARKWELL_REPOSITORY_URL);

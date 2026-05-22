@@ -41,6 +41,7 @@ import {
   CLOSED_UPGRADE_MODAL_STATE,
 } from '../shared/components/upgrade-modal-host.js';
 import type { AiFeature } from '../shared/license/ai-access.js';
+import { MARKWELL_REPOSITORY_URL } from '../shared/constants/about.js';
 import { t } from '../shared/utils/i18n.js';
 import { popupStyles } from './styles.js';
 import './views/all-highlights.js';
@@ -471,7 +472,7 @@ export class MarkwellPopupRoot extends LitElement {
   }
 
   private handleOpenHelp(): void {
-    void chrome.tabs.create({ url: 'https://github.com/markwell' });
+    void chrome.tabs.create({ url: MARKWELL_REPOSITORY_URL });
   }
 
   private readonly onFindRelated = (event: Event): void => {
