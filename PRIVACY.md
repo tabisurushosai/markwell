@@ -46,7 +46,7 @@ Markwell does not use cookies.
 
 ## Sharing with third parties
 
-Markwell does not sell or share your data with third parties. The only external recipients are **Google** (when you use Gemini with your own API key) and **markwell-api.vercel.app** (for license verification as described above), each under your explicit use of those features.
+Markwell does not sell your data. The external recipients used by the extension are **Google** (when you use Gemini with your own API key), **markwell-api.vercel.app** (for license verification as described above), and **Stripe** (when you choose to open the Premium checkout page), each under your explicit use of those features.
 
 ## Deleting your data
 
